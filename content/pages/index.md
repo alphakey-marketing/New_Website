@@ -18,7 +18,7 @@ sections:
       Hi, I'm a slightly unconventional marketer.
 
 
-      By day, I craft copy, analyze data, and design strategies for brands. By night, I meditate in stillness, using spiritual intuition to sense the authentic energy behind each brand. Weekends? You'll find me on the badminton court, chasing that little white shuttlecock with sweat dripping down.
+      By day, I craft copy, analyze data, and design strategies for brands. By night, I meditate in stillness, using intuition to sense the authentic energy behind each brand. Weekends? You'll find me on the badminton court, chasing that little white shuttlecock with sweat dripping down.
 
 
       Friends say I'm detail-oriented (sometimes annoyingly so), but what I'm most proud of is my ability to view problems from three perspectives: right, wrong, and neutral. This helps me find balance in the gray-area world of marketing.
@@ -59,8 +59,8 @@ sections:
   - type: ServicesSection
     elementId: services
     colors: colors-f
-    title: "Services I Offer"
-    subtitle: "Choose the path that resonates with you"
+    title: "Marketing Services"
+    subtitle: "Strategic solutions for business growth"
     services:
       - title: "Marketing & Website Building"
         icon: "💼"
@@ -71,16 +71,6 @@ sections:
           - "SEO Optimization"
           - "Social Media Management"
           - "Brand Development"
-        phone: "85296783395"
-      - title: "Akashic Reading & Energy Healing"
-        icon: "✨"
-        description: "Experience profound spiritual insights and holistic healing through Akashic readings and energy restoration practices for mind, body, and soul."
-        features:
-          - "Akashic Records Reading"
-          - "Energy Healing Sessions"
-          - "Spiritual Guidance"
-          - "Chakra Balancing"
-          - "Personal Transformation"
         phone: "85296783395"
     styles:
       self:
@@ -118,7 +108,7 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-    subtitle: Projects
+    subtitle: Featured Case Studies
   - type: FeaturedPostsSection
     elementId: ''
     colors: colors-f
@@ -148,7 +138,7 @@ sections:
   - type: ContactSection
     colors: colors-f
     backgroundSize: full
-    title: "Spiritual insight + Professional care ~ Let's navigate marketing with clarity and ease. Reach out... 💬"
+    title: "Let's transform your marketing strategy together 💬"
     form:
       type: FormBlock
       elementId: sign-up-form
@@ -160,19 +150,33 @@ sections:
           isRequired: true
           width: 1/2
           type: TextFormControl
-        - name: whatsappNumber
-          label: WhatsApp Number
+        - name: company
+          label: Company Name
           hideLabel: true
-          placeholder: WhatsApp Number
-          isRequired: true
+          placeholder: Company Name
+          isRequired: false
           width: 1/2
+          type: TextFormControl
+        - name: email
+          label: Email Address
+          hideLabel: true
+          placeholder: Email Address
+          isRequired: true
+          width: full
           type: EmailFormControl
+        - name: message
+          label: Project Details
+          hideLabel: true
+          placeholder: Tell me about your marketing goals and challenges
+          isRequired: false
+          width: full
+          type: TextareaFormControl
         - name: updatesConsent
-          label: I'd like to receive monthly updates and articles
+          label: I'd like to receive marketing insights and case studies
           isRequired: false
           width: full
           type: CheckboxFormControl
-      submitLabel: "Submit 🚀"
+      submitLabel: "Get in Touch 🚀"
       styles:
         self:
           textAlign: center
