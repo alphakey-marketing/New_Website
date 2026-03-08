@@ -20,11 +20,6 @@
             },
             {
                 "type": "Link",
-                "label": "Japanese Learning",
-                "url": "/japanese-learning"
-            },
-            {
-                "type": "Link",
                 "label": "Blog",
                 "url": "/blog"
             }
