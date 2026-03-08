@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japanese Handwriting Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #drawCanvas {
+            border: 2px solid #333;
+            cursor: crosshair;
+            background-color: #fffef0;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #candidateList {
+            margin-top: 20px;
+            font-size: 24px;
+            line-height: 1.8;
+        }
+        .candidate {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .candidate:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Japanese Handwriting Recognition</h1>
+    <p>Draw a kanji, hiragana, or katakana character below:</p>
+    
+    <canvas id="drawCanvas" 
+            data-candidate-list="candidateList" 
+            width="300" 
+            height="300">
+    </canvas>
+    
+    <div class="controls">
+        <button onclick="recognizeKanji()">🔍 Recognize</button>
+        <button onclick="clearCanvas()">🗑️ Clear</button>
+        <button onclick="undoStroke()">↶ Undo</button>
+    </div>
+    
+    <div id="candidateList"></div>
+
+    <!-- Include KanjiCanvas library -->
+    <script src="https://cdn.jsdelivr.net/gh/asdfjkl/kanjicanvas@master/docs/resources/javascript/kanji-canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/asdfjkl/kanjicanvas@master/docs/resources/javascript/ref-patterns.js"></script>
+    
+    <script>
+        // Initialize the canvas
+        KanjiCanvas.init('drawCanvas');
+        
+        // Recognition function
+        function recognizeKanji() {
+            const results = KanjiCanvas.recognize('drawCanvas');
+            displayResults(results);
+        }
+        
+        // Clear canvas
+        function clearCanvas() {
+            KanjiCanvas.erase('drawCanvas');
+            document.getElementById('candidateList').innerHTML = '';
+        }
+        
+        // Undo last stroke
+        function undoStroke() {
+            KanjiCanvas.deleteLast('drawCanvas');
+        }
+        
+        // Display recognition results
+        function displayResults(results) {
+            const listDiv = document.getElementById('candidateList');
+            
+            if (results && results.length > 0) {
+                listDiv.innerHTML = '<h3>Candidates:</h3>';
+                results.forEach((char, index) => {
+                    const span = document.createElement('span');
+                    span.className = 'candidate';
+                    span.textContent = char;
+                    span.onclick = () => copyToClipboard(char);
+                    span.title = 'Click to copy';
+                    listDiv.appendChild(span);
+                });
+            } else {
+                listDiv.innerHTML = '<p>No matches found. Try drawing again.</p>';
+            }
+        }
+        
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Copied: ${text}`);
+            });
+        }
+    </script>
+</body>
+</html>

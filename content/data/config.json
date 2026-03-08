@@ -1,0 +1,83 @@
+{
+    "type": "Config",
+    "favicon": "/images/favicon.svg",
+    "header": {
+        "type": "Header",
+        "headerVariant": "variant-c",
+        "isSticky": false,
+        "title": "Personal",
+        "isTitleVisible": true,
+        "primaryLinks": [
+            {
+                "type": "Link",
+                "label": "About",
+                "url": "/info"
+            },
+            {
+                "type": "Link",
+                "label": "Projects",
+                "url": "/projects"
+            },
+            {
+                "type": "Link",
+                "label": "Japanese Learning",
+                "url": "/japanese-learning"
+            },
+            {
+                "type": "Link",
+                "label": "Blog",
+                "url": "/blog"
+            }
+        ],
+        "styles": {
+            "self": {
+                "width": "full"
+            }
+        }
+    },
+    "footer": {
+        "type": "Footer",
+        "primaryLinks": [
+            {
+                "type": "Link",
+                "label": "About",
+                "url": "/info",
+                "altText": ""
+            },
+            {
+                "type": "Link",
+                "label": "Contact",
+                "url": "mailto:curryfishcake@gmail.com",
+                "altText": ""
+            },
+            {
+                "type": "Link",
+                "label": "Blog",
+                "url": "/blog",
+                "altText": ""
+            }
+        ],
+        "contacts": {
+            "type": "ContactBlock",
+            "title": "Contact details",
+            "phoneNumber": "+85296783395",
+            "phoneAltText": "WhatsApp me",
+            "email": "curryfishcake@gmail.com",
+            "emailAltText": "Email me",
+            "address": "Sai Wan, Central and Western District, Hong Kong",
+            "addressAltText": "My location"
+        },
+        "copyrightText": "Edited with sincerity",
+        "styles": {
+            "self": {
+                "width": "narrow",
+                "padding": [
+                    "pt-16",
+                    "pb-16",
+                    "pr-4",
+                    "pl-4"
+                ]
+            }
+        }
+    }
+}

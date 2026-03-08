@@ -1,0 +1,10 @@
+{
+    "type": "Person",
+    "firstName": "Key",
+    "lastName": "Chan",
+    "image": {
+        "type": "ImageBlock",
+        "url": "/images/about.jpg",
+        "altText": "Key Chan photo"
+    }
+}
