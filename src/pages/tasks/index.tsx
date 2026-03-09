@@ -419,7 +419,7 @@ export default function TasksPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Task</h3>
             <p className="text-sm text-gray-500 mb-6">
-              Are you sure you want to delete "{deleteConfirm.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{deleteConfirm.title}&quot;? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -444,8 +444,7 @@ export default function TasksPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Project</h3>
             <p className="text-sm text-gray-500 mb-6">
-              Are you sure you want to delete "{deleteProjectConfirm.name}"? Tasks in this project will not be deleted
-              but will become unassigned.
+              Are you sure you want to delete &quot;{deleteProjectConfirm.name}&quot;? Tasks in this project will not be deleted but will become unassigned.
             </p>
             <div className="flex justify-end space-x-3">
               <button
