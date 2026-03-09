@@ -11,7 +11,7 @@ This phase adds Supabase authentication and protected task routes to your websit
    - Create a new project (remember your database password)
    - Wait for project initialization (~2 minutes)
 
-2. **Run Database Schema**
+2. **Run Database Schema - Phase 1**
    
    Go to your Supabase project → SQL Editor → New Query, then run:
 
@@ -95,45 +95,153 @@ This phase adds Supabase authentication and protected task routes to your websit
 6. Sign in with your credentials
 7. You should see the Task Management welcome page
 
-### Troubleshooting
+---
 
-**Error: "Missing NEXT_PUBLIC_SUPABASE_URL"**
-- Make sure you added both secrets to Replit
-- Restart the server after adding secrets
+## Phase 2: Task CRUD + Database ✅
 
-**Sign up not working / No confirmation email**
-- Check Supabase → Authentication → Providers → Email is enabled
-- For testing, disable "Confirm email" option
+This phase adds the tasks database table and full CRUD functionality.
 
-**"Invalid login credentials"**
-- Make sure you completed email confirmation if enabled
-- Password must be at least 6 characters
+### Database Setup - Phase 2
+
+1. **Run Tasks Schema**
+   
+   Go to Supabase → SQL Editor → New Query, then run the entire contents of `supabase_tasks_schema.sql` file from the repository root.
+
+   This will:
+   - Create the `tasks` table with proper columns
+   - Set up Row Level Security (RLS) policies
+   - Create indexes for performance
+   - Add auto-update trigger for `updated_at` field
+   - Enable Realtime for live updates
+
+2. **Enable Realtime (if not automatic)**
+   
+   - Go to Database → Replication
+   - Find the `tasks` table
+   - Toggle it ON if it's not already enabled
+
+### Install New Dependencies
+
+In Replit Shell, run:
+```bash
+npm install date-fns
+```
+
+Then restart the server.
+
+### Testing Phase 2
+
+1. Navigate to `/tasks`
+2. You should see:
+   - Task statistics cards (To Do, In Progress, Done)
+   - Search bar and status filter dropdown
+   - "New Task" button
+   - Empty state message if no tasks exist
+
+3. **Create a task**:
+   - Click "New Task"
+   - Fill in title (required), description, status, priority, due date
+   - Click "Create"
+   - Task appears in the list instantly
+
+4. **Edit a task**:
+   - Click "Edit" button on any task
+   - Modify fields
+   - Click "Update"
+   - Changes appear immediately
+
+5. **Change status quickly**:
+   - Use the status dropdown in each task card
+   - Changes save automatically
+   - Statistics update in real-time
+
+6. **Delete a task**:
+   - Click "Delete" button
+   - Confirm deletion in the modal
+   - Task is removed from the list
+
+7. **Filter and search**:
+   - Use status filter to show only specific statuses
+   - Type in search box to filter by title/description
+   - Filters work together
+
+8. **Test real-time updates**:
+   - Open `/tasks` in two browser tabs
+   - Create/edit/delete a task in one tab
+   - See it update automatically in the other tab
+
+### Troubleshooting Phase 2
+
+**Error: "relation 'tasks' does not exist"**
+- You need to run the `supabase_tasks_schema.sql` in Supabase SQL Editor
+- Make sure the query completed successfully
+
+**Tasks not appearing**
+- Check browser console for errors
+- Verify RLS policies are created (Supabase → Authentication → Policies)
+- Ensure you're logged in with the user who created the tasks
+
+**Real-time not working**
+- Check Database → Replication in Supabase
+- Ensure `tasks` table is enabled for Realtime
+- Check browser console for subscription errors
+
+**Date formatting error**
+- Make sure `date-fns` is installed: `npm install date-fns`
+- Restart the server after installation
+
+### Features Added in Phase 2
+
+✅ Complete task CRUD operations (Create, Read, Update, Delete)
+✅ Task list view with inline status changes
+✅ Task creation/edit modal with full form
+✅ Delete confirmation dialog
+✅ Real-time synchronization across tabs
+✅ Search by title/description
+✅ Filter by status (To Do, In Progress, Done)
+✅ Task statistics dashboard
+✅ Priority and due date support
+✅ Responsive design with Tailwind CSS
 
 ### What's Next?
 
-**Phase 2** (Next commit) will add:
-- Task database schema
-- Task creation form
-- Task list view
-- CRUD operations (Create, Read, Update, Delete)
+**Phase 3** (Future) will add:
+- Kanban board view with drag-and-drop
+- Projects/workspaces to organize tasks
+- Task labels/tags
+- Calendar view for due dates
+- Rich text editor for descriptions
+- Subtasks support
 
-### File Structure Added
+---
+
+## File Structure
 
 ```
-src/
-├── lib/
-│   └── supabaseClient.ts       # Supabase initialization
-├── types/
-│   └── task.ts                 # TypeScript interfaces
-└── pages/
-    └── tasks/
-        ├── login.tsx           # Authentication page
-        └── index.tsx           # Protected tasks page
+New_Website/
+├── supabase_tasks_schema.sql   # Database schema for tasks
+├── src/
+│   ├── lib/
+│   │   └── supabaseClient.ts   # Supabase client
+│   ├── types/
+│   │   └── task.ts             # TypeScript types
+│   ├── utils/
+│   │   └── taskService.ts      # Task CRUD operations
+│   ├── components/
+│   │   └── tasks/
+│   │       ├── TaskList.tsx    # Task list component
+│   │       └── TaskForm.tsx    # Task form modal
+│   └── pages/
+│       └── tasks/
+│           ├── login.tsx        # Auth page
+│           └── index.tsx        # Main tasks page
+└── TASK_SETUP.md               # This file
 ```
 
 ### Security Notes
 
 - Never commit `.env` or expose your `SUPABASE_SERVICE_ROLE_KEY`
-- The `anon` key is safe to use client-side (it's rate-limited)
+- The `anon` key is safe to use client-side (rate-limited)
 - Row Level Security (RLS) ensures users only see their own data
 - All authentication is handled by Supabase (secure by default)
+- Tasks are automatically filtered by user_id via RLS policies
