@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabaseClient';
 import { taskService } from '../../utils/taskService';
 import { projectService } from '../../utils/projectService';
+import { exportService } from '../../utils/exportService';
 import TaskList from '../../components/tasks/TaskList';
 import TaskForm from '../../components/tasks/TaskForm';
 import KanbanBoard from '../../components/tasks/KanbanBoard';
@@ -24,12 +25,14 @@ export default function TasksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Task | null>(null);
   const [deleteProjectConfirm, setDeleteProjectConfirm] = useState<Project | null>(null);
   const [filter, setFilter] = useState<'all' | 'todo' | 'in_progress' | 'done'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -85,6 +88,36 @@ export default function TasksPage() {
       setProjects(data);
     } catch (error) {
       console.error('Failed to load projects:', error);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      await exportService.exportAllData();
+      setShowExportMenu(false);
+    } catch (error) {
+      alert('Failed to export data');
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportLoading(true);
+    try {
+      const result = await exportService.importData(file) as any;
+      alert(
+        `Import successful!\n\nProjects: ${result.projectsImported}\nTasks: ${result.tasksImported}\nNotes: ${result.notesImported}`
+      );
+      await loadTasks();
+      await loadProjects();
+      setShowExportMenu(false);
+    } catch (error: any) {
+      alert(`Import failed: ${error.message}`);
+    } finally {
+      setImportLoading(false);
+      e.target.value = '';
     }
   };
 
@@ -191,10 +224,46 @@ export default function TasksPage() {
         <nav className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
-              <div className="flex items-center">
+              <div className="flex items-center space-x-4">
                 <h1 className="text-xl font-bold text-gray-900">Task Management</h1>
+                <button
+                  onClick={() => router.push('/tasks/notes')}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  📝 Notes & Docs
+                </button>
               </div>
               <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowExportMenu(!showExportMenu)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    ⚙️ Backup
+                  </button>
+                  {showExportMenu && (
+                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                      <div className="py-1">
+                        <button
+                          onClick={handleExport}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Export Data
+                        </button>
+                        <label className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          Import Data
+                          <input
+                            type="file"
+                            accept=".json"
+                            className="hidden"
+                            onChange={handleImport}
+                            disabled={importLoading}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <span className="text-sm text-gray-700">{user.email}</span>
                 <button
                   onClick={handleSignOut}
