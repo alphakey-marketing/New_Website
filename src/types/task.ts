@@ -9,6 +9,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   due_date?: string;
+  project_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -19,4 +20,5 @@ export interface TaskFormData {
   status: TaskStatus;
   priority: TaskPriority;
   due_date?: string;
+  project_id?: string;
 }
