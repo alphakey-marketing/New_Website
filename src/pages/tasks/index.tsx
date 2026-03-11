@@ -7,13 +7,14 @@ import { exportService } from '../../utils/exportService';
 import TaskList from '../../components/tasks/TaskList';
 import TaskForm from '../../components/tasks/TaskForm';
 import KanbanBoard from '../../components/tasks/KanbanBoard';
+import FocusList from '../../components/tasks/FocusList';
 import Sidebar from '../../components/tasks/Sidebar';
 import ProjectForm from '../../components/tasks/ProjectForm';
 import type { User } from '@supabase/supabase-js';
 import type { Task, TaskFormData } from '../../types/task';
 import type { Project, ProjectFormData } from '../../types/project';
 
-type ViewMode = 'list' | 'kanban';
+type ViewMode = 'list' | 'kanban' | 'focus';
 
 export default function TasksPage() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('focus');
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showProjectForm, setShowProjectForm] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -46,9 +47,7 @@ export default function TasksPage() {
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
         loadTasks();
@@ -63,10 +62,8 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (!user) return;
-
     const tasksChannel = taskService.subscribeToTasks(user.id, () => loadTasks());
     const projectsChannel = projectService.subscribeToProjects(user.id, () => loadProjects());
-
     return () => {
       tasksChannel.unsubscribe();
       projectsChannel.unsubscribe();
@@ -103,13 +100,10 @@ export default function TasksPage() {
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setImportLoading(true);
     try {
       const result = await exportService.importData(file) as any;
-      alert(
-        `Import successful!\n\nProjects: ${result.projectsImported}\nTasks: ${result.tasksImported}\nNotes: ${result.notesImported}`
-      );
+      alert(`Import successful!\n\nProjects: ${result.projectsImported}\nTasks: ${result.tasksImported}\nNotes: ${result.notesImported}`);
       await loadTasks();
       await loadProjects();
       setShowExportMenu(false);
@@ -122,10 +116,7 @@ export default function TasksPage() {
   };
 
   const handleCreateTask = async (data: TaskFormData) => {
-    const taskData = {
-      ...data,
-      project_id: selectedProjectId,
-    };
+    const taskData = { ...data, project_id: selectedProjectId };
     await taskService.createTask(taskData as any);
     await loadTasks();
   };
@@ -163,9 +154,7 @@ export default function TasksPage() {
   const handleDeleteProject = async (project: Project) => {
     await projectService.deleteProject(project.id);
     await loadProjects();
-    if (selectedProjectId === project.id) {
-      setSelectedProjectId(null);
-    }
+    if (selectedProjectId === project.id) setSelectedProjectId(null);
     setDeleteProjectConfirm(null);
   };
 
@@ -174,6 +163,7 @@ export default function TasksPage() {
     router.push('/tasks/login');
   };
 
+  // For list/kanban: filter by selected project + status + search
   const filteredTasks = tasks.filter((task) => {
     const matchesProject = selectedProjectId === null || task.project_id === selectedProjectId;
     const matchesFilter = filter === 'all' || task.status === filter;
@@ -185,9 +175,7 @@ export default function TasksPage() {
   });
 
   const taskCountsByProject = tasks.reduce((acc, task) => {
-    if (task.project_id) {
-      acc[task.project_id] = (acc[task.project_id] || 0) + 1;
-    }
+    if (task.project_id) acc[task.project_id] = (acc[task.project_id] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
@@ -203,22 +191,20 @@ export default function TasksPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <Sidebar
-        projects={projects}
-        selectedProjectId={selectedProjectId}
-        onSelectProject={setSelectedProjectId}
-        onNewProject={() => setShowProjectForm(true)}
-        onEditProject={(project) => {
-          setEditingProject(project);
-          setShowProjectForm(true);
-        }}
-        onDeleteProject={setDeleteProjectConfirm}
-        taskCountsByProject={taskCountsByProject}
-        totalTasks={tasks.length}
-      />
+      {/* Sidebar — hidden in focus view for clean reading */}
+      {viewMode !== 'focus' && (
+        <Sidebar
+          projects={projects}
+          selectedProjectId={selectedProjectId}
+          onSelectProject={setSelectedProjectId}
+          onNewProject={() => setShowProjectForm(true)}
+          onEditProject={(project) => { setEditingProject(project); setShowProjectForm(true); }}
+          onDeleteProject={setDeleteProjectConfirm}
+          taskCountsByProject={taskCountsByProject}
+          totalTasks={tasks.length}
+        />
+      )}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
         <nav className="bg-white shadow">
@@ -244,21 +230,12 @@ export default function TasksPage() {
                   {showExportMenu && (
                     <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                       <div className="py-1">
-                        <button
-                          onClick={handleExport}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
+                        <button onClick={handleExport} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                           Export Data
                         </button>
                         <label className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
                           Import Data
-                          <input
-                            type="file"
-                            accept=".json"
-                            className="hidden"
-                            onChange={handleImport}
-                            disabled={importLoading}
-                          />
+                          <input type="file" accept=".json" className="hidden" onChange={handleImport} disabled={importLoading} />
                         </label>
                       </div>
                     </div>
@@ -276,54 +253,61 @@ export default function TasksPage() {
           </div>
         </nav>
 
-        {/* Content */}
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-            {/* Toolbar */}
-            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-              <div className="flex items-center space-x-4">
-                {/* View Toggle */}
-                <div className="flex items-center bg-white border border-gray-300 rounded-md">
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-4 py-2 text-sm font-medium rounded-l-md ${
-                      viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    List
-                  </button>
-                  <button
-                    onClick={() => setViewMode('kanban')}
-                    className={`px-4 py-2 text-sm font-medium rounded-r-md ${
-                      viewMode === 'kanban' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    Kanban
-                  </button>
-                </div>
 
-                {viewMode === 'list' && (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="Search tasks..."
-                      className="block w-64 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <select
-                      className="block border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value as typeof filter)}
-                    >
-                      <option value="all">All Tasks</option>
-                      <option value="todo">To Do</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="done">Done</option>
-                    </select>
-                  </>
-                )}
+            {/* View Toggle */}
+            <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+              <div className="flex items-center bg-white border border-gray-300 rounded-md">
+                <button
+                  onClick={() => setViewMode('focus')}
+                  className={`px-4 py-2 text-sm font-medium rounded-l-md ${
+                    viewMode === 'focus' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  🎯 Focus
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📋 List
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`px-4 py-2 text-sm font-medium rounded-r-md ${
+                    viewMode === 'kanban' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  🗂️ Kanban
+                </button>
               </div>
+
+              {/* List view filters — only shown in list mode */}
+              {viewMode === 'list' && (
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    placeholder="Search tasks..."
+                    className="block w-56 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <select
+                    className="block border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value as typeof filter)}
+                  >
+                    <option value="all">All Tasks</option>
+                    <option value="todo">To Do</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+              )}
+
               <button
                 onClick={() => setShowTaskForm(true)}
                 className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -335,54 +319,54 @@ export default function TasksPage() {
               </button>
             </div>
 
-            {/* Stats */}
+            {/* Stats — only in list mode */}
             {viewMode === 'list' && (
               <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
                     <dt className="text-sm font-medium text-gray-500 truncate">To Do</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                      {filteredTasks.filter((t) => t.status === 'todo').length}
-                    </dd>
+                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{filteredTasks.filter((t) => t.status === 'todo').length}</dd>
                   </div>
                 </div>
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
                     <dt className="text-sm font-medium text-gray-500 truncate">In Progress</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                      {filteredTasks.filter((t) => t.status === 'in_progress').length}
-                    </dd>
+                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{filteredTasks.filter((t) => t.status === 'in_progress').length}</dd>
                   </div>
                 </div>
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
                     <dt className="text-sm font-medium text-gray-500 truncate">Done</dt>
-                    <dd className="mt-1 text-3xl font-semibold text-gray-900">
-                      {filteredTasks.filter((t) => t.status === 'done').length}
-                    </dd>
+                    <dd className="mt-1 text-3xl font-semibold text-gray-900">{filteredTasks.filter((t) => t.status === 'done').length}</dd>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* View */}
-            {viewMode === 'list' ? (
+            {/* Views */}
+            {viewMode === 'focus' && (
+              <FocusList
+                tasks={tasks}
+                projects={projects}
+                onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }}
+                onStatusChange={handleStatusChange}
+              />
+            )}
+
+            {viewMode === 'list' && (
               <TaskList
                 tasks={filteredTasks}
-                onEdit={(task) => {
-                  setEditingTask(task);
-                  setShowTaskForm(true);
-                }}
+                projects={projects}
+                onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }}
                 onDelete={setDeleteConfirm}
                 onStatusChange={handleStatusChange}
               />
-            ) : (
+            )}
+
+            {viewMode === 'kanban' && (
               <KanbanBoard
                 tasks={filteredTasks}
-                onEdit={(task) => {
-                  setEditingTask(task);
-                  setShowTaskForm(true);
-                }}
+                onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }}
                 onDelete={setDeleteConfirm}
                 onStatusChange={handleStatusChange}
               />
@@ -396,10 +380,7 @@ export default function TasksPage() {
         <TaskForm
           task={editingTask}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-          onCancel={() => {
-            setShowTaskForm(false);
-            setEditingTask(null);
-          }}
+          onCancel={() => { setShowTaskForm(false); setEditingTask(null); }}
         />
       )}
 
@@ -407,10 +388,7 @@ export default function TasksPage() {
         <ProjectForm
           project={editingProject}
           onSubmit={editingProject ? handleUpdateProject : handleCreateProject}
-          onCancel={() => {
-            setShowProjectForm(false);
-            setEditingProject(null);
-          }}
+          onCancel={() => { setShowProjectForm(false); setEditingProject(null); }}
         />
       )}
 
@@ -422,18 +400,8 @@ export default function TasksPage() {
               Are you sure you want to delete &quot;{deleteConfirm.title}&quot;? This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteTask(deleteConfirm)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-              >
-                Delete
-              </button>
+              <button onClick={() => setDeleteConfirm(null)} className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
+              <button onClick={() => handleDeleteTask(deleteConfirm)} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">Delete</button>
             </div>
           </div>
         </div>
@@ -447,18 +415,8 @@ export default function TasksPage() {
               Are you sure you want to delete &quot;{deleteProjectConfirm.name}&quot;? Tasks in this project will not be deleted but will become unassigned.
             </p>
             <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteProjectConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteProject(deleteProjectConfirm)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-              >
-                Delete
-              </button>
+              <button onClick={() => setDeleteProjectConfirm(null)} className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Cancel</button>
+              <button onClick={() => handleDeleteProject(deleteProjectConfirm)} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">Delete</button>
             </div>
           </div>
         </div>
