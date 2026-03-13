@@ -1,8 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 export interface TaskSnapshot {
   id: string;
   title: string;
@@ -30,14 +27,12 @@ interface RequestBody {
   userPrompt: string;
 }
 
-// ---------------------------------------------------------------------------
-// Helper: call OpenRouter API (OpenAI-compatible, works in Hong Kong)
-// Free models tried in order until one succeeds (fallback chain)
-// ---------------------------------------------------------------------------
+// Non-Venice providers - tried in order until one succeeds
 const FREE_MODELS = [
-  'google/gemma-3-4b-it:free',
-  'deepseek/deepseek-r1-distill-llama-70b:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen-2.5-7b-instruct:free',
+  'microsoft/phi-3-mini-128k-instruct:free',
+  'google/gemma-2-9b-it:free',
+  'openchat/openchat-7b:free',
 ];
 
 async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
@@ -47,43 +42,47 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
   let lastError = '';
 
   for (const model of FREE_MODELS) {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://alphakey-marketing.replit.app',
-        'X-Title': 'AlphaKey Task Assistant',
-      },
-      body: JSON.stringify({
-        model,
-        temperature: 0.4,
-        max_tokens: 2048,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: userMessage },
-        ],
-      }),
-    });
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://alphakey-marketing.replit.app',
+          'X-Title': 'AlphaKey Task Assistant',
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.4,
+          max_tokens: 2048,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage },
+          ],
+        }),
+      });
 
-    if (res.ok) {
-      const data = await res.json();
-      const content = data.choices?.[0]?.message?.content ?? '';
-      if (content) return content;
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content ?? '';
+        if (content) {
+          console.log('AI responded via model:', model);
+          return content;
+        }
+      }
+
+      const errText = await res.text().catch(() => res.statusText);
+      lastError = `${model} -> ${res.status}: ${errText.slice(0, 200)}`;
+      console.warn('Model failed, trying next:', lastError);
+    } catch (fetchErr: any) {
+      lastError = `${model} -> fetch error: ${fetchErr.message}`;
+      console.warn('Model fetch error, trying next:', lastError);
     }
-
-    // 429 or other error — try next model
-    const errText = await res.text().catch(() => res.statusText);
-    lastError = `${model} → ${res.status}: ${errText}`;
-    console.warn('OpenRouter model failed, trying next:', lastError);
   }
 
   throw new Error(`All free models failed. Last error: ${lastError}`);
 }
 
-// ---------------------------------------------------------------------------
-// System prompt — strictly scoped to tasks only, notes never accessed
-// ---------------------------------------------------------------------------
 const SYSTEM_PROMPT = `You are a personal productivity assistant. You ONLY have access to the user's tasks and projects data. You have NO access to notes, documents, passwords, or any other data.
 
 Your job is to analyse the tasks provided and return a JSON array of actionable suggestions to help the user prioritise and organise their work.
@@ -97,22 +96,19 @@ Each suggestion must follow this exact JSON structure:
   "explanation": "<1-2 sentences explaining WHY you suggest this change, friendly tone>",
   "currentValue": "<what it currently is>",
   "proposedValue": "<what you recommend instead>",
-  "field": "<one of: priority | due_date | description | title — omit for sequence/general>"
+  "field": "<one of: priority | due_date | description | title - omit for sequence/general>"
 }
 
 Rules:
 - Return ONLY a valid JSON array. No markdown, no explanation outside the array.
 - Maximum 8 suggestions per response.
 - Be specific and actionable. Explain your reasoning briefly.
-- For sequence suggestions, list the proposed order in proposedValue as "1. Task A → 2. Task B → 3. Task C".
+- For sequence suggestions, list the proposed order in proposedValue as "1. Task A -> 2. Task B -> 3. Task C".
 - For reprioritize, use values: high | medium | low.
 - For reschedule, use ISO date format YYYY-MM-DD in proposedValue.
-- Be encouraging and gentle in tone — the user appreciates kind guidance.
+- Be encouraging and gentle in tone - the user appreciates kind guidance.
 - Never mention or ask about notes or documents.`;
 
-// ---------------------------------------------------------------------------
-// API Route
-// ---------------------------------------------------------------------------
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -124,17 +120,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'tasks array is required' });
   }
 
-  // Build readable task list for AI — NO notes data ever passed here
   const taskSummary = tasks
-    .map((t) => [
-      `ID: ${t.id}`,
-      `Title: ${t.title}`,
-      `Status: ${t.status}`,
-      `Priority: ${t.priority}`,
-      t.due_date     ? `Due: ${t.due_date}`             : 'Due: not set',
-      t.description  ? `Description: ${t.description}`  : '',
-      t.project_name ? `Project: ${t.project_name}`     : 'Project: none',
-    ].filter(Boolean).join(' | '))
+    .map((t) =>
+      [
+        `ID: ${t.id}`,
+        `Title: ${t.title}`,
+        `Status: ${t.status}`,
+        `Priority: ${t.priority}`,
+        t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
+        t.description ? `Description: ${t.description}` : '',
+        t.project_name ? `Project: ${t.project_name}` : 'Project: none',
+      ]
+        .filter(Boolean)
+        .join(' | ')
+    )
     .join('\n');
 
   const today = new Date().toISOString().split('T')[0];
@@ -144,23 +143,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
-
-    // Strip any accidental markdown code fences
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     let suggestions: AISuggestion[];
     try {
       suggestions = JSON.parse(cleaned);
     } catch {
-      suggestions = [{
-        id: 's_error',
-        taskId: '',
-        taskTitle: '',
-        type: 'general',
-        explanation: 'I had trouble formatting my response. Please try again or rephrase your request.',
-        currentValue: '',
-        proposedValue: raw.slice(0, 300),
-      }];
+      suggestions = [
+        {
+          id: 's_error',
+          taskId: '',
+          taskTitle: '',
+          type: 'general',
+          explanation: 'I had trouble formatting my response. Please try again or rephrase your request.',
+          currentValue: '',
+          proposedValue: raw.slice(0, 300),
+        },
+      ];
     }
 
     return res.status(200).json({ suggestions });
