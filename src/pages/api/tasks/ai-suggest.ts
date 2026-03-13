@@ -32,37 +32,53 @@ interface RequestBody {
 
 // ---------------------------------------------------------------------------
 // Helper: call OpenRouter API (OpenAI-compatible, works in Hong Kong)
+// Free models tried in order until one succeeds (fallback chain)
 // ---------------------------------------------------------------------------
+const FREE_MODELS = [
+  'google/gemma-3-4b-it:free',
+  'deepseek/deepseek-r1-distill-llama-70b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+];
+
 async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set in environment variables.');
 
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://alphakey-marketing.replit.app',
-      'X-Title': 'AlphaKey Task Assistant',
-    },
-    body: JSON.stringify({
-      model: 'meta-llama/llama-3.2-3b-instruct:free',
-      temperature: 0.4,
-      max_tokens: 2048,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user',   content: userMessage },
-      ],
-    }),
-  });
+  let lastError = '';
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenRouter API error ${res.status}: ${err}`);
+  for (const model of FREE_MODELS) {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://alphakey-marketing.replit.app',
+        'X-Title': 'AlphaKey Task Assistant',
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        max_tokens: 2048,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user',   content: userMessage },
+        ],
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content ?? '';
+      if (content) return content;
+    }
+
+    // 429 or other error — try next model
+    const errText = await res.text().catch(() => res.statusText);
+    lastError = `${model} → ${res.status}: ${errText}`;
+    console.warn('OpenRouter model failed, trying next:', lastError);
   }
 
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '';
+  throw new Error(`All free models failed. Last error: ${lastError}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -115,9 +131,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `Title: ${t.title}`,
       `Status: ${t.status}`,
       `Priority: ${t.priority}`,
-      t.due_date     ? `Due: ${t.due_date}`            : 'Due: not set',
-      t.description  ? `Description: ${t.description}` : '',
-      t.project_name ? `Project: ${t.project_name}`    : 'Project: none',
+      t.due_date     ? `Due: ${t.due_date}`             : 'Due: not set',
+      t.description  ? `Description: ${t.description}`  : '',
+      t.project_name ? `Project: ${t.project_name}`     : 'Project: none',
     ].filter(Boolean).join(' | '))
     .join('\n');
 
