@@ -19,6 +19,7 @@ export interface AISuggestion {
   currentValue: string;
   proposedValue: string;
   field?: 'priority' | 'due_date' | 'description' | 'title';
+  subTasks?: { title: string; description?: string }[];
 }
 
 interface RequestBody {
@@ -80,12 +81,33 @@ Analyse the user's tasks and return actionable suggestions in this exact format:
 
 Field rules:
 - type: one of reprioritize | reschedule | rewrite | sequence | split | general
-- field: one of priority | due_date | description | title (omit for sequence or general types)
+- field: one of priority | due_date | description | title (omit for sequence, split, or general types)
 - priority values: high | medium | low
 - due_date values: ISO format YYYY-MM-DD
 - Maximum 8 suggestions total
 - Be specific, actionable, and encouraging
-- You only have access to task data. Never mention notes or documents.`;
+- You only have access to task data. Never mention notes or documents.
+
+For type "split" specifically:
+- Set proposedValue to a short human-readable summary e.g. "3 sub-tasks"
+- Set currentValue to the original task title
+- Include a "subTasks" array with each sub-task as { "title": "...", "description": "..." }
+- Do NOT put sub-task titles inside proposedValue as a plain string
+- Example for split:
+  {
+    "id": "s2",
+    "taskId": "<task id>",
+    "taskTitle": "<original task title>",
+    "type": "split",
+    "explanation": "This task is large. Here are 3 logical steps to complete it.",
+    "currentValue": "<original task title>",
+    "proposedValue": "3 sub-tasks",
+    "subTasks": [
+      { "title": "Step 1: Analyse data", "description": "Gather and review all relevant data" },
+      { "title": "Step 2: Do Excel", "description": "Build the spreadsheet and calculations" },
+      { "title": "Step 3: Send to Vincent", "description": "Email the completed report" }
+    ]
+  }`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {

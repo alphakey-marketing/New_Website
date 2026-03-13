@@ -153,7 +153,28 @@ export default function TasksPage() {
   // AI: apply a suggestion to a real task
   // -------------------------------------------------------------------------
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
-    if (!suggestion.taskId || !suggestion.field) return; // sequence/general suggestions are read-only
+    // --- SPLIT: create sub-tasks from the AI's subTasks array ---
+    if (suggestion.type === 'split') {
+      const originalTask = tasks.find((t) => t.id === suggestion.taskId);
+      if (!suggestion.subTasks?.length) {
+        throw new Error('No sub-tasks were provided by the AI. Please try again.');
+      }
+      for (const sub of suggestion.subTasks) {
+        await taskService.createTask({
+          title: sub.title,
+          description: sub.description ?? '',
+          project_id: originalTask?.project_id ?? null,
+          priority: originalTask?.priority ?? 'medium',
+          status: 'todo',
+          due_date: originalTask?.due_date ?? null,
+        } as any);
+      }
+      await loadTasks();
+      return;
+    }
+
+    // --- All other types: update a field on the existing task ---
+    if (!suggestion.taskId || !suggestion.field) return; // sequence/general are read-only
     const task = tasks.find((t) => t.id === suggestion.taskId);
     if (!task) return;
 

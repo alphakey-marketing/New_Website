@@ -13,8 +13,8 @@ const QUICK_PROMPTS = [
   { label: '🔄 Sequence my tasks', prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
   { label: '🔴 Reprioritize', prompt: 'Review my task priorities. Are any tasks set to the wrong priority level?' },
   { label: '📅 Fix deadlines', prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
+  { label: '✂️ Break down a task', prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
   { label: '✏️ Improve descriptions', prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
-  { label: '🏠 Home tasks first', prompt: 'I want to focus on personal and home tasks today. What should I do first?' },
   { label: '💼 Work tasks first', prompt: 'I want to focus on work tasks only. What is the best sequence for today?' },
 ];
 
@@ -126,7 +126,8 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
             <p className="mb-1">• The AI reads your <strong>tasks and projects only</strong>. Your Notes & Docs are <strong>never shared</strong>.</p>
             <p className="mb-1">• Pick a quick prompt below or type your own request.</p>
             <p className="mb-1">• The AI returns suggestions. You <strong>review each one</strong> and choose Accept or Reject.</p>
-            <p>• <strong>Nothing changes</strong> until you click Accept.</p>
+            <p className="mb-1">• <strong>Nothing changes</strong> until you click Accept.</p>
+            <p>• ✂️ <strong>Split task</strong> — creates all sub-tasks at once when you Accept.</p>
           </div>
         )}
 
@@ -154,7 +155,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
             rows={3}
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
-            placeholder="e.g. I have a big client meeting tomorrow, help me reprioritize..."
+            placeholder="e.g. Break down 'Complete pending report' into 3 steps: analyze data, do Excel, send to Vincent"
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
           />
           <button
@@ -200,20 +201,38 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                       </div>
                     </div>
                     <p className="text-sm text-gray-700 mb-3">{s.explanation}</p>
-                    {s.currentValue && (
+
+                    {/* Sub-tasks preview for split type */}
+                    {s.type === 'split' && s.subTasks && s.subTasks.length > 0 && (
+                      <div className="mb-3 space-y-1">
+                        {s.subTasks.map((sub, i) => (
+                          <div key={i} className="flex items-start space-x-2 text-xs bg-white border border-orange-200 rounded-lg px-3 py-2">
+                            <span className="font-bold text-orange-500 mt-0.5">{i + 1}.</span>
+                            <div>
+                              <p className="font-medium text-gray-800">{sub.title}</p>
+                              {sub.description && <p className="text-gray-500 mt-0.5">{sub.description}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Before/after value for non-split types */}
+                    {s.type !== 'split' && s.currentValue && (
                       <div className="flex items-center space-x-2 text-xs mb-3">
                         <span className="px-2 py-1 bg-white border border-gray-300 rounded text-gray-500 line-through">{s.currentValue}</span>
                         <span className="text-gray-400">→</span>
                         <span className="px-2 py-1 bg-white border border-indigo-300 rounded text-indigo-700 font-medium">{s.proposedValue}</span>
                       </div>
                     )}
+
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleAccept(s)}
                         disabled={applying === s.id}
                         className="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50"
                       >
-                        {applying === s.id ? 'Applying...' : '✅ Accept'}
+                        {applying === s.id ? 'Applying...' : s.type === 'split' ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks` : '✅ Accept'}
                       </button>
                       <button
                         onClick={() => handleReject(s.id)}
@@ -235,7 +254,12 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
             <p className="text-sm font-semibold text-green-800 mb-2">✅ Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}</p>
             <ul className="space-y-1">
               {acceptedList.map((s) => (
-                <li key={s.id} className="text-xs text-green-700">• {s.taskTitle}: {s.proposedValue}</li>
+                <li key={s.id} className="text-xs text-green-700">
+                  {s.type === 'split'
+                    ? `• ${s.taskTitle}: created ${s.subTasks?.length ?? 0} sub-tasks`
+                    : `• ${s.taskTitle}: ${s.proposedValue}`
+                  }
+                </li>
               ))}
             </ul>
           </div>
