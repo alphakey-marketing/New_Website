@@ -40,7 +40,7 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
       'X-Title': 'AlphaKey Task Assistant',
     },
     body: JSON.stringify({
-      model: 'mistralai/mistral-7b-instruct',
+      model: 'mistralai/mistral-small-3.1-24b-instruct',
       temperature: 0.4,
       max_tokens: 2048,
       messages: [
