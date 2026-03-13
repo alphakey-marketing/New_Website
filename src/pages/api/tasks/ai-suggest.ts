@@ -46,7 +46,7 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
       'X-Title': 'AlphaKey Task Assistant',
     },
     body: JSON.stringify({
-      model: 'mistralai/mistral-7b-instruct:free',
+      model: 'meta-llama/llama-3.2-3b-instruct:free',
       temperature: 0.4,
       max_tokens: 2048,
       messages: [
@@ -115,9 +115,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `Title: ${t.title}`,
       `Status: ${t.status}`,
       `Priority: ${t.priority}`,
-      t.due_date    ? `Due: ${t.due_date}`             : 'Due: not set',
-      t.description ? `Description: ${t.description}` : '',
-      t.project_name ? `Project: ${t.project_name}`   : 'Project: none',
+      t.due_date     ? `Due: ${t.due_date}`            : 'Due: not set',
+      t.description  ? `Description: ${t.description}` : '',
+      t.project_name ? `Project: ${t.project_name}`    : 'Project: none',
     ].filter(Boolean).join(' | '))
     .join('\n');
 
