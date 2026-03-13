@@ -31,20 +31,22 @@ interface RequestBody {
 }
 
 // ---------------------------------------------------------------------------
-// Helper: call Groq API
+// Helper: call OpenRouter API (OpenAI-compatible, works in Hong Kong)
 // ---------------------------------------------------------------------------
-async function callGroq(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('GROQ_API_KEY is not set in environment variables.');
+async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set in environment variables.');
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://alphakey-marketing.replit.app',
+      'X-Title': 'AlphaKey Task Assistant',
     },
     body: JSON.stringify({
-      model: 'llama3-8b-8192',
+      model: 'mistralai/mistral-7b-instruct:free',
       temperature: 0.4,
       max_tokens: 2048,
       messages: [
@@ -56,7 +58,7 @@ async function callGroq(systemPrompt: string, userMessage: string): Promise<stri
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Groq API error ${res.status}: ${err}`);
+    throw new Error(`OpenRouter API error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
@@ -64,7 +66,7 @@ async function callGroq(systemPrompt: string, userMessage: string): Promise<stri
 }
 
 // ---------------------------------------------------------------------------
-// System prompt — strictly scoped to tasks only
+// System prompt — strictly scoped to tasks only, notes never accessed
 // ---------------------------------------------------------------------------
 const SYSTEM_PROMPT = `You are a personal productivity assistant. You ONLY have access to the user's tasks and projects data. You have NO access to notes, documents, passwords, or any other data.
 
@@ -106,27 +108,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'tasks array is required' });
   }
 
-  // Build a readable task list for the AI — NO notes data ever passed here
+  // Build readable task list for AI — NO notes data ever passed here
   const taskSummary = tasks
-    .map((t) => {
-      const proj = projects?.find((p) => p.id === t.project_name) ?? null;
-      return [
-        `ID: ${t.id}`,
-        `Title: ${t.title}`,
-        `Status: ${t.status}`,
-        `Priority: ${t.priority}`,
-        t.due_date   ? `Due: ${t.due_date}` : 'Due: not set',
-        t.description ? `Description: ${t.description}` : '',
-        t.project_name ? `Project: ${t.project_name}` : 'Project: none',
-      ].filter(Boolean).join(' | ');
-    })
+    .map((t) => [
+      `ID: ${t.id}`,
+      `Title: ${t.title}`,
+      `Status: ${t.status}`,
+      `Priority: ${t.priority}`,
+      t.due_date    ? `Due: ${t.due_date}`             : 'Due: not set',
+      t.description ? `Description: ${t.description}` : '',
+      t.project_name ? `Project: ${t.project_name}`   : 'Project: none',
+    ].filter(Boolean).join(' | '))
     .join('\n');
 
   const today = new Date().toISOString().split('T')[0];
-  const userMessage = `Today is ${today}.\n\nHere are my tasks:\n${taskSummary}\n\nUser request: ${userPrompt || 'Please analyse my tasks and suggest how to best prioritise and sequence them.'}`;
+  const userMessage = `Today is ${today}.\n\nHere are my tasks:\n${taskSummary}\n\nUser request: ${
+    userPrompt || 'Please analyse my tasks and suggest how to best prioritise and sequence them.'
+  }`;
 
   try {
-    const raw = await callGroq(SYSTEM_PROMPT, userMessage);
+    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
 
     // Strip any accidental markdown code fences
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -135,7 +136,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       suggestions = JSON.parse(cleaned);
     } catch {
-      // If JSON parse fails, return a friendly error suggestion
       suggestions = [{
         id: 's_error',
         taskId: '',
