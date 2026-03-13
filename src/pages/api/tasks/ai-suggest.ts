@@ -27,60 +27,36 @@ interface RequestBody {
   userPrompt: string;
 }
 
-// Non-Venice providers - tried in order until one succeeds
-const FREE_MODELS = [
-  'qwen/qwen-2.5-7b-instruct:free',
-  'microsoft/phi-3-mini-128k-instruct:free',
-  'google/gemma-2-9b-it:free',
-  'openchat/openchat-7b:free',
-];
-
 async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set in environment variables.');
 
-  let lastError = '';
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://alphakey-marketing.replit.app',
+      'X-Title': 'AlphaKey Task Assistant',
+    },
+    body: JSON.stringify({
+      model: 'mistralai/mistral-7b-instruct',
+      temperature: 0.4,
+      max_tokens: 2048,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+    }),
+  });
 
-  for (const model of FREE_MODELS) {
-    try {
-      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://alphakey-marketing.replit.app',
-          'X-Title': 'AlphaKey Task Assistant',
-        },
-        body: JSON.stringify({
-          model,
-          temperature: 0.4,
-          max_tokens: 2048,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userMessage },
-          ],
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const content = data.choices?.[0]?.message?.content ?? '';
-        if (content) {
-          console.log('AI responded via model:', model);
-          return content;
-        }
-      }
-
-      const errText = await res.text().catch(() => res.statusText);
-      lastError = `${model} -> ${res.status}: ${errText.slice(0, 200)}`;
-      console.warn('Model failed, trying next:', lastError);
-    } catch (fetchErr: any) {
-      lastError = `${model} -> fetch error: ${fetchErr.message}`;
-      console.warn('Model fetch error, trying next:', lastError);
-    }
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenRouter error ${res.status}: ${err.slice(0, 300)}`);
   }
 
-  throw new Error(`All free models failed. Last error: ${lastError}`);
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content ?? '';
 }
 
 const SYSTEM_PROMPT = `You are a personal productivity assistant. You ONLY have access to the user's tasks and projects data. You have NO access to notes, documents, passwords, or any other data.
