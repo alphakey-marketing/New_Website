@@ -9,6 +9,8 @@ import TaskForm from '../../components/tasks/TaskForm';
 import KanbanBoard from '../../components/tasks/KanbanBoard';
 import FocusList from '../../components/tasks/FocusList';
 import AISuggestionPanel from '../../components/tasks/AISuggestionPanel';
+import AIDailyBriefing from '../../components/tasks/AIDailyBriefing';
+import AIQuickAdd from '../../components/tasks/AIQuickAdd';
 import Sidebar from '../../components/tasks/Sidebar';
 import ProjectForm from '../../components/tasks/ProjectForm';
 import type { User } from '@supabase/supabase-js';
@@ -105,7 +107,7 @@ export default function TasksPage() {
   };
 
   const handleCreateTask = async (data: TaskFormData) => {
-    await taskService.createTask({ ...data, project_id: selectedProjectId } as any);
+    await taskService.createTask({ ...data, project_id: data.project_id ?? selectedProjectId } as any);
     await loadTasks();
   };
 
@@ -122,8 +124,18 @@ export default function TasksPage() {
     setDeleteConfirm(null);
   };
 
+  const handleDeleteTaskById = async (taskId: string) => {
+    await taskService.deleteTask(taskId);
+    await loadTasks();
+  };
+
   const handleStatusChange = async (task: Task, newStatus: Task['status']) => {
     await taskService.updateTask(task.id, { status: newStatus });
+    await loadTasks();
+  };
+
+  const handleUpdateTaskById = async (taskId: string, update: { priority?: string; due_date?: string; status?: string }) => {
+    await taskService.updateTask(taskId, update as any);
     await loadTasks();
   };
 
@@ -174,7 +186,7 @@ export default function TasksPage() {
     }
 
     // --- All other types: update a field on the existing task ---
-    if (!suggestion.taskId || !suggestion.field) return; // sequence/general are read-only
+    if (!suggestion.taskId || !suggestion.field) return;
     const task = tasks.find((t) => t.id === suggestion.taskId);
     if (!task) return;
 
@@ -245,7 +257,6 @@ export default function TasksPage() {
                 </button>
               </div>
               <div className="flex items-center space-x-3">
-                {/* AI Assistant button */}
                 <button
                   onClick={() => setShowAIPanel(!showAIPanel)}
                   className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
@@ -286,6 +297,7 @@ export default function TasksPage() {
 
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+
             {/* View Toggle */}
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
               <div className="flex items-center bg-white border border-gray-300 rounded-md">
@@ -332,6 +344,22 @@ export default function TasksPage() {
                 New Task
               </button>
             </div>
+
+            {/* AI Daily Briefing — shown in all views */}
+            <AIDailyBriefing
+              tasks={tasks}
+              projects={projects}
+              onUpdateTask={handleUpdateTaskById}
+              onDeleteTask={handleDeleteTaskById}
+            />
+
+            {/* AI Quick Add — shown in list and focus views */}
+            {viewMode !== 'kanban' && (
+              <AIQuickAdd
+                projects={projects}
+                onCreateTask={handleCreateTask as any}
+              />
+            )}
 
             {viewMode === 'list' && (
               <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-3">
