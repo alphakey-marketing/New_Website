@@ -41,8 +41,9 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
     },
     body: JSON.stringify({
       model: 'mistralai/mistral-small-3.1-24b-instruct',
-      temperature: 0.4,
+      temperature: 0.2,
       max_tokens: 2048,
+      response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
@@ -59,31 +60,32 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
   return data.choices?.[0]?.message?.content ?? '';
 }
 
-const SYSTEM_PROMPT = `You are a personal productivity assistant. You ONLY have access to the user's tasks and projects data. You have NO access to notes, documents, passwords, or any other data.
+const SYSTEM_PROMPT = `You are a productivity assistant. You must respond with a JSON object containing a "suggestions" array.
 
-Your job is to analyse the tasks provided and return a JSON array of actionable suggestions to help the user prioritise and organise their work.
-
-Each suggestion must follow this exact JSON structure:
+Analyse the user's tasks and return actionable suggestions in this exact format:
 {
-  "id": "<unique string like s1, s2, s3>",
-  "taskId": "<the task id>",
-  "taskTitle": "<the task title>",
-  "type": "<one of: reprioritize | reschedule | rewrite | sequence | split | general>",
-  "explanation": "<1-2 sentences explaining WHY you suggest this change, friendly tone>",
-  "currentValue": "<what it currently is>",
-  "proposedValue": "<what you recommend instead>",
-  "field": "<one of: priority | due_date | description | title - omit for sequence/general>"
+  "suggestions": [
+    {
+      "id": "s1",
+      "taskId": "<task id>",
+      "taskTitle": "<task title>",
+      "type": "reprioritize",
+      "explanation": "<1-2 sentences why, friendly tone>",
+      "currentValue": "<current value>",
+      "proposedValue": "<proposed value>",
+      "field": "priority"
+    }
+  ]
 }
 
-Rules:
-- Return ONLY a valid JSON array. No markdown, no explanation outside the array.
-- Maximum 8 suggestions per response.
-- Be specific and actionable. Explain your reasoning briefly.
-- For sequence suggestions, list the proposed order in proposedValue as "1. Task A -> 2. Task B -> 3. Task C".
-- For reprioritize, use values: high | medium | low.
-- For reschedule, use ISO date format YYYY-MM-DD in proposedValue.
-- Be encouraging and gentle in tone - the user appreciates kind guidance.
-- Never mention or ask about notes or documents.`;
+Field rules:
+- type: one of reprioritize | reschedule | rewrite | sequence | split | general
+- field: one of priority | due_date | description | title (omit for sequence or general types)
+- priority values: high | medium | low
+- due_date values: ISO format YYYY-MM-DD
+- Maximum 8 suggestions total
+- Be specific, actionable, and encouraging
+- You only have access to task data. Never mention notes or documents.`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -113,29 +115,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     .join('\n');
 
   const today = new Date().toISOString().split('T')[0];
-  const userMessage = `Today is ${today}.\n\nHere are my tasks:\n${taskSummary}\n\nUser request: ${
-    userPrompt || 'Please analyse my tasks and suggest how to best prioritise and sequence them.'
-  }`;
+  const userMessage = `Today is ${today}.\n\nHere are my tasks:\n${taskSummary}\n\nRequest: ${
+    userPrompt || 'Analyse my tasks and suggest how to best prioritise and sequence them.'
+  }\n\nRespond with a JSON object containing a "suggestions" array.`;
 
   try {
     const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
+
+    // Strip markdown fences if present
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     let suggestions: AISuggestion[];
     try {
-      suggestions = JSON.parse(cleaned);
+      const parsed = JSON.parse(cleaned);
+      // Handle both { suggestions: [...] } and bare [...] responses
+      suggestions = Array.isArray(parsed) ? parsed : (parsed.suggestions ?? []);
     } catch {
-      suggestions = [
-        {
+      // Last resort: try to extract a JSON array with regex
+      const match = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/);
+      if (match) {
+        try {
+          suggestions = JSON.parse(match[0]);
+        } catch {
+          suggestions = [{
+            id: 's_error',
+            taskId: '',
+            taskTitle: '',
+            type: 'general',
+            explanation: 'I had trouble formatting my response. Please try again.',
+            currentValue: '',
+            proposedValue: raw.slice(0, 300),
+          }];
+        }
+      } else {
+        suggestions = [{
           id: 's_error',
           taskId: '',
           taskTitle: '',
           type: 'general',
-          explanation: 'I had trouble formatting my response. Please try again or rephrase your request.',
+          explanation: 'I had trouble formatting my response. Please try again.',
           currentValue: '',
           proposedValue: raw.slice(0, 300),
-        },
-      ];
+        }];
+      }
     }
 
     return res.status(200).json({ suggestions });
