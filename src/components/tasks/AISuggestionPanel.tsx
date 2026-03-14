@@ -10,37 +10,41 @@ interface Props {
 }
 
 const QUICK_PROMPTS = [
-  { label: '🔄 Sequence my tasks', prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
-  { label: '🔴 Reprioritize', prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
-  { label: '📅 Fix deadlines', prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
-  { label: '✂️ Break down a task', prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
-  { label: '✏️ Improve descriptions', prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
-  { label: '💼 Work tasks first', prompt: 'I want to focus on work tasks only. What is the best sequence for today?' },
+  { label: '🔄 Sequence my tasks',    prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
+  { label: '🔴 Fix priorities',        prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
+  { label: '📅 Fix deadlines',         prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
+  { label: '✂️ Break down a task',     prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
+  { label: '✏️ Improve descriptions',  prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
+  { label: '📁 New project + tasks',   prompt: 'Create a new project for me with tasks inside it.' },
 ];
 
-const typeConfig = {
-  reprioritize: { icon: '🔴', label: 'Reprioritize',   color: 'bg-red-50 border-red-200' },
-  reschedule:   { icon: '📅', label: 'Reschedule',     color: 'bg-yellow-50 border-yellow-200' },
-  rewrite:      { icon: '✏️',  label: 'Rewrite',        color: 'bg-blue-50 border-blue-200' },
-  sequence:     { icon: '🔢', label: 'Recommended Order', color: 'bg-purple-50 border-purple-200' },
-  split:        { icon: '✂️',  label: 'Split task',     color: 'bg-orange-50 border-orange-200' },
-  general:      { icon: '💡', label: 'Suggestion',     color: 'bg-gray-50 border-gray-200' },
+const typeConfig: Record<string, { icon: string; label: string; color: string }> = {
+  reprioritize: { icon: '🔴', label: 'Reprioritize',        color: 'bg-red-50 border-red-200' },
+  reschedule:   { icon: '📅', label: 'Reschedule',          color: 'bg-yellow-50 border-yellow-200' },
+  rewrite:      { icon: '✏️', label: 'Rewrite',             color: 'bg-blue-50 border-blue-200' },
+  sequence:     { icon: '🔢', label: 'Recommended Order',   color: 'bg-purple-50 border-purple-200' },
+  split:        { icon: '✂️', label: 'Split task',          color: 'bg-orange-50 border-orange-200' },
+  scaffold:     { icon: '📁', label: 'New Project + Tasks', color: 'bg-green-50 border-green-200' },
+  general:      { icon: '💡', label: 'Suggestion',          color: 'bg-gray-50 border-gray-200' },
 };
 
-// These types are read-only — no Accept button, no DB write
+// These types are purely informational — no Accept button, no DB write
 const READ_ONLY_TYPES = new Set(['sequence', 'general']);
 
 export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, onClose }: Props) {
   const [userPrompt, setUserPrompt] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]       = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [applied, setApplied]   = useState<Set<string>>(new Set());
   const [rejected, setRejected] = useState<Set<string>>(new Set());
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError]       = useState<string | null>(null);
   const [applying, setApplying] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(true);
 
-  const projectMap = projects.reduce((acc, p) => { acc[p.id] = p; return acc; }, {} as Record<string, typeof projects[0]>);
+  const projectMap = projects.reduce(
+    (acc, p) => { acc[p.id] = p; return acc; },
+    {} as Record<string, typeof projects[0]>
+  );
 
   const buildSnapshots = (): TaskSnapshot[] =>
     tasks
@@ -74,12 +78,10 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           userPrompt: finalPrompt,
         }),
       });
-
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error ?? 'Unknown error');
       }
-
       const data = await res.json();
       setSuggestions(data.suggestions ?? []);
       setShowGuide(false);
@@ -102,15 +104,23 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     }
   };
 
-  const handleDismiss = (id: string) => {
-    setRejected((prev) => new Set(prev).add(id));
+  const handleDismiss = (id: string) => setRejected((prev) => new Set(prev).add(id));
+
+  const pending      = suggestions.filter((s) => !applied.has(s.id) && !rejected.has(s.id));
+  // Only show actionable (non-read-only) accepted items in the summary
+  const acceptedList = suggestions.filter((s) => applied.has(s.id) && !READ_ONLY_TYPES.has(s.type));
+
+  const taskTitleMap = tasks.reduce(
+    (acc, t) => { acc[t.id] = t.title; return acc; },
+    {} as Record<string, string>
+  );
+
+  const acceptedSummaryLabel = (s: AISuggestion): string => {
+    if (s.type === 'scaffold') return `Created project "${s.scaffoldProjectName}" with ${s.subTasks?.length ?? 0} tasks`;
+    if (s.type === 'split')    return `${s.taskTitle}: split into ${s.subTasks?.length ?? 0} sub-tasks`;
+    if (s.taskTitle && s.proposedValue) return `${s.taskTitle}: ${s.proposedValue}`;
+    return s.proposedValue || s.explanation;
   };
-
-  const pending    = suggestions.filter((s) => !applied.has(s.id) && !rejected.has(s.id));
-  const acceptedList = suggestions.filter((s) => applied.has(s.id));
-
-  // Build a task-title lookup for sequence rendering
-  const taskTitleMap = tasks.reduce((acc, t) => { acc[t.id] = t.title; return acc; }, {} as Record<string, string>);
 
   return (
     <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-white shadow-2xl border-l border-gray-200 flex flex-col z-40">
@@ -130,10 +140,10 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-900">
             <p className="font-semibold mb-2">👋 How this works</p>
             <p className="mb-1">• AI reads your <strong>tasks and projects only</strong>. Notes are <strong>never shared</strong>.</p>
-            <p className="mb-1">• Pick a quick prompt or type your own.</p>
+            <p className="mb-1">• Pick a quick prompt or describe exactly what you want.</p>
+            <p className="mb-1">• AI responds <strong>only to what you ask</strong> — no unsolicited suggestions.</p>
             <p className="mb-1">• Review each suggestion — <strong>nothing changes</strong> until you click Accept.</p>
-            <p className="mb-1">• 🔢 <strong>Sequence</strong> suggestions are read-only ordered plans — no Accept needed.</p>
-            <p>• ✂️ <strong>Split task</strong> creates all sub-tasks at once when you Accept.</p>
+            <p>• 📁 <strong>New project + tasks</strong> — creates the project and all tasks in one click.</p>
           </div>
         )}
 
@@ -161,7 +171,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
             rows={3}
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
-            placeholder="e.g. What order should I do my tasks today?"
+            placeholder='e.g. Create a new project named "invesbot" and add 3 tasks: get the API, put to code, UAT'
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
           />
           <button
@@ -185,7 +195,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           </div>
         )}
 
-        {/* Suggestions */}
+        {/* Pending suggestions */}
         {pending.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
@@ -198,19 +208,43 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
                 return (
                   <div key={s.id} className={`rounded-xl border p-4 ${cfg.color}`}>
+                    {/* Card header */}
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <span className="text-xs font-semibold text-gray-500 uppercase">{cfg.icon} {cfg.label}</span>
                         {s.taskTitle && <p className="text-sm font-medium text-gray-900 mt-0.5">{s.taskTitle}</p>}
                       </div>
                       {isReadOnly && (
-                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">Read-only</span>
+                        <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium whitespace-nowrap">Read-only</span>
                       )}
                     </div>
 
                     <p className="text-sm text-gray-700 mb-3">{s.explanation}</p>
 
-                    {/* Sequence: render numbered task list from orderedTaskIds */}
+                    {/* SCAFFOLD: show project name + task list */}
+                    {s.type === 'scaffold' && s.subTasks && s.subTasks.length > 0 && (
+                      <div className="mb-3 space-y-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-xs font-semibold text-green-700">📁 Project: {s.scaffoldProjectName}</span>
+                        </div>
+                        {s.subTasks.map((sub, i) => (
+                          <div key={i} className="flex items-start space-x-2 text-xs bg-white border border-green-200 rounded-lg px-3 py-2">
+                            <span className="font-bold text-green-600 mt-0.5 w-4">{i + 1}.</span>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-800">{sub.title}</p>
+                              {sub.description && <p className="text-gray-500 mt-0.5">{sub.description}</p>}
+                            </div>
+                            <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                              sub.priority === 'high' ? 'bg-red-100 text-red-700' :
+                              sub.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-600'
+                            }`}>{sub.priority ?? 'medium'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* SEQUENCE: numbered task list */}
                     {s.type === 'sequence' && s.orderedTaskIds && s.orderedTaskIds.length > 0 && (
                       <div className="mb-3 space-y-1">
                         {s.orderedTaskIds.map((id, i) => (
@@ -221,15 +255,13 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                         ))}
                       </div>
                     )}
-
-                    {/* Sequence: fallback to proposedValue if no orderedTaskIds */}
                     {s.type === 'sequence' && (!s.orderedTaskIds || s.orderedTaskIds.length === 0) && s.proposedValue && (
                       <div className="mb-3 text-xs bg-white border border-purple-200 rounded-lg px-3 py-2 whitespace-pre-line text-gray-700">
                         {s.proposedValue}
                       </div>
                     )}
 
-                    {/* Sub-tasks preview for split type */}
+                    {/* SPLIT: sub-task list */}
                     {s.type === 'split' && s.subTasks && s.subTasks.length > 0 && (
                       <div className="mb-3 space-y-1">
                         {s.subTasks.map((sub, i) => (
@@ -244,8 +276,8 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                       </div>
                     )}
 
-                    {/* Before → after for actionable types */}
-                    {!isReadOnly && s.type !== 'split' && s.currentValue && (
+                    {/* Before → after for simple field-change types */}
+                    {!isReadOnly && s.type !== 'split' && s.type !== 'scaffold' && s.currentValue && (
                       <div className="flex items-center space-x-2 text-xs mb-3">
                         <span className="px-2 py-1 bg-white border border-gray-300 rounded text-gray-500 line-through">{s.currentValue}</span>
                         <span className="text-gray-400">→</span>
@@ -255,7 +287,6 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
                     {/* Action buttons */}
                     {isReadOnly ? (
-                      // Read-only: just a dismiss button
                       <button
                         onClick={() => handleDismiss(s.id)}
                         className="w-full py-1.5 rounded-lg border border-gray-300 text-gray-500 text-xs font-medium hover:bg-gray-50"
@@ -269,11 +300,10 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                           disabled={applying === s.id}
                           className="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50"
                         >
-                          {applying === s.id
-                            ? 'Applying...'
-                            : s.type === 'split'
-                            ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks`
-                            : '✅ Accept'}
+                          {applying === s.id ? 'Creating...' :
+                            s.type === 'scaffold' ? `✅ Create project + ${s.subTasks?.length ?? 0} tasks` :
+                            s.type === 'split'    ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks` :
+                            '✅ Accept'}
                         </button>
                         <button
                           onClick={() => handleDismiss(s.id)}
@@ -290,18 +320,13 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           </div>
         )}
 
-        {/* Accepted summary */}
+        {/* Accepted summary — only actionable changes */}
         {acceptedList.length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4">
             <p className="text-sm font-semibold text-green-800 mb-2">✅ Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}</p>
             <ul className="space-y-1">
               {acceptedList.map((s) => (
-                <li key={s.id} className="text-xs text-green-700">
-                  {s.type === 'split'
-                    ? `• ${s.taskTitle}: created ${s.subTasks?.length ?? 0} sub-tasks`
-                    : `• ${s.taskTitle}: ${s.proposedValue}`
-                  }
-                </li>
+                <li key={s.id} className="text-xs text-green-700">• {acceptedSummaryLabel(s)}</li>
               ))}
             </ul>
           </div>

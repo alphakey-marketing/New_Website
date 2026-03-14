@@ -14,13 +14,16 @@ export interface AISuggestion {
   id: string;
   taskId: string;
   taskTitle: string;
-  type: 'reprioritize' | 'reschedule' | 'rewrite' | 'sequence' | 'split' | 'general';
+  type: 'reprioritize' | 'reschedule' | 'rewrite' | 'sequence' | 'split' | 'scaffold' | 'general';
   explanation: string;
   currentValue: string;
   proposedValue: string;
   field?: 'priority' | 'due_date' | 'description' | 'title';
-  subTasks?: { title: string; description?: string }[];
-  orderedTaskIds?: string[]; // for sequence type — ordered list of task IDs
+  subTasks?: { title: string; description?: string; priority?: string }[];
+  orderedTaskIds?: string[];
+  // scaffold-specific
+  scaffoldProjectName?: string;   // new project name to create
+  scaffoldProjectColor?: string;  // optional hex color
 }
 
 interface RequestBody {
@@ -64,62 +67,88 @@ async function callOpenRouter(systemPrompt: string, userMessage: string): Promis
 
 const SYSTEM_PROMPT = `You are a productivity assistant. You must respond with a JSON object containing a "suggestions" array.
 
-Analyse the user's tasks and return actionable suggestions in this exact format:
+== CRITICAL RULE: ONLY RESPOND TO WHAT THE USER ASKS ==
+You must ONLY produce suggestion types that are directly relevant to the user's request.
+- If the user asks to create a project or tasks → use "scaffold"
+- If the user asks to break down a task → use "split"
+- If the user asks for task order/sequence → use "sequence"
+- If the user explicitly asks to fix priorities → use "reprioritize"
+- If the user explicitly asks to fix deadlines/dates → use "reschedule"
+- If the user asks to improve wording/descriptions → use "rewrite"
+- DO NOT add reprioritize or reschedule suggestions unless the user's request explicitly asks for them
+- DO NOT mix suggestion types — respond only to what was asked
+
+== RESPONSE FORMAT ==
 {
   "suggestions": [
     {
       "id": "s1",
-      "taskId": "<task id>",
+      "taskId": "<task id or empty string>",
       "taskTitle": "<task title>",
-      "type": "reprioritize",
-      "explanation": "<1-2 sentences why, friendly tone>",
-      "currentValue": "<current value>",
-      "proposedValue": "<proposed value>",
-      "field": "priority"
+      "type": "<type>",
+      "explanation": "<1-2 sentences, friendly tone>",
+      "currentValue": "<current value or empty string>",
+      "proposedValue": "<proposed value or empty string>",
+      "field": "<priority|due_date|description|title — omit for scaffold/sequence/split/general>"
     }
   ]
 }
 
-Field rules:
-- type: one of reprioritize | reschedule | rewrite | sequence | split | general
-- field: one of priority | due_date | description | title (omit for sequence, split, or general types)
-- priority values: high | medium | low
-- due_date values: ISO format YYYY-MM-DD
-- Maximum 8 suggestions total
-- Be specific, actionable, and encouraging
-- You only have access to task data. Never mention notes or documents.
-
----
-REPRIORITIZE rules (STRICT — only suggest when there is a concrete, data-backed reason):
-- ONLY suggest reprioritize if ONE of these specific conditions is true:
-  a) Task is overdue (past due date) but set to low or medium priority
-  b) Task has a due date within the next 3 days but is set to low priority
-  c) Task has no due date and has been in todo for a long time AND is set to high priority with no justification
-  d) Two tasks clearly conflict in priority (e.g. a blocker is lower priority than the task it blocks)
-- DO NOT suggest reprioritize just because you think a task "sounds important" or "seems urgent"
-- DO NOT suggest reprioritize for tasks already at an appropriate priority level
-- If no task meets the strict conditions above, return zero reprioritize suggestions
----
-
-For type "sequence":
-- Use type "sequence" ONLY for a single holistic suggestion covering the best order for ALL tasks
-- Set taskId to "" (empty string) and taskTitle to "Recommended task order"
-- Set proposedValue to a numbered list like "1. Task A\n2. Task B\n3. Task C"
+== TYPE: scaffold ==
+Use when the user wants to create a NEW PROJECT with tasks inside it.
+- Set taskId to "" and taskTitle to the new project name
+- Set scaffoldProjectName to the project name (e.g. "invesbot")
+- Set scaffoldProjectColor to a sensible hex color (e.g. "#6366f1")
+- Set proposedValue to a human summary e.g. "1 project + 3 tasks"
 - Set currentValue to ""
-- Include orderedTaskIds: an array of task IDs in the recommended order
-- sequence suggestions are READ-ONLY — the user sees the order but there is no database change
+- Include a subTasks array with each task: { title, description, priority }
+- priority for each subTask: "high" | "medium" | "low"
+- Example:
+  {
+    "id": "s1",
+    "taskId": "",
+    "taskTitle": "invesbot",
+    "type": "scaffold",
+    "explanation": "I will create the project \"invesbot\" and add your 3 tasks to it.",
+    "currentValue": "",
+    "proposedValue": "1 project + 3 tasks",
+    "scaffoldProjectName": "invesbot",
+    "scaffoldProjectColor": "#6366f1",
+    "subTasks": [
+      { "title": "Get the API", "description": "Obtain and set up the required API credentials", "priority": "high" },
+      { "title": "Put to code", "description": "Implement the API integration in the codebase", "priority": "high" },
+      { "title": "UAT", "description": "User acceptance testing of the integration", "priority": "medium" }
+    ]
+  }
+
+== TYPE: split ==
+- Set proposedValue to e.g. "3 sub-tasks"
+- Set currentValue to the original task title
+- Include subTasks array: { title, description, priority }
+- Do NOT put sub-task titles inside proposedValue
+
+== TYPE: sequence ==
+- Use for ordering existing tasks only
+- Set taskId to "", taskTitle to "Recommended task order"
+- Set proposedValue to a numbered list
+- Include orderedTaskIds: array of task IDs in recommended order
+- READ-ONLY — no database change
 - Return at most 1 sequence suggestion
 
-For type "split" specifically:
-- Set proposedValue to a short human-readable summary e.g. "3 sub-tasks"
-- Set currentValue to the original task title
-- Include a "subTasks" array with each sub-task as { "title": "...", "description": "..." }
-- Do NOT put sub-task titles inside proposedValue as a plain string
+== TYPE: reprioritize ==
+ONLY if user explicitly asks. AND only if ONE of these conditions is met:
+  a) Task is overdue but set to low/medium priority
+  b) Task due within 3 days but set to low priority
+  c) Two tasks conflict in priority (blocker is lower priority than blocked)
+If no task meets these conditions, return zero reprioritize suggestions.
 
-For type "general":
-- Use for advice that doesn't map to a specific field change
-- Set taskId to "", taskTitle to "", currentValue to "", proposedValue to the advice text
-- These are READ-ONLY — show as informational, no Accept button`;
+== TYPE: reschedule ==
+ONLY if user explicitly asks to fix deadlines or reschedule.
+
+== TYPE: general ==
+- Set taskId, taskTitle, currentValue all to ""
+- Set proposedValue to the advice text
+- READ-ONLY — informational only, no Accept button`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -132,26 +161,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'tasks array is required' });
   }
 
-  const taskSummary = tasks
-    .map((t) =>
-      [
-        `ID: ${t.id}`,
-        `Title: ${t.title}`,
-        `Status: ${t.status}`,
-        `Priority: ${t.priority}`,
-        t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
-        t.description ? `Description: ${t.description}` : '',
-        t.project_name ? `Project: ${t.project_name}` : 'Project: none',
-      ]
-        .filter(Boolean)
-        .join(' | ')
-    )
-    .join('\n');
+  const taskSummary = tasks.length > 0
+    ? tasks.map((t) =>
+        [
+          `ID: ${t.id}`,
+          `Title: ${t.title}`,
+          `Status: ${t.status}`,
+          `Priority: ${t.priority}`,
+          t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
+          t.description ? `Description: ${t.description}` : '',
+          t.project_name ? `Project: ${t.project_name}` : 'Project: none',
+        ].filter(Boolean).join(' | ')
+      ).join('\n')
+    : '(no tasks yet)';
 
   const today = new Date().toISOString().split('T')[0];
-  const userMessage = `Today is ${today}.\n\nHere are my tasks:\n${taskSummary}\n\nRequest: ${
-    userPrompt || 'Analyse my tasks and suggest how to best prioritise and sequence them.'
-  }\n\nRespond with a JSON object containing a "suggestions" array.`;
+  const userMessage = `Today is ${today}.\n\nExisting tasks:\n${taskSummary}\n\nUser request: ${userPrompt}\n\nRespond with a JSON object containing a "suggestions" array. Only respond to exactly what the user asked for.`;
 
   try {
     const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);

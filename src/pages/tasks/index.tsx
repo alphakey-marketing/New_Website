@@ -42,26 +42,14 @@ export default function TasksPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUser(user);
-        loadTasks();
-        loadProjects();
-      } else {
-        router.push('/tasks/login');
-      }
+      if (user) { setUser(user); loadTasks(); loadProjects(); }
+      else { router.push('/tasks/login'); }
       setLoading(false);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        loadTasks();
-        loadProjects();
-      } else {
-        router.push('/tasks/login');
-      }
+      if (session?.user) { setUser(session.user); loadTasks(); loadProjects(); }
+      else { router.push('/tasks/login'); }
     });
-
     return () => subscription.unsubscribe();
   }, [router]);
 
@@ -69,10 +57,7 @@ export default function TasksPage() {
     if (!user) return;
     const tasksChannel = taskService.subscribeToTasks(user.id, () => loadTasks());
     const projectsChannel = projectService.subscribeToProjects(user.id, () => loadProjects());
-    return () => {
-      tasksChannel.unsubscribe();
-      projectsChannel.unsubscribe();
-    };
+    return () => { tasksChannel.unsubscribe(); projectsChannel.unsubscribe(); };
   }, [user]);
 
   const loadTasks = async () => {
@@ -161,17 +146,48 @@ export default function TasksPage() {
     router.push('/tasks/login');
   };
 
+  // ---------------------------------------------------------------------------
+  // AI: apply suggestion
+  // ---------------------------------------------------------------------------
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
-    // SPLIT: create sub-tasks
+
+    // SCAFFOLD: create a new project, then create all tasks inside it
+    if (suggestion.type === 'scaffold') {
+      if (!suggestion.scaffoldProjectName) throw new Error('No project name provided by AI.');
+      if (!suggestion.subTasks?.length)    throw new Error('No tasks provided by AI.');
+
+      const newProject = await projectService.createProject({
+        name: suggestion.scaffoldProjectName,
+        description: '',
+        color: suggestion.scaffoldProjectColor ?? '#6366f1',
+      } as any);
+
+      for (const sub of suggestion.subTasks) {
+        await taskService.createTask({
+          title: sub.title,
+          description: sub.description ?? '',
+          project_id: newProject.id,
+          priority: (sub.priority ?? 'medium') as Task['priority'],
+          status: 'todo',
+          due_date: null,
+        } as any);
+      }
+
+      await loadProjects();
+      await loadTasks();
+      return;
+    }
+
+    // SPLIT: create sub-tasks under the same project
     if (suggestion.type === 'split') {
       const originalTask = tasks.find((t) => t.id === suggestion.taskId);
-      if (!suggestion.subTasks?.length) throw new Error('No sub-tasks were provided by the AI.');
+      if (!suggestion.subTasks?.length) throw new Error('No sub-tasks provided by AI.');
       for (const sub of suggestion.subTasks) {
         await taskService.createTask({
           title: sub.title,
           description: sub.description ?? '',
           project_id: originalTask?.project_id ?? null,
-          priority: originalTask?.priority ?? 'medium',
+          priority: (sub.priority ?? originalTask?.priority ?? 'medium') as Task['priority'],
           status: 'todo',
           due_date: originalTask?.due_date ?? null,
         } as any);
@@ -183,7 +199,7 @@ export default function TasksPage() {
     // SEQUENCE / GENERAL: read-only, nothing to write
     if (suggestion.type === 'sequence' || suggestion.type === 'general') return;
 
-    // All other types: update a field
+    // All other types: update a specific field
     if (!suggestion.taskId || !suggestion.field) return;
     const task = tasks.find((t) => t.id === suggestion.taskId);
     if (!task) return;
@@ -286,8 +302,8 @@ export default function TasksPage() {
             {/* View Toggle */}
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
               <div className="flex items-center bg-white border border-gray-300 rounded-md">
-                <button onClick={() => setViewMode('focus')} className={`px-4 py-2 text-sm font-medium rounded-l-md ${viewMode === 'focus' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>🎯 Focus</button>
-                <button onClick={() => setViewMode('list')}  className={`px-4 py-2 text-sm font-medium ${viewMode === 'list'  ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>📋 List</button>
+                <button onClick={() => setViewMode('focus')}  className={`px-4 py-2 text-sm font-medium rounded-l-md ${viewMode === 'focus'  ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>🎯 Focus</button>
+                <button onClick={() => setViewMode('list')}   className={`px-4 py-2 text-sm font-medium ${viewMode === 'list'   ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>📋 List</button>
                 <button onClick={() => setViewMode('kanban')} className={`px-4 py-2 text-sm font-medium rounded-r-md ${viewMode === 'kanban' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>🗂️ Kanban</button>
               </div>
 
@@ -314,11 +330,7 @@ export default function TasksPage() {
 
             {/* AI Quick Add */}
             {viewMode !== 'kanban' && (
-              <AIQuickAdd
-                projects={projects}
-                onCreateTask={handleCreateTask as any}
-                onProjectCreated={loadProjects}
-              />
+              <AIQuickAdd projects={projects} onCreateTask={handleCreateTask as any} onProjectCreated={loadProjects} />
             )}
 
             {viewMode === 'list' && (
