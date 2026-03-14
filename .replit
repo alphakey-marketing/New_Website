@@ -1,0 +1,13 @@
+run = "npx next dev -p 5000 -H 0.0.0.0"
+modules = ["nodejs-20"]
+
+[deployment]
+run = ["sh", "-c", "npx next start -p 5000 -H 0.0.0.0"]
+build = ["sh", "-c", "npx next build"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[agent]
+expertMode = true
