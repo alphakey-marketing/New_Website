@@ -20,6 +20,7 @@ export interface AISuggestion {
   proposedValue: string;
   field?: 'priority' | 'due_date' | 'description' | 'title';
   subTasks?: { title: string; description?: string }[];
+  orderedTaskIds?: string[]; // for sequence type — ordered list of task IDs
 }
 
 interface RequestBody {
@@ -88,26 +89,37 @@ Field rules:
 - Be specific, actionable, and encouraging
 - You only have access to task data. Never mention notes or documents.
 
+---
+REPRIORITIZE rules (STRICT — only suggest when there is a concrete, data-backed reason):
+- ONLY suggest reprioritize if ONE of these specific conditions is true:
+  a) Task is overdue (past due date) but set to low or medium priority
+  b) Task has a due date within the next 3 days but is set to low priority
+  c) Task has no due date and has been in todo for a long time AND is set to high priority with no justification
+  d) Two tasks clearly conflict in priority (e.g. a blocker is lower priority than the task it blocks)
+- DO NOT suggest reprioritize just because you think a task "sounds important" or "seems urgent"
+- DO NOT suggest reprioritize for tasks already at an appropriate priority level
+- If no task meets the strict conditions above, return zero reprioritize suggestions
+---
+
+For type "sequence":
+- Use type "sequence" ONLY for a single holistic suggestion covering the best order for ALL tasks
+- Set taskId to "" (empty string) and taskTitle to "Recommended task order"
+- Set proposedValue to a numbered list like "1. Task A\n2. Task B\n3. Task C"
+- Set currentValue to ""
+- Include orderedTaskIds: an array of task IDs in the recommended order
+- sequence suggestions are READ-ONLY — the user sees the order but there is no database change
+- Return at most 1 sequence suggestion
+
 For type "split" specifically:
 - Set proposedValue to a short human-readable summary e.g. "3 sub-tasks"
 - Set currentValue to the original task title
 - Include a "subTasks" array with each sub-task as { "title": "...", "description": "..." }
 - Do NOT put sub-task titles inside proposedValue as a plain string
-- Example for split:
-  {
-    "id": "s2",
-    "taskId": "<task id>",
-    "taskTitle": "<original task title>",
-    "type": "split",
-    "explanation": "This task is large. Here are 3 logical steps to complete it.",
-    "currentValue": "<original task title>",
-    "proposedValue": "3 sub-tasks",
-    "subTasks": [
-      { "title": "Step 1: Analyse data", "description": "Gather and review all relevant data" },
-      { "title": "Step 2: Do Excel", "description": "Build the spreadsheet and calculations" },
-      { "title": "Step 3: Send to Vincent", "description": "Email the completed report" }
-    ]
-  }`;
+
+For type "general":
+- Use for advice that doesn't map to a specific field change
+- Set taskId to "", taskTitle to "", currentValue to "", proposedValue to the advice text
+- These are READ-ONLY — show as informational, no Accept button`;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -143,42 +155,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
-
-    // Strip markdown fences if present
     const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
     let suggestions: AISuggestion[];
     try {
       const parsed = JSON.parse(cleaned);
-      // Handle both { suggestions: [...] } and bare [...] responses
       suggestions = Array.isArray(parsed) ? parsed : (parsed.suggestions ?? []);
     } catch {
-      // Last resort: try to extract a JSON array with regex
       const match = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/);
       if (match) {
-        try {
-          suggestions = JSON.parse(match[0]);
-        } catch {
-          suggestions = [{
-            id: 's_error',
-            taskId: '',
-            taskTitle: '',
-            type: 'general',
-            explanation: 'I had trouble formatting my response. Please try again.',
-            currentValue: '',
-            proposedValue: raw.slice(0, 300),
-          }];
-        }
+        try { suggestions = JSON.parse(match[0]); }
+        catch { suggestions = [{ id: 's_error', taskId: '', taskTitle: '', type: 'general', explanation: 'I had trouble formatting my response. Please try again.', currentValue: '', proposedValue: raw.slice(0, 300) }]; }
       } else {
-        suggestions = [{
-          id: 's_error',
-          taskId: '',
-          taskTitle: '',
-          type: 'general',
-          explanation: 'I had trouble formatting my response. Please try again.',
-          currentValue: '',
-          proposedValue: raw.slice(0, 300),
-        }];
+        suggestions = [{ id: 's_error', taskId: '', taskTitle: '', type: 'general', explanation: 'I had trouble formatting my response. Please try again.', currentValue: '', proposedValue: raw.slice(0, 300) }];
       }
     }
 

@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { projectService } from '../../utils/projectService';
 import type { ParsedTask } from '../../pages/api/tasks/ai-parse-task';
 
 interface Props {
@@ -12,22 +13,28 @@ interface Props {
     project_id?: string | null;
     status: 'todo';
   }) => Promise<void>;
+  onProjectCreated?: () => Promise<void>; // called after a new project is auto-created
 }
 
-export default function AIQuickAdd({ projects, onCreateTask }: Props) {
+export default function AIQuickAdd({ projects, onCreateTask, onProjectCreated }: Props) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<ParsedTask | null>(null);
   const [confidence, setConfidence] = useState<'high' | 'medium' | 'low' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
+  // When AI proposes a new project name that doesn't exist yet
+  const [newProjectName, setNewProjectName] = useState<string | null>(null);
+  const [createNewProject, setCreateNewProject] = useState(false);
 
   const handleParse = async () => {
     if (!input.trim()) return;
     setLoading(true);
     setError(null);
     setPreview(null);
-    setSuccess(false);
+    setSuccess(null);
+    setNewProjectName(null);
+    setCreateNewProject(false);
 
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -41,8 +48,20 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
         throw new Error(d.error ?? 'Parse failed');
       }
       const data = await res.json();
-      setPreview(data.task);
+      const parsed: ParsedTask = data.task;
+      setPreview(parsed);
       setConfidence(data.confidence);
+
+      // Check if AI proposed a project name that doesn't exist yet
+      if (parsed.project_name) {
+        const match = projects.find(
+          (p) => p.name.toLowerCase() === parsed.project_name!.toLowerCase()
+        );
+        if (!match) {
+          setNewProjectName(parsed.project_name);
+          setCreateNewProject(true); // default: yes, create it
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -53,24 +72,49 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
   const handleConfirm = async () => {
     if (!preview) return;
     setLoading(true);
+    setError(null);
     try {
-      const matchedProject = preview.project_name
-        ? projects.find((p) => p.name.toLowerCase() === preview.project_name?.toLowerCase())
-        : null;
+      let resolvedProjectId: string | null = null;
+
+      if (preview.project_name) {
+        // Try to match existing project (case-insensitive)
+        const existing = projects.find(
+          (p) => p.name.toLowerCase() === preview.project_name!.toLowerCase()
+        );
+        if (existing) {
+          resolvedProjectId = existing.id;
+        } else if (createNewProject && newProjectName) {
+          // Auto-create the new project
+          const created = await projectService.createProject({
+            name: newProjectName,
+            description: '',
+            color: '#6366f1', // default indigo
+          } as any);
+          resolvedProjectId = created.id;
+          // Notify parent to refresh project list
+          if (onProjectCreated) await onProjectCreated();
+        }
+      }
 
       await onCreateTask({
         title: preview.title,
         description: preview.description,
         priority: preview.priority,
         due_date: preview.due_date ?? null,
-        project_id: matchedProject?.id ?? null,
+        project_id: resolvedProjectId,
         status: 'todo',
       });
+
+      const projectNote = resolvedProjectId && newProjectName && createNewProject
+        ? ` in new project "${newProjectName}"`
+        : '';
       setInput('');
       setPreview(null);
       setConfidence(null);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setNewProjectName(null);
+      setCreateNewProject(false);
+      setSuccess(`✅ Task created${projectNote}!`);
+      setTimeout(() => setSuccess(null), 4000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -107,7 +151,7 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
         <input
           type="text"
           value={input}
-          onChange={(e) => { setInput(e.target.value); setPreview(null); }}
+          onChange={(e) => { setInput(e.target.value); setPreview(null); setNewProjectName(null); }}
           onKeyDown={(e) => e.key === 'Enter' && !loading && handleParse()}
           placeholder="e.g. Send report to Vincent by Friday, high priority"
           className="flex-1 border border-indigo-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
@@ -122,13 +166,8 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
         </button>
       </div>
 
-      {error && (
-        <p className="mt-2 text-xs text-red-600">⚠️ {error}</p>
-      )}
-
-      {success && (
-        <p className="mt-2 text-xs text-green-600 font-medium">✅ Task created successfully!</p>
-      )}
+      {error && <p className="mt-2 text-xs text-red-600">⚠️ {error}</p>}
+      {success && <p className="mt-2 text-xs text-green-600 font-medium">{success}</p>}
 
       {/* Preview card */}
       {preview && (
@@ -137,7 +176,7 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Review & confirm</span>
             {confidence && (
               <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${confidenceBadge[confidence]}`}>
-                {confidence === 'high' ? '✅ High confidence' : confidence === 'medium' ? '⚠️ Medium confidence' : '❓ Low confidence — please review'}
+                {confidence === 'high' ? '✅ High confidence' : confidence === 'medium' ? '⚠️ Medium — please review' : '❓ Low — please review carefully'}
               </span>
             )}
           </div>
@@ -165,7 +204,7 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
             />
           </div>
 
-          {/* Priority + Due date row */}
+          {/* Priority + Due date */}
           <div className="flex space-x-3">
             <div className="flex-1">
               <label className="text-xs font-medium text-gray-500">Priority</label>
@@ -190,10 +229,43 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
             </div>
           </div>
 
-          {/* Project */}
-          {preview.project_name && (
+          {/* Project — existing match */}
+          {preview.project_name && !newProjectName && (
             <div className="text-xs text-indigo-700 bg-indigo-50 rounded-lg px-3 py-1.5">
               📁 Matched project: <strong>{preview.project_name}</strong>
+            </div>
+          )}
+
+          {/* Project — new project prompt */}
+          {newProjectName && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <p className="text-xs font-semibold text-amber-800 mb-1.5">
+                📁 Project &quot;{newProjectName}&quot; doesn&apos;t exist yet
+              </p>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setCreateNewProject(true)}
+                  className={`flex-1 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                    createNewProject
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  ✅ Create project
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreateNewProject(false)}
+                  className={`flex-1 py-1 text-xs font-medium rounded-lg border transition-colors ${
+                    !createNewProject
+                      ? 'bg-gray-700 text-white border-gray-700'
+                      : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Skip — no project
+                </button>
+              </div>
             </div>
           )}
 
@@ -207,7 +279,7 @@ export default function AIQuickAdd({ projects, onCreateTask }: Props) {
               {loading ? 'Creating...' : '✅ Create Task'}
             </button>
             <button
-              onClick={() => { setPreview(null); setConfidence(null); }}
+              onClick={() => { setPreview(null); setConfidence(null); setNewProjectName(null); }}
               className="flex-1 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50"
             >
               ✏️ Edit differently

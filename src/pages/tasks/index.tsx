@@ -106,7 +106,7 @@ export default function TasksPage() {
     }
   };
 
-  const handleCreateTask = async (data: TaskFormData) => {
+  const handleCreateTask = async (data: TaskFormData & { project_id?: string | null }) => {
     await taskService.createTask({ ...data, project_id: data.project_id ?? selectedProjectId } as any);
     await loadTasks();
   };
@@ -161,16 +161,11 @@ export default function TasksPage() {
     router.push('/tasks/login');
   };
 
-  // -------------------------------------------------------------------------
-  // AI: apply a suggestion to a real task
-  // -------------------------------------------------------------------------
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
-    // --- SPLIT: create sub-tasks from the AI's subTasks array ---
+    // SPLIT: create sub-tasks
     if (suggestion.type === 'split') {
       const originalTask = tasks.find((t) => t.id === suggestion.taskId);
-      if (!suggestion.subTasks?.length) {
-        throw new Error('No sub-tasks were provided by the AI. Please try again.');
-      }
+      if (!suggestion.subTasks?.length) throw new Error('No sub-tasks were provided by the AI.');
       for (const sub of suggestion.subTasks) {
         await taskService.createTask({
           title: sub.title,
@@ -185,21 +180,19 @@ export default function TasksPage() {
       return;
     }
 
-    // --- All other types: update a field on the existing task ---
+    // SEQUENCE / GENERAL: read-only, nothing to write
+    if (suggestion.type === 'sequence' || suggestion.type === 'general') return;
+
+    // All other types: update a field
     if (!suggestion.taskId || !suggestion.field) return;
     const task = tasks.find((t) => t.id === suggestion.taskId);
     if (!task) return;
 
     const update: Partial<TaskFormData> = {};
-    if (suggestion.field === 'priority') {
-      update.priority = suggestion.proposedValue as Task['priority'];
-    } else if (suggestion.field === 'due_date') {
-      update.due_date = suggestion.proposedValue;
-    } else if (suggestion.field === 'title') {
-      update.title = suggestion.proposedValue;
-    } else if (suggestion.field === 'description') {
-      update.description = suggestion.proposedValue;
-    }
+    if (suggestion.field === 'priority')    update.priority    = suggestion.proposedValue as Task['priority'];
+    if (suggestion.field === 'due_date')    update.due_date    = suggestion.proposedValue;
+    if (suggestion.field === 'title')       update.title       = suggestion.proposedValue;
+    if (suggestion.field === 'description') update.description = suggestion.proposedValue;
 
     await taskService.updateTask(task.id, update as any);
     await loadTasks();
@@ -246,7 +239,6 @@ export default function TasksPage() {
       )}
 
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <nav className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -260,18 +252,13 @@ export default function TasksPage() {
                 <button
                   onClick={() => setShowAIPanel(!showAIPanel)}
                   className={`px-4 py-2 text-sm font-medium rounded-md border transition-colors ${
-                    showAIPanel
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50'
+                    showAIPanel ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50'
                   }`}
                 >
                   🤖 AI Assistant
                 </button>
                 <div className="relative">
-                  <button
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
+                  <button onClick={() => setShowExportMenu(!showExportMenu)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                     ⚙️ Backup
                   </button>
                   {showExportMenu && (
@@ -287,9 +274,7 @@ export default function TasksPage() {
                   )}
                 </div>
                 <span className="text-sm text-gray-700">{user.email}</span>
-                <button onClick={handleSignOut} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                  Sign out
-                </button>
+                <button onClick={handleSignOut} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Sign out</button>
               </div>
             </div>
           </div>
@@ -301,31 +286,15 @@ export default function TasksPage() {
             {/* View Toggle */}
             <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
               <div className="flex items-center bg-white border border-gray-300 rounded-md">
-                <button onClick={() => setViewMode('focus')} className={`px-4 py-2 text-sm font-medium rounded-l-md ${viewMode === 'focus' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>
-                  🎯 Focus
-                </button>
-                <button onClick={() => setViewMode('list')} className={`px-4 py-2 text-sm font-medium ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>
-                  📋 List
-                </button>
-                <button onClick={() => setViewMode('kanban')} className={`px-4 py-2 text-sm font-medium rounded-r-md ${viewMode === 'kanban' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>
-                  🗂️ Kanban
-                </button>
+                <button onClick={() => setViewMode('focus')} className={`px-4 py-2 text-sm font-medium rounded-l-md ${viewMode === 'focus' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>🎯 Focus</button>
+                <button onClick={() => setViewMode('list')}  className={`px-4 py-2 text-sm font-medium ${viewMode === 'list'  ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>📋 List</button>
+                <button onClick={() => setViewMode('kanban')} className={`px-4 py-2 text-sm font-medium rounded-r-md ${viewMode === 'kanban' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}>🗂️ Kanban</button>
               </div>
 
               {viewMode === 'list' && (
                 <div className="flex items-center space-x-3">
-                  <input
-                    type="text"
-                    placeholder="Search tasks..."
-                    className="block w-56 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <select
-                    className="block border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value as typeof filter)}
-                  >
+                  <input type="text" placeholder="Search tasks..." className="block w-56 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  <select className="block border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
                     <option value="all">All Tasks</option>
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
@@ -334,30 +303,21 @@ export default function TasksPage() {
                 </div>
               )}
 
-              <button
-                onClick={() => setShowTaskForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
+              <button onClick={() => setShowTaskForm(true)} className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                 New Task
               </button>
             </div>
 
-            {/* AI Daily Briefing — shown in all views */}
-            <AIDailyBriefing
-              tasks={tasks}
-              projects={projects}
-              onUpdateTask={handleUpdateTaskById}
-              onDeleteTask={handleDeleteTaskById}
-            />
+            {/* AI Daily Briefing */}
+            <AIDailyBriefing tasks={tasks} projects={projects} onUpdateTask={handleUpdateTaskById} onDeleteTask={handleDeleteTaskById} />
 
-            {/* AI Quick Add — shown in list and focus views */}
+            {/* AI Quick Add */}
             {viewMode !== 'kanban' && (
               <AIQuickAdd
                 projects={projects}
                 onCreateTask={handleCreateTask as any}
+                onProjectCreated={loadProjects}
               />
             )}
 
@@ -376,17 +336,10 @@ export default function TasksPage() {
         </main>
       </div>
 
-      {/* AI Suggestion Panel */}
       {showAIPanel && (
-        <AISuggestionPanel
-          tasks={tasks}
-          projects={projects}
-          onApplySuggestion={handleApplySuggestion}
-          onClose={() => setShowAIPanel(false)}
-        />
+        <AISuggestionPanel tasks={tasks} projects={projects} onApplySuggestion={handleApplySuggestion} onClose={() => setShowAIPanel(false)} />
       )}
 
-      {/* Modals */}
       {showTaskForm && (
         <TaskForm task={editingTask} onSubmit={editingTask ? handleUpdateTask : handleCreateTask} onCancel={() => { setShowTaskForm(false); setEditingTask(null); }} />
       )}
