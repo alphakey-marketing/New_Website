@@ -56,19 +56,30 @@ export async function callOpenRouter(
 }
 
 /**
- * Safe JSON parser with fallback array extraction.
- * Returns parsed value or throws with a descriptive message.
+ * Safe JSON parser with two-stage fallback:
+ *   1. Direct JSON.parse
+ *   2. Extract first JSON array  [ { ... } ]
+ *   3. Extract first JSON object { ... }
+ *   4. Return fallback if provided, otherwise throw
  */
 export function safeParseJSON<T>(raw: string, fallback?: T): T {
+  // Stage 1: direct parse
   try {
     return JSON.parse(raw) as T;
-  } catch {
-    // Try to pull out a JSON array from a partially-fenced response
-    const arrayMatch = raw.match(/\[\s*\{[\s\S]*\}\s*\]/);
-    if (arrayMatch) {
-      try { return JSON.parse(arrayMatch[0]) as T; } catch { /* fall through */ }
-    }
-    if (fallback !== undefined) return fallback;
-    throw new Error(`Failed to parse AI response as JSON. Raw: ${raw.slice(0, 200)}`);
+  } catch { /* fall through */ }
+
+  // Stage 2: pull out a JSON array
+  const arrayMatch = raw.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+  if (arrayMatch) {
+    try { return JSON.parse(arrayMatch[0]) as T; } catch { /* fall through */ }
   }
+
+  // Stage 3: pull out the first JSON object (handles "Here is the result: {...}")
+  const objectMatch = raw.match(/\{[\s\S]*\}/);
+  if (objectMatch) {
+    try { return JSON.parse(objectMatch[0]) as T; } catch { /* fall through */ }
+  }
+
+  if (fallback !== undefined) return fallback;
+  throw new Error(`Failed to parse AI response as JSON. Raw: ${raw.slice(0, 200)}`);
 }

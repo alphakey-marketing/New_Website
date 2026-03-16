@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { callOpenRouter, safeParseJSON } from '../../../utils/openrouter';
+import { getSessionFromRequest } from '../../../lib/supabaseServer';
 
 export interface TaskSnapshot {
   id: string;
@@ -32,32 +33,27 @@ interface RequestBody {
   userPrompt: string;
 }
 
-/**
- * Detect whether the user's prompt is description-oriented.
- * Only for these intents do we send task descriptions to the model;
- * for sequence / reprioritize / reschedule / scaffold they are pure noise.
- */
 function needsDescriptions(prompt: string): boolean {
   const lower = prompt.toLowerCase();
-  return (
+  // Positive signals: user wants content-level changes
+  const positive =
     lower.includes('description') ||
     lower.includes('rewrite') ||
     lower.includes('improve') ||
     lower.includes('vague') ||
     lower.includes('clearer') ||
+    lower.includes('wording') ||
+    lower.includes('rename') ||
+    lower.includes('simplify') ||
     lower.includes('break down') ||
     lower.includes('break up') ||
-    lower.includes('split') ||
     lower.includes('sub-task') ||
-    lower.includes('subtask')
-  );
+    lower.includes('subtask') ||
+    // "split" only when it means breaking a task into pieces
+    (lower.includes('split') && !lower.includes('split my time') && !lower.includes('split between') && !lower.includes('split across'));
+  return positive;
 }
 
-/**
- * Build the system prompt with today's date baked in.
- * Injecting the date here (not just in the user message) means
- * the model cannot ignore or misplace it when resolving relative dates.
- */
 function buildSystemPrompt(today: string): string {
   return `You are a productivity assistant. Today's date is ${today}.
 You must respond with a JSON object containing a "suggestions" array.
@@ -169,17 +165,16 @@ const ERROR_SUGGESTION: AISuggestion = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Auth guard — reject unauthenticated direct API calls
+  const user = await getSessionFromRequest(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
   const { tasks, projects, userPrompt }: RequestBody = req.body;
   if (!tasks || !Array.isArray(tasks)) return res.status(400).json({ error: 'tasks array is required' });
 
   const today = new Date().toISOString().split('T')[0];
-
-  // Detect whether this prompt needs task descriptions (rewrite / split)
-  // For all other intents (sequence, reprioritize, reschedule, scaffold)
-  // descriptions are irrelevant noise that wastes tokens.
   const includeDesc = needsDescriptions(userPrompt);
 
-  // Cap to 50 non-done tasks sorted by due date
   const cappedTasks = tasks
     .filter((t) => t.status !== 'done')
     .sort((a, b) => {
@@ -198,7 +193,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `Status: ${t.status}`,
           `Priority: ${t.priority}`,
           t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
-          // Only include description when the intent actually needs it
           includeDesc && t.description ? `Desc: ${t.description.slice(0, 80)}` : '',
           t.project_name ? `Project: ${t.project_name}` : '',
         ].filter(Boolean).join(' | ')

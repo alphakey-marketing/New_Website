@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { callOpenRouter, safeParseJSON } from '../../../utils/openrouter';
+import { getSessionFromRequest } from '../../../lib/supabaseServer';
 import type { TaskSnapshot } from './ai-suggest';
 
 export interface FocusTask {
@@ -80,11 +81,29 @@ motivationalNote: short, warm, specific to their situation.`;
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // Auth guard — reject unauthenticated direct API calls
+  const user = await getSessionFromRequest(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
   const { tasks, today }: { tasks: TaskSnapshot[]; today: string } = req.body;
   if (!tasks?.length) return res.status(400).json({ error: 'tasks array is required' });
 
-  const pending = tasks.filter((t) => t.status !== 'done');
-  const taskSummary = pending.map((t) =>
+  // Cap to 30 tasks: daily focus only needs the top 3, so prioritise
+  // high-priority + soonest due tasks to keep the payload tight
+  const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
+  const cappedTasks = tasks
+    .filter((t) => t.status !== 'done')
+    .sort((a, b) => {
+      const pDiff = (priorityOrder[a.priority] ?? 2) - (priorityOrder[b.priority] ?? 2);
+      if (pDiff !== 0) return pDiff;
+      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return 0;
+    })
+    .slice(0, 30);
+
+  const taskSummary = cappedTasks.map((t) =>
     [
       `ID: ${t.id}`,
       `Title: ${t.title}`,

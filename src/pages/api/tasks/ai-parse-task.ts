@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { callOpenRouter, safeParseJSON } from '../../../utils/openrouter';
+import { getSessionFromRequest } from '../../../lib/supabaseServer';
 
 export interface ParsedTask {
   title: string;
@@ -48,6 +49,10 @@ Rules:
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Auth guard — reject unauthenticated direct API calls
+  const user = await getSessionFromRequest(req);
+  if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
   const { input, today, projects } = req.body;
   if (!input?.trim()) return res.status(400).json({ error: 'input is required' });
