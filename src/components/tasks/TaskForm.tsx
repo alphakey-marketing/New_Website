@@ -5,18 +5,19 @@ interface TaskFormProps {
   task?: Task | null;
   allTasks?: Task[];
   projects?: { id: string; name: string; color?: string }[];
+  initialProjectId?: string | null;
   onSubmit: (data: TaskFormData) => Promise<void>;
   onCancel: () => void;
 }
 
-export default function TaskForm({ task, allTasks = [], projects = [], onSubmit, onCancel }: TaskFormProps) {
+export default function TaskForm({ task, allTasks = [], projects = [], initialProjectId, onSubmit, onCancel }: TaskFormProps) {
   const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     description: '',
     status: 'todo',
     priority: 'medium',
     due_date: '',
-    project_id: null,
+    project_id: initialProjectId ?? null,
     blocked_by: null,
   });
   const [loading, setLoading] = useState(false);
@@ -35,14 +36,14 @@ export default function TaskForm({ task, allTasks = [], projects = [], onSubmit,
         blocked_by: task.blocked_by ?? null,
       });
       if (task.blocked_by && task.blocked_by.length > 0) setShowDepsSection(true);
+    } else if (initialProjectId) {
+      // Pre-scope to project when opening form from Focus view or project context
+      setFormData((prev) => ({ ...prev, project_id: initialProjectId }));
     }
-  }, [task]);
+  }, [task, initialProjectId]);
 
-  // The project currently selected in the form (may change while user edits)
   const activeProjectId = formData.project_id ?? null;
 
-  // Eligible blockers: same project, not done, not the task itself
-  // If no project selected yet, show nothing and prompt user to pick a project first
   const eligibleBlockers = activeProjectId
     ? allTasks.filter(
         (t) =>
@@ -52,7 +53,6 @@ export default function TaskForm({ task, allTasks = [], projects = [], onSubmit,
       )
     : [];
 
-  // Clear any existing blocked_by selections that no longer belong to the new project
   const handleProjectChange = (newProjectId: string | null) => {
     const validBlockers = (formData.blocked_by ?? []).filter(
       (id) => allTasks.find((t) => t.id === id)?.project_id === newProjectId
@@ -190,7 +190,7 @@ export default function TaskForm({ task, allTasks = [], projects = [], onSubmit,
               />
             </div>
 
-            {/* ── Dependencies (optional, collapsible) ── */}
+            {/* Dependencies */}
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               <button
                 type="button"
@@ -214,21 +214,18 @@ export default function TaskForm({ task, allTasks = [], projects = [], onSubmit,
                     Select tasks <strong>within the same project</strong> that must be <strong>Done</strong> before this task can start.
                   </p>
 
-                  {/* No project selected */}
                   {!activeProjectId && (
                     <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                       ⚠️ Assign this task to a <strong>project</strong> first to set dependencies.
                     </p>
                   )}
 
-                  {/* Project selected but no eligible tasks */}
                   {activeProjectId && eligibleBlockers.length === 0 && (
                     <p className="text-xs text-gray-400 italic">
                       No other active tasks in <strong>{activeProjectName}</strong> to set as blockers.
                     </p>
                   )}
 
-                  {/* Blocker checklist */}
                   {activeProjectId && eligibleBlockers.length > 0 && (
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                       {eligibleBlockers.map((t) => {

@@ -38,9 +38,8 @@ export default function TasksPage() {
   const [filter, setFilter] = useState<'all' | 'todo' | 'in_progress' | 'done'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [importLoading, setImportLoading] = useState(false);
-  // pre-scoped project when opening TaskForm from Focus view
+  // Pre-scoped project when opening TaskForm from Focus view or sidebar
   const newTaskProjectRef = useRef<string | null>(null);
-  // user dropdown
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
@@ -151,7 +150,7 @@ export default function TasksPage() {
     router.push('/tasks/login');
   };
 
-  // Open task form pre-scoped to a project (from Focus view)
+  // Open task form pre-scoped to a project (from Focus view or sidebar)
   const handleFocusNewTask = (projectId: string | null) => {
     newTaskProjectRef.current = projectId;
     setEditingTask(null);
@@ -243,7 +242,6 @@ export default function TasksPage() {
     return acc;
   }, {} as Record<string, number>);
 
-  // Initials for avatar
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '??';
 
   if (loading) {
@@ -272,15 +270,14 @@ export default function TasksPage() {
       )}
 
       <div className="flex-1 flex flex-col">
-        {/* ── Navbar ── */}
+        {/* Navbar */}
         <nav className="bg-white shadow">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-14">
               <div className="flex items-center space-x-1">
-                {/* View toggle */}
                 <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
                   <button onClick={() => setViewMode('focus')} title="Focus" className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${ viewMode === 'focus' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }`}>
-                    \uD83C\uDFAF Focus
+                    🎯 Focus
                   </button>
                   <button onClick={() => setViewMode('list')} title="List" className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${ viewMode === 'list' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }`}>
                     List
@@ -292,25 +289,22 @@ export default function TasksPage() {
               </div>
 
               <div className="flex items-center space-x-2">
-                {/* Notes */}
                 <button onClick={() => router.push('/tasks/notes')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-blue-700 font-medium rounded-md hover:bg-gray-100 transition-colors">
-                  \uD83D\uDCDD Notes
+                  📝 Notes
                 </button>
 
-                {/* AI Assistant */}
                 <button
                   onClick={() => setShowAIPanel(!showAIPanel)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                     showAIPanel ? 'bg-indigo-600 text-white border-indigo-600' : 'text-indigo-600 border-indigo-300 hover:bg-indigo-50'
                   }`}
                 >
-                  \uD83E\uDD16 AI
+                  🤖 AI
                 </button>
 
-                {/* Backup */}
                 <div className="relative">
                   <button onClick={() => setShowExportMenu(!showExportMenu)} className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-                    \u2699\uFE0F
+                    ⚙️
                   </button>
                   {showExportMenu && (
                     <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
@@ -325,7 +319,6 @@ export default function TasksPage() {
                   )}
                 </div>
 
-                {/* Avatar dropdown */}
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
@@ -352,14 +345,13 @@ export default function TasksPage() {
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
 
-            {/* List view toolbar */}
             {viewMode === 'list' && (
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <span>{filteredTasks.filter(t => t.status==='todo').length} to do</span>
-                  <span>\u00b7</span>
+                  <span>·</span>
                   <span>{filteredTasks.filter(t => t.status==='in_progress').length} in progress</span>
-                  <span>\u00b7</span>
+                  <span>·</span>
                   <span>{filteredTasks.filter(t => t.status==='done').length} done</span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -370,7 +362,7 @@ export default function TasksPage() {
                     <option value="in_progress">In Progress</option>
                     <option value="done">Done</option>
                   </select>
-                  <button onClick={() => setShowTaskForm(true)} className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  <button onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }} className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                     <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                     New
                   </button>
@@ -378,17 +370,15 @@ export default function TasksPage() {
               </div>
             )}
 
-            {/* Kanban toolbar */}
             {viewMode === 'kanban' && (
               <div className="mb-4 flex justify-end">
-                <button onClick={() => setShowTaskForm(true)} className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                <button onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }} className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                   <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                   New Task
                 </button>
               </div>
             )}
 
-            {/* AI Daily Briefing */}
             <AIDailyBriefing tasks={tasks} projects={projects} onUpdateTask={handleUpdateTaskById} onDeleteTask={handleDeleteTaskById} />
 
             {viewMode === 'focus'  && <FocusList tasks={tasks} projects={projects} onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }} onStatusChange={handleStatusChange} onNewTask={handleFocusNewTask} />}
@@ -409,12 +399,13 @@ export default function TasksPage() {
         />
       )}
 
-      {/* TaskForm */}
+      {/* TaskForm — initialProjectId wires the pre-scoped project into formData on mount */}
       {showTaskForm && (
         <TaskForm
           task={editingTask}
           allTasks={tasks}
           projects={projects}
+          initialProjectId={editingTask ? undefined : (newTaskProjectRef.current ?? selectedProjectId)}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           onCancel={() => { setShowTaskForm(false); setEditingTask(null); newTaskProjectRef.current = null; }}
         />
