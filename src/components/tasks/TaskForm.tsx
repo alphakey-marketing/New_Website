@@ -3,18 +3,20 @@ import type { Task, TaskFormData } from '../../types/task';
 
 interface TaskFormProps {
   task?: Task | null;
-  allTasks?: Task[];          // needed to populate the blocked-by picker
+  allTasks?: Task[];
+  projects?: { id: string; name: string; color?: string }[];
   onSubmit: (data: TaskFormData) => Promise<void>;
   onCancel: () => void;
 }
 
-export default function TaskForm({ task, allTasks = [], onSubmit, onCancel }: TaskFormProps) {
+export default function TaskForm({ task, allTasks = [], projects = [], onSubmit, onCancel }: TaskFormProps) {
   const [formData, setFormData] = useState<TaskFormData>({
     title: '',
     description: '',
     status: 'todo',
     priority: 'medium',
     due_date: '',
+    project_id: null,
     blocked_by: null,
   });
   const [loading, setLoading] = useState(false);
@@ -29,14 +31,38 @@ export default function TaskForm({ task, allTasks = [], onSubmit, onCancel }: Ta
         status: task.status,
         priority: task.priority,
         due_date: task.due_date ? task.due_date.split('T')[0] : '',
+        project_id: task.project_id ?? null,
         blocked_by: task.blocked_by ?? null,
       });
       if (task.blocked_by && task.blocked_by.length > 0) setShowDepsSection(true);
     }
   }, [task]);
 
-  // Tasks eligible to be a blocker: everything except the current task being edited
-  const eligibleBlockers = allTasks.filter((t) => t.id !== task?.id && t.status !== 'done');
+  // The project currently selected in the form (may change while user edits)
+  const activeProjectId = formData.project_id ?? null;
+
+  // Eligible blockers: same project, not done, not the task itself
+  // If no project selected yet, show nothing and prompt user to pick a project first
+  const eligibleBlockers = activeProjectId
+    ? allTasks.filter(
+        (t) =>
+          t.id !== task?.id &&
+          t.status !== 'done' &&
+          t.project_id === activeProjectId
+      )
+    : [];
+
+  // Clear any existing blocked_by selections that no longer belong to the new project
+  const handleProjectChange = (newProjectId: string | null) => {
+    const validBlockers = (formData.blocked_by ?? []).filter(
+      (id) => allTasks.find((t) => t.id === id)?.project_id === newProjectId
+    );
+    setFormData({
+      ...formData,
+      project_id: newProjectId,
+      blocked_by: validBlockers.length > 0 ? validBlockers : null,
+    });
+  };
 
   const toggleBlocker = (id: string) => {
     const current = formData.blocked_by ?? [];
@@ -64,6 +90,7 @@ export default function TaskForm({ task, allTasks = [], onSubmit, onCancel }: Ta
   };
 
   const selectedCount = formData.blocked_by?.length ?? 0;
+  const activeProjectName = projects.find((p) => p.id === activeProjectId)?.name;
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
@@ -103,6 +130,24 @@ export default function TaskForm({ task, allTasks = [], onSubmit, onCancel }: Ta
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
             </div>
+
+            {/* Project */}
+            {projects.length > 0 && (
+              <div>
+                <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">Project</label>
+                <select
+                  id="project_id"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={formData.project_id ?? ''}
+                  onChange={(e) => handleProjectChange(e.target.value || null)}
+                >
+                  <option value="">No project</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Status + Priority */}
             <div className="grid grid-cols-2 gap-4">
@@ -166,12 +211,25 @@ export default function TaskForm({ task, allTasks = [], onSubmit, onCancel }: Ta
               {showDepsSection && (
                 <div className="px-4 py-3 space-y-3">
                   <p className="text-xs text-gray-500">
-                    Select tasks that must be <strong>Done</strong> before this task can start. This task will be locked until all selected blockers are completed.
+                    Select tasks <strong>within the same project</strong> that must be <strong>Done</strong> before this task can start.
                   </p>
 
-                  {eligibleBlockers.length === 0 ? (
-                    <p className="text-xs text-gray-400 italic">No other active tasks available to set as blockers.</p>
-                  ) : (
+                  {/* No project selected */}
+                  {!activeProjectId && (
+                    <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      ⚠️ Assign this task to a <strong>project</strong> first to set dependencies.
+                    </p>
+                  )}
+
+                  {/* Project selected but no eligible tasks */}
+                  {activeProjectId && eligibleBlockers.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">
+                      No other active tasks in <strong>{activeProjectName}</strong> to set as blockers.
+                    </p>
+                  )}
+
+                  {/* Blocker checklist */}
+                  {activeProjectId && eligibleBlockers.length > 0 && (
                     <div className="space-y-1 max-h-48 overflow-y-auto">
                       {eligibleBlockers.map((t) => {
                         const isSelected = formData.blocked_by?.includes(t.id) ?? false;
