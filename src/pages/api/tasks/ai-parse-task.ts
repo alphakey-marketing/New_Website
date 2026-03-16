@@ -15,7 +15,18 @@ export interface ParseTaskResponse {
   raw_input: string;
 }
 
-const SYSTEM_PROMPT = `You are a task parser. Extract task details from natural language input and return a JSON object.
+function buildSystemPrompt(today: string): string {
+  return `You are a task parser. Today's date is ${today}.
+Extract task details from natural language input and return a JSON object.
+
+== DATE HANDLING ==
+Today is ${today}. Use this to resolve ALL relative date references:
+- "today" \u2192 ${today}
+- "tomorrow" \u2192 next calendar day after ${today}
+- "this Wednesday / Friday / Monday" \u2192 the nearest upcoming occurrence of that weekday from ${today}
+- "next week" \u2192 Monday of the week after ${today}
+- "end of week" \u2192 Friday of the current week from ${today}
+If no date is mentioned, set due_date to null. NEVER put date text in the title or description.
 
 Return this exact format:
 {
@@ -30,12 +41,10 @@ Return this exact format:
 }
 
 Rules:
-- Title should be concise and action-oriented (start with a verb)
+- Title: concise, action-oriented, starts with a verb. Never includes date information.
 - Priority: high if urgent/ASAP/important/today, medium if this week/soon, low if someday/eventually
-- due_date: resolve relative dates (today, tomorrow, Friday, next week) to ISO YYYY-MM-DD based on today's date provided
-- If no due date mentioned, set due_date to null
-- project_name: only set if a project is clearly mentioned (e.g. "for the marketing project")
 - confidence: high if all fields clear, medium if some ambiguity, low if very vague`;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -50,8 +59,7 @@ ${projectList ? `Available projects: ${projectList}` : ''}
 Parse this into a task: "${input}"`;
 
   try {
-    // 256 tokens is plenty for the small parse-task JSON schema
-    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage, { temperature: 0.1, max_tokens: 256 });
+    const raw = await callOpenRouter(buildSystemPrompt(today), userMessage, { temperature: 0.1, max_tokens: 256 });
     const parsed = safeParseJSON<ParseTaskResponse>(raw);
     return res.status(200).json({ ...parsed, raw_input: input });
   } catch (error: any) {

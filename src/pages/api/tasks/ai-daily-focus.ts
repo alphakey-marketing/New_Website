@@ -26,7 +26,15 @@ export interface DailyFocusResponse {
   motivationalNote: string;
 }
 
-const SYSTEM_PROMPT = `You are a personal productivity coach. Analyse the user's tasks and return a JSON daily focus plan.
+function buildSystemPrompt(today: string): string {
+  return `You are a personal productivity coach. Today's date is ${today}.
+Analyse the user's tasks and return a JSON daily focus plan.
+
+== DATE CONTEXT ==
+Today is ${today}. Use this to determine:
+- Which tasks are overdue (due_date < ${today})
+- Which tasks are due today (due_date = ${today})
+- Which tasks are stale (in todo/in_progress for 14+ days with no due date, OR overdue by 7+ days)
 
 Return this exact format:
 {
@@ -57,16 +65,17 @@ Rules for topTasks:
 - Pick the 3 most important tasks for TODAY only
 - Rank 1 = must do first, rank 3 = do last
 - Consider: overdue > high priority due today > high priority due soon > medium priority
-- estimatedMinutes: realistic guess (simple task=15, medium=30, complex=60-120)
+- estimatedMinutes: realistic guess (simple=15, medium=30, complex=60-120)
 - Maximum 3 tasks in topTasks
 
 Rules for staleTasks:
-- A task is stale if it has been in todo or in_progress status for 14+ days with no due date, OR is overdue by 7+ days
+- Stale = todo/in_progress for 14+ days with no due date, OR overdue by 7+ days from ${today}
 - Maximum 5 stale tasks
-- suggestion: drop = task may no longer be relevant; reschedule = set a new realistic deadline; reprioritize = change priority level
+- suggestion: drop = no longer relevant; reschedule = set new deadline; reprioritize = change priority
 
-overloadWarning: if totalEstimatedMinutes > 360 (6 hours), warn the user with a friendly message.
+overloadWarning: if totalEstimatedMinutes > 360 (6 hours), warn with a friendly message.
 motivationalNote: short, warm, specific to their situation.`;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -94,7 +103,7 @@ ${taskSummary}
 Give me my top 3 focus tasks for today, identify any stale tasks, and provide a motivational note.`;
 
   try {
-    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage, { temperature: 0.3, max_tokens: 1500 });
+    const raw = await callOpenRouter(buildSystemPrompt(today), userMessage, { temperature: 0.3, max_tokens: 1500 });
     const parsed = safeParseJSON<DailyFocusResponse>(raw);
     return res.status(200).json(parsed);
   } catch (error: any) {
