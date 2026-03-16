@@ -56,9 +56,9 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
   };
 
   const staleActionLabel = (s: StaleTask) => {
-    if (s.suggestion === 'reschedule') return '\uD83D\uDCC5 Reschedule +7 days';
-    if (s.suggestion === 'reprioritize') return '\uD83D\uDD3D Set to Low priority';
-    if (s.suggestion === 'drop') return '\uD83D\uDDD1\uFE0F Delete task';
+    if (s.suggestion === 'reschedule') return '📅 Reschedule +7 days';
+    if (s.suggestion === 'reprioritize') return '🔽 Set to Low priority';
+    if (s.suggestion === 'drop') return '🗑️ Delete task';
     return 'Apply';
   };
 
@@ -80,7 +80,7 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
       <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 cursor-pointer"
         onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center space-x-3">
-          <span className="text-xl">\uD83C\uDF05</span>
+          <span className="text-xl">🌅</span>
           <div>
             <h3 className="text-sm font-bold text-white">Daily Briefing</h3>
             <p className="text-xs text-blue-200">Your top 3 focus tasks + stale task cleanup</p>
@@ -89,15 +89,15 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
         <div className="flex items-center space-x-3">
           <button onClick={(e) => { e.stopPropagation(); handleGenerate(); }} disabled={loading}
             className="px-3 py-1.5 bg-white text-blue-700 text-xs font-semibold rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors">
-            {loading ? '\uD83E\uDDE0 Analysing...' : briefing ? '\uD83D\uDD04 Refresh' : '\u2728 Generate'}
+            {loading ? '🧠 Analysing...' : briefing ? '🔄 Refresh' : '✨ Generate'}
           </button>
-          <span className="text-white text-lg">{expanded ? '\u25B2' : '\u25BC'}</span>
+          <span className="text-white text-lg">{expanded ? '▲' : '▼'}</span>
         </div>
       </div>
 
       {expanded && (
         <div className="px-5 py-4 space-y-5">
-          {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">\u26A0\uFE0F {error}</div>}
+          {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">⚠️ {error}</div>}
 
           {!briefing && !loading && (
             <div className="text-center py-6">
@@ -115,16 +115,16 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
           {briefing && (
             <>
               <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-                <p className="text-sm text-blue-800 font-medium">\uD83D\uDCAC {briefing.motivationalNote}</p>
+                <p className="text-sm text-blue-800 font-medium">💬 {briefing.motivationalNote}</p>
               </div>
               {briefing.overloadWarning && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-                  <p className="text-sm text-amber-800">\u26A0\uFE0F {briefing.overloadWarning}</p>
+                  <p className="text-sm text-amber-800">⚠️ {briefing.overloadWarning}</p>
                 </div>
               )}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">\uD83C\uDFAF Top 3 Focus Tasks Today</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">🎯 Top 3 Focus Tasks Today</p>
                   <span className="text-xs text-gray-400">Est. total: {formatMinutes(briefing.totalEstimatedMinutes)}</span>
                 </div>
                 <div className="space-y-2">
@@ -148,7 +148,7 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
               </div>
               {briefing.staleTasks.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">\uD83D\uDD78\uFE0F Stale Tasks \u2014 Needs Attention</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">🕸️ Stale Tasks — Needs Attention</p>
                   <div className="space-y-2">
                     {briefing.staleTasks.map((st: StaleTask) => (
                       <div key={st.taskId}
@@ -160,7 +160,7 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
                         </div>
                         <button onClick={() => handleApplyStale(st)} disabled={appliedStale.has(st.taskId)}
                           className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap">
-                          {appliedStale.has(st.taskId) ? '\u2705 Done' : staleActionLabel(st)}
+                          {appliedStale.has(st.taskId) ? '✅ Done' : staleActionLabel(st)}
                         </button>
                       </div>
                     ))}

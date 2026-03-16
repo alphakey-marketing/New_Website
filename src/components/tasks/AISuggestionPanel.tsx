@@ -22,22 +22,22 @@ interface Props {
 }
 
 const QUICK_PROMPTS = [
-  { label: '\uD83D\uDD04 Sequence my tasks',   prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
-  { label: '\uD83D\uDD34 Fix priorities',       prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
-  { label: '\uD83D\uDCC5 Fix deadlines',        prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
-  { label: '\u2702\uFE0F Break down a task',    prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
-  { label: '\u2712\uFE0F Improve descriptions', prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
-  { label: '\uD83D\uDCC1 New project + tasks',  prompt: 'Create a new project for me with tasks inside it.' },
+  { label: '🔄 Sequence my tasks',   prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
+  { label: '🔴 Fix priorities',       prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
+  { label: '📅 Fix deadlines',        prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
+  { label: '✂️ Break down a task',    prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
+  { label: '✏️ Improve descriptions', prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
+  { label: '📁 New project + tasks',  prompt: 'Create a new project for me with tasks inside it.' },
 ];
 
 const typeConfig: Record<string, { icon: string; label: string; color: string }> = {
-  reprioritize: { icon: '\uD83D\uDD34', label: 'Reprioritize',        color: 'bg-red-50 border-red-200' },
-  reschedule:   { icon: '\uD83D\uDCC5', label: 'Reschedule',          color: 'bg-yellow-50 border-yellow-200' },
-  rewrite:      { icon: '\u270F\uFE0F', label: 'Rewrite',             color: 'bg-blue-50 border-blue-200' },
-  sequence:     { icon: '\uD83D\uDD22', label: 'Recommended Order',   color: 'bg-purple-50 border-purple-200' },
-  split:        { icon: '\u2702\uFE0F', label: 'Split task',          color: 'bg-orange-50 border-orange-200' },
-  scaffold:     { icon: '\uD83D\uDCC1', label: 'Project + Tasks',     color: 'bg-green-50 border-green-200' },
-  general:      { icon: '\uD83D\uDCA1', label: 'Suggestion',          color: 'bg-gray-50 border-gray-200' },
+  reprioritize: { icon: '🔴', label: 'Reprioritize',        color: 'bg-red-50 border-red-200' },
+  reschedule:   { icon: '📅', label: 'Reschedule',          color: 'bg-yellow-50 border-yellow-200' },
+  rewrite:      { icon: '✏️', label: 'Rewrite',             color: 'bg-blue-50 border-blue-200' },
+  sequence:     { icon: '🔢', label: 'Recommended Order',   color: 'bg-purple-50 border-purple-200' },
+  split:        { icon: '✂️', label: 'Split task',          color: 'bg-orange-50 border-orange-200' },
+  scaffold:     { icon: '📁', label: 'Project + Tasks',     color: 'bg-green-50 border-green-200' },
+  general:      { icon: '💡', label: 'Suggestion',          color: 'bg-gray-50 border-gray-200' },
 };
 
 const READ_ONLY_TYPES = new Set(['sequence', 'general']);
@@ -67,7 +67,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     {} as Record<string, typeof projects[0]>
   );
 
-  // ── Quick Add ──
+  // -- Quick Add --
   const handleQaParse = async () => {
     if (!qaInput.trim()) return;
     setQaLoading(true); setQaError(null); setQaPreview(null);
@@ -113,7 +113,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
       });
       const note = resolvedProjectId && qaNewProjectName && qaCreateNewProject ? ` in new project "${qaNewProjectName}"` : '';
       setQaInput(''); setQaPreview(null); setQaConfidence(null); setQaNewProjectName(null); setQaCreateNewProject(false);
-      setQaSuccess(`\u2705 Task created${note}!`);
+      setQaSuccess(`✅ Task created${note}!`);
       setTimeout(() => setQaSuccess(null), 4000);
     } catch (err: any) {
       setQaError(err.message);
@@ -127,7 +127,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     setQaPreview({ ...qaPreview, [field]: value });
   };
 
-  // ── Suggest ──
+  // -- Suggest --
   const buildSnapshots = (): TaskSnapshot[] =>
     tasks.filter((t) => t.status !== 'done').map((t) => ({
       id: t.id, title: t.title, description: t.description,
@@ -185,18 +185,18 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
   return (
     <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-white shadow-2xl border-l border-gray-200 flex flex-col z-40">
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-blue-600">
-        <h2 className="text-lg font-bold text-white">\uD83E\uDD16 AI Assistant</h2>
+        <h2 className="text-lg font-bold text-white">🤖 AI Assistant</h2>
         <button onClick={onClose} className="text-white hover:text-indigo-200 text-2xl leading-none">&times;</button>
       </div>
 
       <div className="flex border-b border-gray-200">
         <button onClick={() => setActiveTab('quick-add')}
           className={`flex-1 py-2.5 text-sm font-medium transition-colors ${ activeTab === 'quick-add' ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-700' }`}>
-          \u26A1 Quick Add Task
+          ⚡ Quick Add Task
         </button>
         <button onClick={() => setActiveTab('suggest')}
           className={`flex-1 py-2.5 text-sm font-medium transition-colors ${ activeTab === 'suggest' ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-700' }`}>
-          \u2728 Suggestions
+          ✨ Suggestions
         </button>
       </div>
 
@@ -204,7 +204,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
         {activeTab === 'quick-add' && (
           <>
-            <p className="text-xs text-gray-500">Type naturally \u2014 AI extracts the title, priority, due date and project.</p>
+            <p className="text-xs text-gray-500">Type naturally — AI extracts the title, priority, due date and project.</p>
             <div className="flex space-x-2">
               <input type="text" value={qaInput}
                 onChange={(e) => { setQaInput(e.target.value); setQaPreview(null); setQaNewProjectName(null); }}
@@ -214,20 +214,20 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                 disabled={qaLoading} />
               <button onClick={handleQaParse} disabled={qaLoading || !qaInput.trim()}
                 className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                {qaLoading && !qaPreview ? '\uD83E\uDDE0...' : 'Parse'}
+                {qaLoading && !qaPreview ? '🧠...' : 'Parse'}
               </button>
             </div>
 
-            {qaError && <p className="text-xs text-red-600">\u26A0\uFE0F {qaError}</p>}
+            {qaError && <p className="text-xs text-red-600">⚠️ {qaError}</p>}
             {qaSuccess && <p className="text-xs text-green-600 font-medium">{qaSuccess}</p>}
 
             {qaPreview && (
               <div className="bg-white border border-indigo-200 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Review & confirm</span>
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Review &amp; confirm</span>
                   {qaConfidence && (
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${confidenceBadge[qaConfidence]}`}>
-                      {qaConfidence === 'high' ? '\u2705 High confidence' : qaConfidence === 'medium' ? '\u26A0\uFE0F Review' : '\u2753 Review carefully'}
+                      {qaConfidence === 'high' ? '✅ High confidence' : qaConfidence === 'medium' ? '⚠️ Review' : '❓ Review carefully'}
                     </span>
                   )}
                 </div>
@@ -247,9 +247,9 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                     <label className="text-xs font-medium text-gray-500">Priority</label>
                     <select value={qaPreview.priority} onChange={(e) => handleQaEdit('priority', e.target.value)}
                       className={`mt-1 w-full border rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none ${priorityColor[qaPreview.priority]}`}>
-                      <option value="high">\uD83D\uDD34 High</option>
-                      <option value="medium">\uD83D\uDFE1 Medium</option>
-                      <option value="low">\uD83D\uDFE2 Low</option>
+                      <option value="high">🔴 High</option>
+                      <option value="medium">🟡 Medium</option>
+                      <option value="low">🟢 Low</option>
                     </select>
                   </div>
                   <div className="flex-1">
@@ -260,16 +260,16 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                 </div>
                 {qaPreview.project_name && !qaNewProjectName && (
                   <div className="text-xs text-indigo-700 bg-indigo-50 rounded-lg px-3 py-1.5">
-                    \uD83D\uDCC1 Matched project: <strong>{qaPreview.project_name}</strong>
+                    📁 Matched project: <strong>{qaPreview.project_name}</strong>
                   </div>
                 )}
                 {qaNewProjectName && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    <p className="text-xs font-semibold text-amber-800 mb-1.5">\uD83D\uDCC1 &quot;{qaNewProjectName}&quot; doesn&apos;t exist yet</p>
+                    <p className="text-xs font-semibold text-amber-800 mb-1.5">📁 &quot;{qaNewProjectName}&quot; doesn&apos;t exist yet</p>
                     <div className="flex space-x-2">
                       <button type="button" onClick={() => setQaCreateNewProject(true)}
                         className={`flex-1 py-1 text-xs font-medium rounded-lg border transition-colors ${ qaCreateNewProject ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50' }`}>
-                        \u2705 Create project
+                        ✅ Create project
                       </button>
                       <button type="button" onClick={() => setQaCreateNewProject(false)}
                         className={`flex-1 py-1 text-xs font-medium rounded-lg border transition-colors ${ !qaCreateNewProject ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50' }`}>
@@ -281,7 +281,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                 <div className="flex space-x-2 pt-1">
                   <button onClick={handleQaConfirm} disabled={qaLoading}
                     className="flex-1 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                    {qaLoading ? 'Creating...' : '\u2705 Create Task'}
+                    {qaLoading ? 'Creating...' : '✅ Create Task'}
                   </button>
                   <button onClick={() => { setQaPreview(null); setQaConfidence(null); setQaNewProjectName(null); }}
                     className="flex-1 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50">
@@ -314,11 +314,11 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none" />
               <button onClick={() => handleAsk()} disabled={loading || !userPrompt.trim()}
                 className="mt-2 w-full py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50">
-                {loading ? '\uD83E\uDDE0 Thinking...' : '\u2728 Get suggestions'}
+                {loading ? '🧠 Thinking...' : '✨ Get suggestions'}
               </button>
             </div>
 
-            {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">\u26A0\uFE0F {error}</div>}
+            {error && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">⚠️ {error}</div>}
             {loading && <div className="space-y-3">{[1,2,3].map((i) => <div key={i} className="animate-pulse bg-gray-100 rounded-xl h-24" />)}</div>}
 
             {pending.length > 0 && (
@@ -344,7 +344,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                         {s.type === 'scaffold' && (
                           <div className="mb-3 space-y-2">
                             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold ${ isExistingProject ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-green-100 text-green-800 border border-green-200' }`}>
-                              <span>{isExistingProject ? '\uD83D\uDCC2' : '\uD83D\uDCC1'}</span>
+                              <span>{isExistingProject ? '📂' : '📁'}</span>
                               <span>{isExistingProject ? `Adding to: "${s.scaffoldProjectName}"` : `New project: "${s.scaffoldProjectName}"`}</span>
                             </div>
                             {s.subTasks && s.subTasks.map((sub, i) => (
@@ -353,7 +353,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                                 <div className="flex-1">
                                   <p className="font-medium text-gray-800">{sub.title}</p>
                                   {sub.description && <p className="text-gray-500 mt-0.5">{sub.description}</p>}
-                                  {sub.due_date && <p className="text-indigo-500 mt-0.5">\uD83D\uDCC5 {sub.due_date}</p>}
+                                  {sub.due_date && <p className="text-indigo-500 mt-0.5">📅 {sub.due_date}</p>}
                                 </div>
                                 <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${ sub.priority === 'high' ? 'bg-red-100 text-red-700' : sub.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600' }`}>{sub.priority ?? 'medium'}</span>
                               </div>
@@ -386,7 +386,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                         {!isReadOnly && s.type !== 'split' && s.type !== 'scaffold' && s.currentValue && (
                           <div className="flex items-center space-x-2 text-xs mb-3">
                             <span className="px-2 py-1 bg-white border border-gray-300 rounded text-gray-500 line-through">{s.currentValue}</span>
-                            <span className="text-gray-400">\u2192</span>
+                            <span className="text-gray-400">→</span>
                             <span className="px-2 py-1 bg-white border border-indigo-300 rounded text-indigo-700 font-medium">{s.proposedValue}</span>
                           </div>
                         )}
@@ -396,11 +396,11 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                           <div className="flex space-x-2">
                             <button onClick={() => handleAccept(s)} disabled={applying === s.id}
                               className="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50">
-                              {applying === s.id ? 'Creating...' :
-                                s.type === 'scaffold' ? (isExistingProject ? `\u2705 Add ${s.subTasks?.length ?? 0} tasks` : `\u2705 Create project + ${s.subTasks?.length ?? 0} tasks`) :
-                                s.type === 'split' ? `\u2705 Create ${s.subTasks?.length ?? ''} sub-tasks` : '\u2705 Accept'}
+                              {applying === s.id ? 'Applying...' :
+                                s.type === 'scaffold' ? (isExistingProject ? `✅ Add ${s.subTasks?.length ?? 0} tasks` : `✅ Create project + ${s.subTasks?.length ?? 0} tasks`) :
+                                s.type === 'split' ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks` : '✅ Accept'}
                             </button>
-                            <button onClick={() => handleDismiss(s.id)} className="flex-1 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50">\u274C Reject</button>
+                            <button onClick={() => handleDismiss(s.id)} className="flex-1 py-1.5 rounded-lg border border-gray-300 text-gray-600 text-xs font-medium hover:bg-gray-50">❌ Reject</button>
                           </div>
                         )}
                       </div>
@@ -412,9 +412,9 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
             {acceptedList.length > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <p className="text-sm font-semibold text-green-800 mb-2">\u2705 Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}</p>
+                <p className="text-sm font-semibold text-green-800 mb-2">✅ Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}</p>
                 <ul className="space-y-1">
-                  {acceptedList.map((s) => <li key={s.id} className="text-xs text-green-700">\u2022 {acceptedSummaryLabel(s)}</li>)}
+                  {acceptedList.map((s) => <li key={s.id} className="text-xs text-green-700">· {acceptedSummaryLabel(s)}</li>)}
                 </ul>
               </div>
             )}
@@ -427,7 +427,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
       </div>
 
       <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
-        <p className="text-xs text-gray-400 text-center">\uD83D\uDD12 Notes & Docs are <strong>never</strong> shared with AI</p>
+        <p className="text-xs text-gray-400 text-center">🔒 Notes &amp; Docs are <strong>never</strong> shared with AI</p>
       </div>
     </div>
   );
