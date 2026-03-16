@@ -26,7 +26,7 @@ const priorityConfig = {
 
 function formatDueDate(dateStr: string) {
   const date = new Date(dateStr);
-  if (isPast(date) && !isToday(date)) return { label: `Overdue \u00b7 ${format(date, 'MMM d')}`, cls: 'text-red-600 font-semibold' };
+  if (isPast(date) && !isToday(date)) return { label: `Overdue · ${format(date, 'MMM d')}`, cls: 'text-red-600 font-semibold' };
   if (isToday(date))    return { label: 'Due Today',    cls: 'text-orange-600 font-semibold' };
   if (isTomorrow(date)) return { label: 'Due Tomorrow', cls: 'text-yellow-600 font-semibold' };
   return { label: format(date, 'MMM d, yyyy'), cls: 'text-gray-400' };
@@ -40,7 +40,6 @@ function contrastColor(hex: string): string {
   return (r * 299 + g * 587 + b * 114) / 1000 > 128 ? '#1f2937' : '#ffffff';
 }
 
-/** Returns true if any of the task's blockers are not yet done */
 function isBlocked(task: Task, taskMap: Record<string, Task>): boolean {
   if (!task.blocked_by || task.blocked_by.length === 0) return false;
   return task.blocked_by.some((id) => taskMap[id] && taskMap[id].status !== 'done');
@@ -53,7 +52,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
   const taskMap = tasks.reduce((acc, t) => { acc[t.id] = t; return acc; }, {} as Record<string, Task>);
 
   const sorted = [...tasks].sort((a, b) => {
-    // Blocked tasks always sink to the bottom
     const aBlocked = isBlocked(a, taskMap);
     const bBlocked = isBlocked(b, taskMap);
     if (aBlocked && !bBlocked) return 1;
@@ -95,7 +93,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
 
   return (
     <div>
-      {/* Sort Bar */}
       <div className="mb-3 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center space-x-2 flex-wrap gap-y-1">
           <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Sort:</span>
@@ -107,22 +104,22 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                 sortKey === key ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
               }`}
             >
-              {key === 'priority' ? '\uD83D\uDD34 Priority' : key === 'due_date' ? '\uD83D\uDCC5 Due Date' : '\uD83D\uDD50 Newest'}
+              {key === 'priority' ? '🔴 Priority' : key === 'due_date' ? '📅 Due Date' : '🕐 Newest'}
             </button>
           ))}
         </div>
         <button onClick={() => setShowGuide(!showGuide)} className="text-xs text-blue-500 hover:text-blue-700 underline">
-          {showGuide ? 'Hide guide' : '\u2753 How to use'}
+          {showGuide ? 'Hide guide' : '❓ How to use'}
         </button>
       </div>
 
       {showGuide && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 space-y-1">
-          <p className="font-semibold mb-2">\uD83D\uDCCB How to use the Task List</p>
-          <p>\u2022 <strong>\uD83D\uDD34 Priority sort</strong> \u2014 High \u2192 Medium \u2192 Low. Blocked tasks always sort to the bottom.</p>
-          <p>\u2022 <strong>\uD83D\uDCC5 Due Date sort</strong> \u2014 Nearest deadline first.</p>
-          <p>\u2022 <strong>\uD83D\uDD50 Newest sort</strong> \u2014 Most recently created first.</p>
-          <p>\u2022 <strong>\uD83D\uDD12 Blocked</strong> tasks cannot be started until their dependencies are done.</p>
+          <p className="font-semibold mb-2">📋 How to use the Task List</p>
+          <p>• <strong>🔴 Priority sort</strong> — High → Medium → Low. Blocked tasks always sort to the bottom.</p>
+          <p>• <strong>📅 Due Date sort</strong> — Nearest deadline first.</p>
+          <p>• <strong>🕐 Newest sort</strong> — Most recently created first.</p>
+          <p>• <strong>🔒 Blocked</strong> tasks cannot be started until their dependencies are done.</p>
         </div>
       )}
 
@@ -143,7 +140,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
             return (
               <li key={task.id} className={blocked ? 'bg-orange-50 opacity-80' : isOverdue ? 'bg-red-50' : 'bg-white hover:bg-gray-50 transition-colors'}>
                 <div className="px-4 py-4 sm:px-5">
-                  {/* Row 1: priority dot + title + lock badge + actions */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-2 flex-1 min-w-0">
                       {sortKey === 'priority' && (
@@ -161,11 +157,10 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                           </h3>
                           {blocked && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-100 border border-orange-300 text-orange-700 text-xs font-semibold">
-                              \uD83D\uDD12 Blocked
+                              🔒 Blocked
                             </span>
                           )}
                         </div>
-                        {/* Blocker explanation */}
                         {blocked && blockerTitles.length > 0 && (
                           <p className="mt-0.5 text-xs text-orange-600">
                             Waiting on: {blockerTitles.join(', ')}
@@ -189,7 +184,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                     </div>
                   </div>
 
-                  {/* Row 2: project pill + priority + due date */}
                   <div className="mt-2 ml-7 flex flex-wrap items-center gap-2">
                     {project && (
                       <span
@@ -205,15 +199,13 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${pc.color}`}>
                       {pc.label}
                     </span>
-                    {due && <span className={`text-xs ${due.cls}`}>\u23F0 {due.label}</span>}
+                    {due && <span className={`text-xs ${due.cls}`}>⏰ {due.label}</span>}
                   </div>
 
-                  {/* Row 3: description */}
                   {task.description && (
                     <p className="mt-1.5 ml-7 text-xs text-gray-500 line-clamp-2 leading-relaxed">{task.description}</p>
                   )}
 
-                  {/* Row 4: status dropdown — blocked tasks cannot move to in_progress */}
                   <div className="mt-2 ml-7">
                     <select
                       value={task.status}
@@ -222,7 +214,7 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                       onChange={(e) => {
                         const next = e.target.value as Task['status'];
                         if (blocked && next === 'in_progress') {
-                          alert(`\uD83D\uDD12 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '\u2022 ' + t).join('\n')}`);
+                          alert(`🔒 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '• ' + t).join('\n')}`);
                           return;
                         }
                         onStatusChange(task, next);

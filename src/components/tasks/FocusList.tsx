@@ -7,15 +7,15 @@ interface FocusListProps {
   projects: { id: string; name: string; color?: string }[];
   onEdit: (task: Task) => void;
   onStatusChange: (task: Task, newStatus: Task['status']) => void;
-  onNewTask?: (projectId: string | null) => void; // new: open task form pre-scoped to a project
+  onNewTask?: (projectId: string | null) => void;
 }
 
 const priorityOrder = { high: 0, medium: 1, low: 2 };
 
 const priorityConfig = {
-  high:   { color: 'bg-red-100 text-red-700 border border-red-200',           icon: '\uD83D\uDD34', label: 'High' },
-  medium: { color: 'bg-yellow-100 text-yellow-800 border border-yellow-200',  icon: '\uD83D\uDFE1', label: 'Medium' },
-  low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',         icon: '\uD83D\uDFE2', label: 'Low' },
+  high:   { color: 'bg-red-100 text-red-700 border border-red-200',          icon: '🔴', label: 'High' },
+  medium: { color: 'bg-yellow-100 text-yellow-800 border border-yellow-200', icon: '🟡', label: 'Medium' },
+  low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',        icon: '🟢', label: 'Low' },
 };
 
 function formatDueDate(dateStr: string) {
@@ -64,18 +64,16 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
 
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">\uD83C\uDFAF Today&apos;s Focus</h2>
+          <h2 className="text-2xl font-bold text-gray-900">🎯 Today&apos;s Focus</h2>
           <p className="text-sm text-gray-500 mt-0.5">
             {ranked.length} tasks remaining
-            {overdueCount > 0 && <span className="ml-2 text-red-600 font-semibold">\u00b7 {overdueCount} overdue</span>}
-            {blockedCount > 0 && <span className="ml-2 text-orange-500">\u00b7 {blockedCount} blocked</span>}
+            {overdueCount > 0 && <span className="ml-2 text-red-600 font-semibold">&middot; {overdueCount} overdue</span>}
+            {blockedCount > 0 && <span className="ml-2 text-orange-500">&middot; {blockedCount} blocked</span>}
           </p>
         </div>
 
-        {/* New task button with project picker */}
         {onNewTask && (
           <div className="relative">
             <button
@@ -93,7 +91,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     onClick={() => handleNewTask(null)}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    \uD83D\uDCC2 No project
+                    📂 No project
                   </button>
                   {projects.map((p) => (
                     <button
@@ -117,7 +115,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
 
       {ranked.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
-          <p className="text-4xl mb-3">\uD83C\uDF89</p>
+          <p className="text-4xl mb-3">🎉</p>
           <p className="text-lg font-semibold text-gray-700">All caught up!</p>
           <p className="text-sm text-gray-400 mt-1">No pending tasks. Enjoy your day!</p>
         </div>
@@ -146,14 +144,12 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     : 'bg-white border-gray-200 hover:shadow-sm'
                 }`}
               >
-                {/* Rank */}
                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                   blocked ? 'bg-orange-200 text-orange-600' : index === 0 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'
                 }`}>
-                  {blocked ? '\uD83D\uDD12' : index + 1}
+                  {blocked ? '🔒' : index + 1}
                 </div>
 
-                {/* Task info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center flex-wrap gap-2">
                     <span className={`font-medium ${
@@ -163,7 +159,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     </span>
                     {blocked ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 border border-orange-300 text-orange-700">
-                        \uD83D\uDD12 Blocked
+                        🔒 Blocked
                       </span>
                     ) : (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${pc.color}`}>
@@ -187,12 +183,10 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                   )}
                 </div>
 
-                {/* Due */}
                 {due && !blocked && (
-                  <div className={`flex-shrink-0 text-xs font-medium ${due.cls}`}>\u23F0 {due.label}</div>
+                  <div className={`flex-shrink-0 text-xs font-medium ${due.cls}`}>⏰ {due.label}</div>
                 )}
 
-                {/* Status + Edit */}
                 <div className="flex-shrink-0 flex items-center space-x-2">
                   <select
                     value={task.status}
@@ -201,7 +195,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     onChange={(e) => {
                       const next = e.target.value as Task['status'];
                       if (blocked && next === 'in_progress') {
-                        alert(`\uD83D\uDD12 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '\u2022 ' + t).join('\n')}`);
+                        alert(`🔒 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '• ' + t).join('\n')}`);
                         return;
                       }
                       onStatusChange(task, next);
@@ -212,7 +206,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress" disabled={blocked}>In Progress</option>
-                    <option value="done">\u2705 Done</option>
+                    <option value="done">✅ Done</option>
                   </select>
                   <button
                     onClick={() => onEdit(task)}
