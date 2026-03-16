@@ -32,25 +32,53 @@ interface RequestBody {
   userPrompt: string;
 }
 
-const SYSTEM_PROMPT = `You are a productivity assistant. You must respond with a JSON object containing a "suggestions" array.
+/**
+ * Detect whether the user's prompt is description-oriented.
+ * Only for these intents do we send task descriptions to the model;
+ * for sequence / reprioritize / reschedule / scaffold they are pure noise.
+ */
+function needsDescriptions(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return (
+    lower.includes('description') ||
+    lower.includes('rewrite') ||
+    lower.includes('improve') ||
+    lower.includes('vague') ||
+    lower.includes('clearer') ||
+    lower.includes('break down') ||
+    lower.includes('break up') ||
+    lower.includes('split') ||
+    lower.includes('sub-task') ||
+    lower.includes('subtask')
+  );
+}
+
+/**
+ * Build the system prompt with today's date baked in.
+ * Injecting the date here (not just in the user message) means
+ * the model cannot ignore or misplace it when resolving relative dates.
+ */
+function buildSystemPrompt(today: string): string {
+  return `You are a productivity assistant. Today's date is ${today}.
+You must respond with a JSON object containing a "suggestions" array.
 
 == CRITICAL RULE: ONLY RESPOND TO WHAT THE USER ASKS ==
 You must ONLY produce suggestion types that are directly relevant to the user's request.
-- If the user asks to create a project or tasks → use "scaffold"
-- If the user asks to break down a task → use "split"
-- If the user asks for task order/sequence → use "sequence"
-- If the user explicitly asks to fix priorities → use "reprioritize"
-- If the user explicitly asks to fix deadlines/dates → use "reschedule"
-- If the user asks to improve wording/descriptions → use "rewrite"
+- If the user asks to create a project or tasks \u2192 use "scaffold"
+- If the user asks to break down a task \u2192 use "split"
+- If the user asks for task order/sequence \u2192 use "sequence"
+- If the user explicitly asks to fix priorities \u2192 use "reprioritize"
+- If the user explicitly asks to fix deadlines/dates \u2192 use "reschedule"
+- If the user asks to improve wording/descriptions \u2192 use "rewrite"
 - DO NOT add reprioritize or reschedule suggestions unless the user's request explicitly asks for them
-- DO NOT mix suggestion types — respond only to what was asked
+- DO NOT mix suggestion types \u2014 respond only to what was asked
 
 == DATE HANDLING ==
-Today's date is always provided in the user message as "Today is YYYY-MM-DD".
-When a user mentions a due date for a task (e.g. "by Wednesday", "done by this Friday", "due next Monday", "by end of week"), you MUST:
-- Resolve it to an absolute YYYY-MM-DD date based on today's date
+Today is ${today}. Use this to resolve ALL relative date references.
+When a user mentions a due date (e.g. "by Wednesday", "done by this Friday", "due next Monday", "by end of week"), you MUST:
+- Resolve it to an absolute YYYY-MM-DD date based on today (${today})
 - Set due_date on the relevant subTask to that resolved date
-- NEVER put date information in the title or description — always use the due_date field
+- NEVER put date information in the title or description \u2014 always use the due_date field
 - If no date is mentioned for a task, set due_date to null
 
 == RESPONSE FORMAT ==
@@ -64,7 +92,7 @@ When a user mentions a due date for a task (e.g. "by Wednesday", "done by this F
       "explanation": "<1-2 sentences, friendly tone>",
       "currentValue": "<current value or empty string>",
       "proposedValue": "<proposed value or empty string>",
-      "field": "<priority|due_date|description|title — omit for scaffold/sequence/split/general>"
+      "field": "<priority|due_date|description|title \u2014 omit for scaffold/sequence/split/general>"
     }
   ]
 }
@@ -79,14 +107,14 @@ Use when the user wants to create a NEW PROJECT with tasks inside it.
 - Include a subTasks array with each task: { title, description, priority, due_date }
   - priority: "high" | "medium" | "low"
   - due_date: resolved YYYY-MM-DD string if a date was mentioned, otherwise null
-  - NEVER put date info in title or description — use due_date field only
+  - NEVER put date info in title or description \u2014 use due_date field only
 - Example:
   {
     "id": "s1",
     "taskId": "",
     "taskTitle": "invesbot",
     "type": "scaffold",
-    "explanation": "I will create the project \"invesbot\" and add your 3 tasks to it.",
+    "explanation": "I will create the project \\"invesbot\\" and add your 3 tasks to it.",
     "currentValue": "",
     "proposedValue": "1 project + 3 tasks",
     "scaffoldProjectName": "invesbot",
@@ -109,7 +137,7 @@ Use when the user wants to create a NEW PROJECT with tasks inside it.
 - Set taskId to "", taskTitle to "Recommended task order"
 - Set proposedValue to a numbered list
 - Include orderedTaskIds: array of task IDs in recommended order
-- READ-ONLY — no database change
+- READ-ONLY \u2014 no database change
 - Return at most 1 sequence suggestion
 
 == TYPE: reprioritize ==
@@ -125,7 +153,8 @@ ONLY if user explicitly asks to fix deadlines or reschedule.
 == TYPE: general ==
 - Set taskId, taskTitle, currentValue all to ""
 - Set proposedValue to the advice text
-- READ-ONLY — informational only, no Accept button`;
+- READ-ONLY \u2014 informational only, no Accept button`;
+}
 
 const ERROR_SUGGESTION: AISuggestion = {
   id: 's_error',
@@ -143,7 +172,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { tasks, projects, userPrompt }: RequestBody = req.body;
   if (!tasks || !Array.isArray(tasks)) return res.status(400).json({ error: 'tasks array is required' });
 
-  // Cap snapshot to 50 non-done tasks sorted by due date to keep token usage bounded
+  const today = new Date().toISOString().split('T')[0];
+
+  // Detect whether this prompt needs task descriptions (rewrite / split)
+  // For all other intents (sequence, reprioritize, reschedule, scaffold)
+  // descriptions are irrelevant noise that wastes tokens.
+  const includeDesc = needsDescriptions(userPrompt);
+
+  // Cap to 50 non-done tasks sorted by due date
   const cappedTasks = tasks
     .filter((t) => t.status !== 'done')
     .sort((a, b) => {
@@ -162,18 +198,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `Status: ${t.status}`,
           `Priority: ${t.priority}`,
           t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
-          // Truncate descriptions to 80 chars to save tokens
-          t.description ? `Desc: ${t.description.slice(0, 80)}` : '',
+          // Only include description when the intent actually needs it
+          includeDesc && t.description ? `Desc: ${t.description.slice(0, 80)}` : '',
           t.project_name ? `Project: ${t.project_name}` : '',
         ].filter(Boolean).join(' | ')
       ).join('\n')
     : '(no tasks yet)';
 
-  const today = new Date().toISOString().split('T')[0];
+  const systemPrompt = buildSystemPrompt(today);
   const userMessage = `Today is ${today}.\n\nExisting tasks:\n${taskSummary}\n\nUser request: ${userPrompt}\n\nRespond with a JSON object containing a "suggestions" array. Only respond to exactly what the user asked for.`;
 
   try {
-    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage, { temperature: 0.2, max_tokens: 2048 });
+    const raw = await callOpenRouter(systemPrompt, userMessage, { temperature: 0.2, max_tokens: 2048 });
     const parsed = safeParseJSON<{ suggestions?: AISuggestion[] } | AISuggestion[]>(raw, { suggestions: [ERROR_SUGGESTION] });
     const suggestions: AISuggestion[] = Array.isArray(parsed)
       ? parsed
