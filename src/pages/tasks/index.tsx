@@ -156,7 +156,6 @@ export default function TasksPage() {
       if (!suggestion.scaffoldProjectName) throw new Error('No project name provided by AI.');
       if (!suggestion.subTasks?.length)    throw new Error('No tasks provided by AI.');
 
-      // Case-insensitive match against existing projects — never create a duplicate
       const existingProject = projects.find(
         (p) => p.name.trim().toLowerCase() === suggestion.scaffoldProjectName!.trim().toLowerCase()
       );
@@ -359,9 +358,16 @@ export default function TasksPage() {
         <AISuggestionPanel tasks={tasks} projects={projects} onApplySuggestion={handleApplySuggestion} onClose={() => setShowAIPanel(false)} />
       )}
 
+      {/* TaskForm — allTasks passed so the blocked_by picker has the full task list */}
       {showTaskForm && (
-        <TaskForm task={editingTask} onSubmit={editingTask ? handleUpdateTask : handleCreateTask} onCancel={() => { setShowTaskForm(false); setEditingTask(null); }} />
+        <TaskForm
+          task={editingTask}
+          allTasks={tasks}
+          onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+          onCancel={() => { setShowTaskForm(false); setEditingTask(null); }}
+        />
       )}
+
       {showProjectForm && (
         <ProjectForm project={editingProject} onSubmit={editingProject ? handleUpdateProject : handleCreateProject} onCancel={() => { setShowProjectForm(false); setEditingProject(null); }} />
       )}
