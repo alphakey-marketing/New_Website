@@ -8,8 +8,10 @@ export interface Task {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  due_date?: string;
-  project_id?: string;
+  due_date?: string | null;
+  project_id?: string | null;
+  /** Optional: IDs of tasks that must be 'done' before this task can start */
+  blocked_by?: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +21,8 @@ export interface TaskFormData {
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  due_date?: string;
-  project_id?: string;
+  due_date?: string | null;
+  project_id?: string | null;
+  /** Optional: IDs of tasks that must be 'done' before this task can start */
+  blocked_by?: string[] | null;
 }
