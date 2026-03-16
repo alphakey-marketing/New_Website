@@ -7,14 +7,15 @@ interface FocusListProps {
   projects: { id: string; name: string; color?: string }[];
   onEdit: (task: Task) => void;
   onStatusChange: (task: Task, newStatus: Task['status']) => void;
+  onNewTask?: (projectId: string | null) => void; // new: open task form pre-scoped to a project
 }
 
 const priorityOrder = { high: 0, medium: 1, low: 2 };
 
 const priorityConfig = {
-  high:   { color: 'bg-red-100 text-red-700 border border-red-200',    icon: '\uD83D\uDD34', label: 'High' },
-  medium: { color: 'bg-yellow-100 text-yellow-800 border border-yellow-200', icon: '\uD83D\uDFE1', label: 'Medium' },
-  low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',  icon: '\uD83D\uDFE2', label: 'Low' },
+  high:   { color: 'bg-red-100 text-red-700 border border-red-200',           icon: '\uD83D\uDD34', label: 'High' },
+  medium: { color: 'bg-yellow-100 text-yellow-800 border border-yellow-200',  icon: '\uD83D\uDFE1', label: 'Medium' },
+  low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',         icon: '\uD83D\uDFE2', label: 'Low' },
 };
 
 function formatDueDate(dateStr: string) {
@@ -30,9 +31,9 @@ function isBlocked(task: Task, taskMap: Record<string, Task>): boolean {
   return task.blocked_by.some((id) => taskMap[id] && taskMap[id].status !== 'done');
 }
 
-export default function FocusList({ tasks, projects, onEdit, onStatusChange }: FocusListProps) {
-  const [showGuide, setShowGuide] = useState(true);
+export default function FocusList({ tasks, projects, onEdit, onStatusChange, onNewTask }: FocusListProps) {
   const [limit, setLimit] = useState(7);
+  const [showProjectPicker, setShowProjectPicker] = useState(false);
 
   const projectMap = projects.reduce((acc, p) => { acc[p.id] = p; return acc; }, {} as Record<string, typeof projects[0]>);
   const taskMap    = tasks.reduce((acc, t) => { acc[t.id] = t; return acc; }, {} as Record<string, Task>);
@@ -40,7 +41,6 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange }: F
   const ranked = [...tasks]
     .filter((t) => t.status !== 'done')
     .sort((a, b) => {
-      // Blocked tasks sink to bottom
       const aB = isBlocked(a, taskMap);
       const bB = isBlocked(b, taskMap);
       if (aB && !bB) return 1;
@@ -54,56 +54,64 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange }: F
     });
 
   const visible = ranked.slice(0, limit);
-  const overdueCount  = ranked.filter(t => !isBlocked(t, taskMap) && t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date))).length;
-  const highCount     = ranked.filter(t => !isBlocked(t, taskMap) && t.priority === 'high').length;
-  const blockedCount  = ranked.filter(t => isBlocked(t, taskMap)).length;
+  const overdueCount = ranked.filter(t => !isBlocked(t, taskMap) && t.due_date && isPast(new Date(t.due_date)) && !isToday(new Date(t.due_date))).length;
+  const blockedCount = ranked.filter(t => isBlocked(t, taskMap)).length;
+
+  const handleNewTask = (projectId: string | null) => {
+    setShowProjectPicker(false);
+    onNewTask?.(projectId);
+  };
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">\uD83C\uDFAF Today&apos;s Focus</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {ranked.length} tasks remaining
-              {overdueCount > 0 && <span className="ml-2 text-red-600 font-semibold">\u00b7 {overdueCount} overdue!</span>}
-              {highCount > 0    && <span className="ml-2 text-red-500">\u00b7 {highCount} high priority</span>}
-              {blockedCount > 0 && <span className="ml-2 text-orange-500">\u00b7 {blockedCount} blocked</span>}
-            </p>
-          </div>
-          <button onClick={() => setShowGuide(!showGuide)} className="text-xs text-blue-500 hover:text-blue-700 underline">
-            {showGuide ? 'Hide guide' : '\u2753 How to use'}
-          </button>
+      {/* Header */}
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">\uD83C\uDFAF Today&apos;s Focus</h2>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {ranked.length} tasks remaining
+            {overdueCount > 0 && <span className="ml-2 text-red-600 font-semibold">\u00b7 {overdueCount} overdue</span>}
+            {blockedCount > 0 && <span className="ml-2 text-orange-500">\u00b7 {blockedCount} blocked</span>}
+          </p>
         </div>
 
-        {showGuide && (
-          <div className="mt-4 p-4 bg-indigo-50 border border-indigo-200 rounded-xl text-sm text-indigo-900">
-            <p className="font-semibold text-base mb-2">\uD83D\uDC4B How to use Today&apos;s Focus</p>
-            <div className="space-y-1.5">
-              <p>\uD83D\uDCCC <strong>This list ranks ALL your tasks</strong> across every project in one place.</p>
-              <p>\uD83D\uDD34 <strong>Start from the top.</strong> Sorted by priority, then due date. Task #1 needs your attention most.</p>
-              <p>\uD83D\uDD12 <strong>Blocked tasks</strong> appear at the bottom \u2014 you can&apos;t start them until their dependencies are done.</p>
-              <p>\u2705 <strong>Mark tasks done</strong> inline to automatically unblock dependent tasks.</p>
-            </div>
+        {/* New task button with project picker */}
+        {onNewTask && (
+          <div className="relative">
+            <button
+              onClick={() => setShowProjectPicker(!showProjectPicker)}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              New Task
+            </button>
+            {showProjectPicker && (
+              <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20">
+                <div className="py-1">
+                  <p className="px-3 pt-2 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">Add to project</p>
+                  <button
+                    onClick={() => handleNewTask(null)}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    \uD83D\uDCC2 No project
+                  </button>
+                  {projects.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => handleNewTask(p.id)}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 gap-2"
+                    >
+                      <span
+                        className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: p.color || '#6366f1' }}
+                      />
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Summary pills */}
-      <div className="flex items-center flex-wrap gap-2 mb-5">
-        {(['high', 'medium', 'low'] as const).map((p) => {
-          const count = ranked.filter(t => !isBlocked(t, taskMap) && t.priority === p).length;
-          const cfg = priorityConfig[p];
-          return (
-            <span key={p} className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${cfg.color}`}>
-              {cfg.icon} {cfg.label}: {count}
-            </span>
-          );
-        })}
-        {blockedCount > 0 && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
-            \uD83D\uDD12 Blocked: {blockedCount}
-          </span>
         )}
       </div>
 
