@@ -33,10 +33,10 @@ interface RequestBody {
   userPrompt: string;
 }
 
+/** Detect description-oriented intents (rewrite / split / improve wording). */
 function needsDescriptions(prompt: string): boolean {
   const lower = prompt.toLowerCase();
-  // Positive signals: user wants content-level changes
-  const positive =
+  return (
     lower.includes('description') ||
     lower.includes('rewrite') ||
     lower.includes('improve') ||
@@ -49,9 +49,52 @@ function needsDescriptions(prompt: string): boolean {
     lower.includes('break up') ||
     lower.includes('sub-task') ||
     lower.includes('subtask') ||
-    // "split" only when it means breaking a task into pieces
-    (lower.includes('split') && !lower.includes('split my time') && !lower.includes('split between') && !lower.includes('split across'));
-  return positive;
+    (lower.includes('split') &&
+      !lower.includes('split my time') &&
+      !lower.includes('split between') &&
+      !lower.includes('split across'))
+  );
+}
+
+/**
+ * Detect the primary intent of the prompt so we can tune temperature.
+ *
+ * - reprioritize / reschedule  → 0.1  (must be deterministic)
+ * - sequence                   → 0.1  (logical ordering, not creative)
+ * - scaffold / split           → 0.4  (creative task naming benefits from variety)
+ * - rewrite / general          → 0.3  (some creativity wanted)
+ * - default                    → 0.2
+ */
+function detectTemperature(prompt: string): number {
+  const lower = prompt.toLowerCase();
+  if (
+    lower.includes('priorit') ||
+    lower.includes('reschedule') ||
+    lower.includes('deadline') ||
+    lower.includes('sequence') ||
+    lower.includes('order')
+  ) return 0.1;
+
+  if (
+    lower.includes('scaffold') ||
+    lower.includes('create project') ||
+    lower.includes('new project') ||
+    lower.includes('break down') ||
+    lower.includes('break up') ||
+    lower.includes('split') ||
+    lower.includes('sub-task') ||
+    lower.includes('subtask')
+  ) return 0.4;
+
+  if (
+    lower.includes('rewrite') ||
+    lower.includes('improve') ||
+    lower.includes('wording') ||
+    lower.includes('rename') ||
+    lower.includes('simplify')
+  ) return 0.3;
+
+  return 0.2;
 }
 
 function buildSystemPrompt(today: string): string {
@@ -76,6 +119,11 @@ When a user mentions a due date (e.g. "by Wednesday", "done by this Friday", "du
 - Set due_date on the relevant subTask to that resolved date
 - NEVER put date information in the title or description \u2014 always use the due_date field
 - If no date is mentioned for a task, set due_date to null
+
+== SCAFFOLD: DUPLICATE PROJECT RULE ==
+Before proposing a new scaffold project, check the "Existing projects" list in the user message.
+If a project with the same name (case-insensitive) already exists, do NOT create it again.
+Instead, add the new tasks directly to the existing project by setting scaffoldProjectName to the existing project's name.
 
 == RESPONSE FORMAT ==
 {
@@ -104,23 +152,6 @@ Use when the user wants to create a NEW PROJECT with tasks inside it.
   - priority: "high" | "medium" | "low"
   - due_date: resolved YYYY-MM-DD string if a date was mentioned, otherwise null
   - NEVER put date info in title or description \u2014 use due_date field only
-- Example:
-  {
-    "id": "s1",
-    "taskId": "",
-    "taskTitle": "invesbot",
-    "type": "scaffold",
-    "explanation": "I will create the project \\"invesbot\\" and add your 3 tasks to it.",
-    "currentValue": "",
-    "proposedValue": "1 project + 3 tasks",
-    "scaffoldProjectName": "invesbot",
-    "scaffoldProjectColor": "#6366f1",
-    "subTasks": [
-      { "title": "Get the API", "description": "Obtain and set up the required API credentials", "priority": "high", "due_date": null },
-      { "title": "Send AI idea to MarCom", "description": "", "priority": "high", "due_date": "2026-03-18" },
-      { "title": "UAT", "description": "User acceptance testing", "priority": "medium", "due_date": null }
-    ]
-  }
 
 == TYPE: split ==
 - Set proposedValue to e.g. "3 sub-tasks"
@@ -165,7 +196,6 @@ const ERROR_SUGGESTION: AISuggestion = {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Auth guard — reject unauthenticated direct API calls
   const user = await getSessionFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -174,7 +204,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const today = new Date().toISOString().split('T')[0];
   const includeDesc = needsDescriptions(userPrompt);
+  const temperature = detectTemperature(userPrompt);
 
+  // Cap to 50 non-done tasks sorted by due date
   const cappedTasks = tasks
     .filter((t) => t.status !== 'done')
     .sort((a, b) => {
@@ -199,11 +231,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ).join('\n')
     : '(no tasks yet)';
 
+  // Issue E: always pass existing project names so the model can avoid duplicates
+  // and correctly assign tasks to existing projects when the user says "add to X"
+  const projectList = (projects ?? [])
+    .map((p) => p.name)
+    .filter(Boolean)
+    .join(', ');
+
   const systemPrompt = buildSystemPrompt(today);
-  const userMessage = `Today is ${today}.\n\nExisting tasks:\n${taskSummary}\n\nUser request: ${userPrompt}\n\nRespond with a JSON object containing a "suggestions" array. Only respond to exactly what the user asked for.`;
+  const userMessage = [
+    `Today is ${today}.`,
+    projectList ? `Existing projects: ${projectList}` : '',
+    '',
+    'Existing tasks:',
+    taskSummary,
+    '',
+    `User request: ${userPrompt}`,
+    '',
+    'Respond with a JSON object containing a "suggestions" array. Only respond to exactly what the user asked for.',
+  ].filter((l) => l !== null).join('\n');
 
   try {
-    const raw = await callOpenRouter(systemPrompt, userMessage, { temperature: 0.2, max_tokens: 2048 });
+    const raw = await callOpenRouter(systemPrompt, userMessage, { temperature, max_tokens: 2048 });
     const parsed = safeParseJSON<{ suggestions?: AISuggestion[] } | AISuggestion[]>(raw, { suggestions: [ERROR_SUGGESTION] });
     const suggestions: AISuggestion[] = Array.isArray(parsed)
       ? parsed
