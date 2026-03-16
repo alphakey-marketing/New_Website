@@ -130,8 +130,9 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
   // -- Suggest --
   const buildSnapshots = (): TaskSnapshot[] =>
     tasks.filter((t) => t.status !== 'done').map((t) => ({
-      id: t.id, title: t.title, description: t.description,
-      status: t.status, priority: t.priority, due_date: t.due_date,
+      id: t.id, title: t.title, description: t.description ?? undefined,
+      status: t.status, priority: t.priority,
+      due_date: t.due_date ?? undefined,
       project_name: t.project_id ? (projectMap[t.project_id]?.name ?? undefined) : undefined,
     }));
 
