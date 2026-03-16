@@ -3,6 +3,7 @@ import type { Task } from '../../types/task';
 import type { AISuggestion, TaskSnapshot } from '../../pages/api/tasks/ai-suggest';
 import type { ParsedTask } from '../../pages/api/tasks/ai-parse-task';
 import { projectService } from '../../utils/projectService';
+import { aiRequest } from '../../utils/aiRequest';
 
 interface Props {
   tasks: Task[];
@@ -42,10 +43,8 @@ const typeConfig: Record<string, { icon: string; label: string; color: string }>
 const READ_ONLY_TYPES = new Set(['sequence', 'general']);
 
 export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, onCreateTask, onProjectCreated, onClose }: Props) {
-  // Tab: 'quick-add' | 'suggest'
   const [activeTab, setActiveTab] = useState<'quick-add' | 'suggest'>('quick-add');
 
-  // Quick-add state
   const [qaInput, setQaInput] = useState('');
   const [qaLoading, setQaLoading] = useState(false);
   const [qaPreview, setQaPreview] = useState<ParsedTask | null>(null);
@@ -55,7 +54,6 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
   const [qaNewProjectName, setQaNewProjectName] = useState<string | null>(null);
   const [qaCreateNewProject, setQaCreateNewProject] = useState(false);
 
-  // Suggest state
   const [userPrompt, setUserPrompt] = useState('');
   const [loading, setLoading]       = useState(false);
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
@@ -69,30 +67,22 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     {} as Record<string, typeof projects[0]>
   );
 
-  // ── Quick Add logic ──
+  // ── Quick Add ──
   const handleQaParse = async () => {
     if (!qaInput.trim()) return;
-    setQaLoading(true);
-    setQaError(null);
-    setQaPreview(null);
-    setQaSuccess(null);
-    setQaNewProjectName(null);
-    setQaCreateNewProject(false);
+    setQaLoading(true); setQaError(null); setQaPreview(null);
+    setQaSuccess(null); setQaNewProjectName(null); setQaCreateNewProject(false);
     try {
       const today = new Date().toISOString().split('T')[0];
-      const res = await fetch('/api/tasks/ai-parse-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input: qaInput, today, projects }),
-      });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error ?? 'Parse failed'); }
-      const data = await res.json();
-      const parsed: ParsedTask = data.task;
-      setQaPreview(parsed);
+      const data = await aiRequest<{ task: ParsedTask; confidence: 'high' | 'medium' | 'low' }>(
+        '/api/tasks/ai-parse-task',
+        { input: qaInput, today, projects }
+      );
+      setQaPreview(data.task);
       setQaConfidence(data.confidence);
-      if (parsed.project_name) {
-        const match = projects.find((p) => p.name.toLowerCase() === parsed.project_name!.toLowerCase());
-        if (!match) { setQaNewProjectName(parsed.project_name); setQaCreateNewProject(true); }
+      if (data.task.project_name) {
+        const match = projects.find((p) => p.name.toLowerCase() === data.task.project_name!.toLowerCase());
+        if (!match) { setQaNewProjectName(data.task.project_name); setQaCreateNewProject(true); }
       }
     } catch (err: any) {
       setQaError(err.message);
@@ -103,8 +93,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
   const handleQaConfirm = async () => {
     if (!qaPreview) return;
-    setQaLoading(true);
-    setQaError(null);
+    setQaLoading(true); setQaError(null);
     try {
       let resolvedProjectId: string | null = null;
       if (qaPreview.project_name) {
@@ -118,12 +107,9 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
         }
       }
       await onCreateTask({
-        title: qaPreview.title,
-        description: qaPreview.description,
-        priority: qaPreview.priority,
-        due_date: qaPreview.due_date ?? null,
-        project_id: resolvedProjectId,
-        status: 'todo',
+        title: qaPreview.title, description: qaPreview.description,
+        priority: qaPreview.priority, due_date: qaPreview.due_date ?? null,
+        project_id: resolvedProjectId, status: 'todo',
       });
       const note = resolvedProjectId && qaNewProjectName && qaCreateNewProject ? ` in new project "${qaNewProjectName}"` : '';
       setQaInput(''); setQaPreview(null); setQaConfidence(null); setQaNewProjectName(null); setQaCreateNewProject(false);
@@ -141,7 +127,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     setQaPreview({ ...qaPreview, [field]: value });
   };
 
-  // ── AI Suggest logic ──
+  // ── Suggest ──
   const buildSnapshots = (): TaskSnapshot[] =>
     tasks.filter((t) => t.status !== 'done').map((t) => ({
       id: t.id, title: t.title, description: t.description,
@@ -154,13 +140,10 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     if (!finalPrompt.trim()) return;
     setLoading(true); setError(null); setSuggestions([]); setApplied(new Set()); setRejected(new Set());
     try {
-      const res = await fetch('/api/tasks/ai-suggest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tasks: buildSnapshots(), projects: projects.map((p) => ({ id: p.id, name: p.name })), userPrompt: finalPrompt }),
-      });
-      if (!res.ok) { const data = await res.json(); throw new Error(data.error ?? 'Unknown error'); }
-      const data = await res.json();
+      const data = await aiRequest<{ suggestions: AISuggestion[] }>(
+        '/api/tasks/ai-suggest',
+        { tasks: buildSnapshots(), projects: projects.map((p) => ({ id: p.id, name: p.name })), userPrompt: finalPrompt }
+      );
       setSuggestions(data.suggestions ?? []);
     } catch (err: any) {
       setError(err.message);
@@ -201,53 +184,36 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
   return (
     <div className="fixed inset-y-0 right-0 w-full sm:w-[420px] bg-white shadow-2xl border-l border-gray-200 flex flex-col z-40">
-      {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-blue-600">
         <h2 className="text-lg font-bold text-white">\uD83E\uDD16 AI Assistant</h2>
         <button onClick={onClose} className="text-white hover:text-indigo-200 text-2xl leading-none">&times;</button>
       </div>
 
-      {/* Tabs */}
       <div className="flex border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('quick-add')}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === 'quick-add' ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
+        <button onClick={() => setActiveTab('quick-add')}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${ activeTab === 'quick-add' ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-700' }`}>
           \u26A1 Quick Add Task
         </button>
-        <button
-          onClick={() => setActiveTab('suggest')}
-          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-            activeTab === 'suggest' ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-700'
-          }`}
-        >
+        <button onClick={() => setActiveTab('suggest')}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${ activeTab === 'suggest' ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50' : 'text-gray-500 hover:text-gray-700' }`}>
           \u2728 Suggestions
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
 
-        {/* ── QUICK ADD TAB ── */}
         {activeTab === 'quick-add' && (
           <>
             <p className="text-xs text-gray-500">Type naturally \u2014 AI extracts the title, priority, due date and project.</p>
             <div className="flex space-x-2">
-              <input
-                type="text"
-                value={qaInput}
+              <input type="text" value={qaInput}
                 onChange={(e) => { setQaInput(e.target.value); setQaPreview(null); setQaNewProjectName(null); }}
                 onKeyDown={(e) => e.key === 'Enter' && !qaLoading && handleQaParse()}
                 placeholder='e.g. "Send report by Friday, high priority, for VPN project"'
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                disabled={qaLoading}
-              />
-              <button
-                onClick={handleQaParse}
-                disabled={qaLoading || !qaInput.trim()}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-              >
+                disabled={qaLoading} />
+              <button onClick={handleQaParse} disabled={qaLoading || !qaInput.trim()}
+                className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
                 {qaLoading && !qaPreview ? '\uD83E\uDDE0...' : 'Parse'}
               </button>
             </div>
@@ -327,7 +293,6 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           </>
         )}
 
-        {/* ── SUGGESTIONS TAB ── */}
         {activeTab === 'suggest' && (
           <>
             <div>
