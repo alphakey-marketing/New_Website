@@ -8,7 +8,7 @@ export interface TaskSnapshot {
   description?: string;
   status: string;
   priority: string;
-  due_date?: string;
+  due_date?: string | null;
   project_name?: string;
 }
 
@@ -231,8 +231,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ).join('\n')
     : '(no tasks yet)';
 
-  // Issue E: always pass existing project names so the model can avoid duplicates
-  // and correctly assign tasks to existing projects when the user says "add to X"
   const projectList = (projects ?? [])
     .map((p) => p.name)
     .filter(Boolean)
