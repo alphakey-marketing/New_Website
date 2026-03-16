@@ -151,7 +151,6 @@ export default function TasksPage() {
   // ---------------------------------------------------------------------------
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
 
-    // SCAFFOLD: add tasks to existing project OR create a new one
     if (suggestion.type === 'scaffold') {
       if (!suggestion.scaffoldProjectName) throw new Error('No project name provided by AI.');
       if (!suggestion.subTasks?.length)    throw new Error('No tasks provided by AI.');
@@ -184,7 +183,6 @@ export default function TasksPage() {
       return;
     }
 
-    // SPLIT: create sub-tasks under the same project
     if (suggestion.type === 'split') {
       const originalTask = tasks.find((t) => t.id === suggestion.taskId);
       if (!suggestion.subTasks?.length) throw new Error('No sub-tasks provided by AI.');
@@ -202,10 +200,8 @@ export default function TasksPage() {
       return;
     }
 
-    // SEQUENCE / GENERAL: read-only, nothing to write
     if (suggestion.type === 'sequence' || suggestion.type === 'general') return;
 
-    // All other types: update a specific field
     if (!suggestion.taskId || !suggestion.field) return;
     const task = tasks.find((t) => t.id === suggestion.taskId);
     if (!task) return;
@@ -358,11 +354,12 @@ export default function TasksPage() {
         <AISuggestionPanel tasks={tasks} projects={projects} onApplySuggestion={handleApplySuggestion} onClose={() => setShowAIPanel(false)} />
       )}
 
-      {/* TaskForm — allTasks passed so the blocked_by picker has the full task list */}
+      {/* TaskForm — allTasks + projects passed for same-project blocked_by scoping */}
       {showTaskForm && (
         <TaskForm
           task={editingTask}
           allTasks={tasks}
+          projects={projects}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           onCancel={() => { setShowTaskForm(false); setEditingTask(null); }}
         />
