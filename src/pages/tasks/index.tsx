@@ -168,13 +168,18 @@ export default function TasksPage() {
           } as any)).id;
 
       for (const sub of suggestion.subTasks) {
+        // Resolve due_date: accept YYYY-MM-DD string from AI, convert to ISO, or null
+        const resolvedDueDate = sub.due_date
+          ? new Date(sub.due_date).toISOString()
+          : null;
+
         await taskService.createTask({
           title: sub.title,
           description: sub.description ?? '',
           project_id: targetProjectId,
           priority: (sub.priority ?? 'medium') as Task['priority'],
           status: 'todo',
-          due_date: null,
+          due_date: resolvedDueDate,
         } as any);
       }
 
@@ -187,13 +192,17 @@ export default function TasksPage() {
       const originalTask = tasks.find((t) => t.id === suggestion.taskId);
       if (!suggestion.subTasks?.length) throw new Error('No sub-tasks provided by AI.');
       for (const sub of suggestion.subTasks) {
+        const resolvedDueDate = sub.due_date
+          ? new Date(sub.due_date).toISOString()
+          : (originalTask?.due_date ?? null);
+
         await taskService.createTask({
           title: sub.title,
           description: sub.description ?? '',
           project_id: originalTask?.project_id ?? null,
           priority: (sub.priority ?? originalTask?.priority ?? 'medium') as Task['priority'],
           status: 'todo',
-          due_date: originalTask?.due_date ?? null,
+          due_date: resolvedDueDate,
         } as any);
       }
       await loadTasks();

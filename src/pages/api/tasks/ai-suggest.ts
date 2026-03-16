@@ -19,11 +19,11 @@ export interface AISuggestion {
   currentValue: string;
   proposedValue: string;
   field?: 'priority' | 'due_date' | 'description' | 'title';
-  subTasks?: { title: string; description?: string; priority?: string }[];
+  subTasks?: { title: string; description?: string; priority?: string; due_date?: string | null }[];
   orderedTaskIds?: string[];
   // scaffold-specific
-  scaffoldProjectName?: string;   // new project name to create
-  scaffoldProjectColor?: string;  // optional hex color
+  scaffoldProjectName?: string;
+  scaffoldProjectColor?: string;
 }
 
 interface RequestBody {
@@ -78,6 +78,14 @@ You must ONLY produce suggestion types that are directly relevant to the user's 
 - DO NOT add reprioritize or reschedule suggestions unless the user's request explicitly asks for them
 - DO NOT mix suggestion types — respond only to what was asked
 
+== DATE HANDLING ==
+Today's date is always provided in the user message as "Today is YYYY-MM-DD".
+When a user mentions a due date for a task (e.g. "by Wednesday", "done by this Friday", "due next Monday", "by end of week"), you MUST:
+- Resolve it to an absolute YYYY-MM-DD date based on today's date
+- Set due_date on the relevant subTask to that resolved date
+- NEVER put date information in the title or description — always use the due_date field
+- If no date is mentioned for a task, set due_date to null
+
 == RESPONSE FORMAT ==
 {
   "suggestions": [
@@ -101,8 +109,10 @@ Use when the user wants to create a NEW PROJECT with tasks inside it.
 - Set scaffoldProjectColor to a sensible hex color (e.g. "#6366f1")
 - Set proposedValue to a human summary e.g. "1 project + 3 tasks"
 - Set currentValue to ""
-- Include a subTasks array with each task: { title, description, priority }
-- priority for each subTask: "high" | "medium" | "low"
+- Include a subTasks array with each task: { title, description, priority, due_date }
+  - priority: "high" | "medium" | "low"
+  - due_date: resolved YYYY-MM-DD string if a date was mentioned, otherwise null
+  - NEVER put date info in title or description — use due_date field only
 - Example:
   {
     "id": "s1",
@@ -115,16 +125,16 @@ Use when the user wants to create a NEW PROJECT with tasks inside it.
     "scaffoldProjectName": "invesbot",
     "scaffoldProjectColor": "#6366f1",
     "subTasks": [
-      { "title": "Get the API", "description": "Obtain and set up the required API credentials", "priority": "high" },
-      { "title": "Put to code", "description": "Implement the API integration in the codebase", "priority": "high" },
-      { "title": "UAT", "description": "User acceptance testing of the integration", "priority": "medium" }
+      { "title": "Get the API", "description": "Obtain and set up the required API credentials", "priority": "high", "due_date": null },
+      { "title": "Send AI idea to MarCom", "description": "", "priority": "high", "due_date": "2026-03-18" },
+      { "title": "UAT", "description": "User acceptance testing", "priority": "medium", "due_date": null }
     ]
   }
 
 == TYPE: split ==
 - Set proposedValue to e.g. "3 sub-tasks"
 - Set currentValue to the original task title
-- Include subTasks array: { title, description, priority }
+- Include subTasks array: { title, description, priority, due_date }
 - Do NOT put sub-task titles inside proposedValue
 
 == TYPE: sequence ==
