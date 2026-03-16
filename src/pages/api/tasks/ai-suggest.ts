@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { callOpenRouter, safeParseJSON } from '../../../utils/openrouter';
 
 export interface TaskSnapshot {
   id: string;
@@ -21,7 +22,6 @@ export interface AISuggestion {
   field?: 'priority' | 'due_date' | 'description' | 'title';
   subTasks?: { title: string; description?: string; priority?: string; due_date?: string | null }[];
   orderedTaskIds?: string[];
-  // scaffold-specific
   scaffoldProjectName?: string;
   scaffoldProjectColor?: string;
 }
@@ -30,39 +30,6 @@ interface RequestBody {
   tasks: TaskSnapshot[];
   projects: { id: string; name: string }[];
   userPrompt: string;
-}
-
-async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set in environment variables.');
-
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://alphakey-marketing.replit.app',
-      'X-Title': 'AlphaKey Task Assistant',
-    },
-    body: JSON.stringify({
-      model: 'mistralai/mistral-small-3.1-24b-instruct',
-      temperature: 0.2,
-      max_tokens: 2048,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenRouter error ${res.status}: ${err.slice(0, 300)}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '';
 }
 
 const SYSTEM_PROMPT = `You are a productivity assistant. You must respond with a JSON object containing a "suggestions" array.
@@ -160,27 +127,44 @@ ONLY if user explicitly asks to fix deadlines or reschedule.
 - Set proposedValue to the advice text
 - READ-ONLY — informational only, no Accept button`;
 
+const ERROR_SUGGESTION: AISuggestion = {
+  id: 's_error',
+  taskId: '',
+  taskTitle: '',
+  type: 'general',
+  explanation: 'I had trouble formatting my response. Please try again.',
+  currentValue: '',
+  proposedValue: '',
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { tasks, projects, userPrompt }: RequestBody = req.body;
+  if (!tasks || !Array.isArray(tasks)) return res.status(400).json({ error: 'tasks array is required' });
 
-  if (!tasks || !Array.isArray(tasks)) {
-    return res.status(400).json({ error: 'tasks array is required' });
-  }
+  // Cap snapshot to 50 non-done tasks sorted by due date to keep token usage bounded
+  const cappedTasks = tasks
+    .filter((t) => t.status !== 'done')
+    .sort((a, b) => {
+      if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return 0;
+    })
+    .slice(0, 50);
 
-  const taskSummary = tasks.length > 0
-    ? tasks.map((t) =>
+  const taskSummary = cappedTasks.length > 0
+    ? cappedTasks.map((t) =>
         [
           `ID: ${t.id}`,
           `Title: ${t.title}`,
           `Status: ${t.status}`,
           `Priority: ${t.priority}`,
           t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
-          t.description ? `Description: ${t.description}` : '',
-          t.project_name ? `Project: ${t.project_name}` : 'Project: none',
+          // Truncate descriptions to 80 chars to save tokens
+          t.description ? `Desc: ${t.description.slice(0, 80)}` : '',
+          t.project_name ? `Project: ${t.project_name}` : '',
         ].filter(Boolean).join(' | ')
       ).join('\n')
     : '(no tasks yet)';
@@ -189,23 +173,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const userMessage = `Today is ${today}.\n\nExisting tasks:\n${taskSummary}\n\nUser request: ${userPrompt}\n\nRespond with a JSON object containing a "suggestions" array. Only respond to exactly what the user asked for.`;
 
   try {
-    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
-    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-    let suggestions: AISuggestion[];
-    try {
-      const parsed = JSON.parse(cleaned);
-      suggestions = Array.isArray(parsed) ? parsed : (parsed.suggestions ?? []);
-    } catch {
-      const match = cleaned.match(/\[\s*\{[\s\S]*\}\s*\]/);
-      if (match) {
-        try { suggestions = JSON.parse(match[0]); }
-        catch { suggestions = [{ id: 's_error', taskId: '', taskTitle: '', type: 'general', explanation: 'I had trouble formatting my response. Please try again.', currentValue: '', proposedValue: raw.slice(0, 300) }]; }
-      } else {
-        suggestions = [{ id: 's_error', taskId: '', taskTitle: '', type: 'general', explanation: 'I had trouble formatting my response. Please try again.', currentValue: '', proposedValue: raw.slice(0, 300) }];
-      }
-    }
-
+    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage, { temperature: 0.2, max_tokens: 2048 });
+    const parsed = safeParseJSON<{ suggestions?: AISuggestion[] } | AISuggestion[]>(raw, { suggestions: [ERROR_SUGGESTION] });
+    const suggestions: AISuggestion[] = Array.isArray(parsed)
+      ? parsed
+      : (parsed.suggestions ?? [ERROR_SUGGESTION]);
     return res.status(200).json({ suggestions });
   } catch (error: any) {
     console.error('AI suggest error:', error);

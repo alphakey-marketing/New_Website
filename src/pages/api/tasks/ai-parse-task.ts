@@ -1,50 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { callOpenRouter, safeParseJSON } from '../../../utils/openrouter';
 
 export interface ParsedTask {
   title: string;
   description?: string;
   priority: 'high' | 'medium' | 'low';
   due_date?: string; // YYYY-MM-DD
-  project_name?: string; // matched against existing projects
+  project_name?: string;
 }
 
 export interface ParseTaskResponse {
   task: ParsedTask;
   confidence: 'high' | 'medium' | 'low';
   raw_input: string;
-}
-
-async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set.');
-
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://alphakey-marketing.replit.app',
-      'X-Title': 'AlphaKey Task Assistant',
-    },
-    body: JSON.stringify({
-      model: 'mistralai/mistral-small-3.1-24b-instruct',
-      temperature: 0.1,
-      max_tokens: 512,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenRouter error ${res.status}: ${err.slice(0, 300)}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '{}';
 }
 
 const SYSTEM_PROMPT = `You are a task parser. Extract task details from natural language input and return a JSON object.
@@ -82,9 +50,9 @@ ${projectList ? `Available projects: ${projectList}` : ''}
 Parse this into a task: "${input}"`;
 
   try {
-    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
-    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    // 256 tokens is plenty for the small parse-task JSON schema
+    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage, { temperature: 0.1, max_tokens: 256 });
+    const parsed = safeParseJSON<ParseTaskResponse>(raw);
     return res.status(200).json({ ...parsed, raw_input: input });
   } catch (error: any) {
     console.error('ai-parse-task error:', error);

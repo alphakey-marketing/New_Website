@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { callOpenRouter, safeParseJSON } from '../../../utils/openrouter';
 import type { TaskSnapshot } from './ai-suggest';
 
 export interface FocusTask {
   taskId: string;
   taskTitle: string;
-  rank: number; // 1 = most important
+  rank: number;
   reason: string;
   estimatedMinutes: number;
 }
@@ -21,41 +22,8 @@ export interface DailyFocusResponse {
   topTasks: FocusTask[];
   staleTasks: StaleTask[];
   totalEstimatedMinutes: number;
-  overloadWarning: string | null; // null if day is manageable
+  overloadWarning: string | null;
   motivationalNote: string;
-}
-
-async function callOpenRouter(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set.');
-
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://alphakey-marketing.replit.app',
-      'X-Title': 'AlphaKey Task Assistant',
-    },
-    body: JSON.stringify({
-      model: 'mistralai/mistral-small-3.1-24b-instruct',
-      temperature: 0.3,
-      max_tokens: 1500,
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenRouter error ${res.status}: ${err.slice(0, 300)}`);
-  }
-
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? '{}';
 }
 
 const SYSTEM_PROMPT = `You are a personal productivity coach. Analyse the user's tasks and return a JSON daily focus plan.
@@ -114,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `Status: ${t.status}`,
       `Priority: ${t.priority}`,
       t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
-      t.description ? `Desc: ${t.description}` : '',
+      t.description ? `Desc: ${t.description.slice(0, 80)}` : '',
     ].filter(Boolean).join(' | ')
   ).join('\n');
 
@@ -126,9 +94,8 @@ ${taskSummary}
 Give me my top 3 focus tasks for today, identify any stale tasks, and provide a motivational note.`;
 
   try {
-    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage);
-    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed: DailyFocusResponse = JSON.parse(cleaned);
+    const raw = await callOpenRouter(SYSTEM_PROMPT, userMessage, { temperature: 0.3, max_tokens: 1500 });
+    const parsed = safeParseJSON<DailyFocusResponse>(raw);
     return res.status(200).json(parsed);
   } catch (error: any) {
     console.error('ai-daily-focus error:', error);
