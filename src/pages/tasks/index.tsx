@@ -151,22 +151,29 @@ export default function TasksPage() {
   // ---------------------------------------------------------------------------
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
 
-    // SCAFFOLD: create a new project, then create all tasks inside it
+    // SCAFFOLD: add tasks to existing project OR create a new one
     if (suggestion.type === 'scaffold') {
       if (!suggestion.scaffoldProjectName) throw new Error('No project name provided by AI.');
       if (!suggestion.subTasks?.length)    throw new Error('No tasks provided by AI.');
 
-      const newProject = await projectService.createProject({
-        name: suggestion.scaffoldProjectName,
-        description: '',
-        color: suggestion.scaffoldProjectColor ?? '#6366f1',
-      } as any);
+      // Case-insensitive match against existing projects — never create a duplicate
+      const existingProject = projects.find(
+        (p) => p.name.trim().toLowerCase() === suggestion.scaffoldProjectName!.trim().toLowerCase()
+      );
+
+      const targetProjectId = existingProject
+        ? existingProject.id
+        : (await projectService.createProject({
+            name: suggestion.scaffoldProjectName,
+            description: '',
+            color: suggestion.scaffoldProjectColor ?? '#6366f1',
+          } as any)).id;
 
       for (const sub of suggestion.subTasks) {
         await taskService.createTask({
           title: sub.title,
           description: sub.description ?? '',
-          project_id: newProject.id,
+          project_id: targetProjectId,
           priority: (sub.priority ?? 'medium') as Task['priority'],
           status: 'todo',
           due_date: null,

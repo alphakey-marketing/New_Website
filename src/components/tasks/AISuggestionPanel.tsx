@@ -10,12 +10,12 @@ interface Props {
 }
 
 const QUICK_PROMPTS = [
-  { label: '🔄 Sequence my tasks',    prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
-  { label: '🔴 Fix priorities',        prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
-  { label: '📅 Fix deadlines',         prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
-  { label: '✂️ Break down a task',     prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
-  { label: '✏️ Improve descriptions',  prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
-  { label: '📁 New project + tasks',   prompt: 'Create a new project for me with tasks inside it.' },
+  { label: '🔄 Sequence my tasks',   prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
+  { label: '🔴 Fix priorities',       prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
+  { label: '📅 Fix deadlines',        prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
+  { label: '✂️ Break down a task',    prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
+  { label: '✏️ Improve descriptions', prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
+  { label: '📁 New project + tasks',  prompt: 'Create a new project for me with tasks inside it.' },
 ];
 
 const typeConfig: Record<string, { icon: string; label: string; color: string }> = {
@@ -24,11 +24,10 @@ const typeConfig: Record<string, { icon: string; label: string; color: string }>
   rewrite:      { icon: '✏️', label: 'Rewrite',             color: 'bg-blue-50 border-blue-200' },
   sequence:     { icon: '🔢', label: 'Recommended Order',   color: 'bg-purple-50 border-purple-200' },
   split:        { icon: '✂️', label: 'Split task',          color: 'bg-orange-50 border-orange-200' },
-  scaffold:     { icon: '📁', label: 'New Project + Tasks', color: 'bg-green-50 border-green-200' },
+  scaffold:     { icon: '📁', label: 'Project + Tasks',     color: 'bg-green-50 border-green-200' },
   general:      { icon: '💡', label: 'Suggestion',          color: 'bg-gray-50 border-gray-200' },
 };
 
-// These types are purely informational — no Accept button, no DB write
 const READ_ONLY_TYPES = new Set(['sequence', 'general']);
 
 export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, onClose }: Props) {
@@ -107,7 +106,6 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
   const handleDismiss = (id: string) => setRejected((prev) => new Set(prev).add(id));
 
   const pending      = suggestions.filter((s) => !applied.has(s.id) && !rejected.has(s.id));
-  // Only show actionable (non-read-only) accepted items in the summary
   const acceptedList = suggestions.filter((s) => applied.has(s.id) && !READ_ONLY_TYPES.has(s.type));
 
   const taskTitleMap = tasks.reduce(
@@ -115,9 +113,19 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
     {} as Record<string, string>
   );
 
+  // Determine at render time whether a scaffold project already exists
+  const scaffoldMatchesExisting = (s: AISuggestion): boolean =>
+    !!s.scaffoldProjectName &&
+    projects.some((p) => p.name.trim().toLowerCase() === s.scaffoldProjectName!.trim().toLowerCase());
+
   const acceptedSummaryLabel = (s: AISuggestion): string => {
-    if (s.type === 'scaffold') return `Created project "${s.scaffoldProjectName}" with ${s.subTasks?.length ?? 0} tasks`;
-    if (s.type === 'split')    return `${s.taskTitle}: split into ${s.subTasks?.length ?? 0} sub-tasks`;
+    if (s.type === 'scaffold') {
+      const isExisting = scaffoldMatchesExisting(s);
+      return isExisting
+        ? `Added ${s.subTasks?.length ?? 0} tasks to existing project "${s.scaffoldProjectName}"`
+        : `Created project "${s.scaffoldProjectName}" with ${s.subTasks?.length ?? 0} tasks`;
+    }
+    if (s.type === 'split') return `${s.taskTitle}: split into ${s.subTasks?.length ?? 0} sub-tasks`;
     if (s.taskTitle && s.proposedValue) return `${s.taskTitle}: ${s.proposedValue}`;
     return s.proposedValue || s.explanation;
   };
@@ -135,7 +143,6 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
 
-        {/* Onboarding guide */}
         {showGuide && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-sm text-indigo-900">
             <p className="font-semibold mb-2">👋 How this works</p>
@@ -143,7 +150,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
             <p className="mb-1">• Pick a quick prompt or describe exactly what you want.</p>
             <p className="mb-1">• AI responds <strong>only to what you ask</strong> — no unsolicited suggestions.</p>
             <p className="mb-1">• Review each suggestion — <strong>nothing changes</strong> until you click Accept.</p>
-            <p>• 📁 <strong>New project + tasks</strong> — creates the project and all tasks in one click.</p>
+            <p>• 📁 Say <em>&quot;create tasks in [project name]&quot;</em> to add tasks to an existing project.</p>
           </div>
         )}
 
@@ -171,7 +178,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
             rows={3}
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
-            placeholder='e.g. Create a new project named "invesbot" and add 3 tasks: get the API, put to code, UAT'
+            placeholder={'e.g. Create tasks in my "invesbot" project: get the API, put to code, UAT'}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
           />
           <button
@@ -183,12 +190,10 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           </button>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">⚠️ {error}</div>
         )}
 
-        {/* Loading skeleton */}
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => <div key={i} className="animate-pulse bg-gray-100 rounded-xl h-24" />)}
@@ -205,6 +210,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
               {pending.map((s) => {
                 const cfg = typeConfig[s.type] ?? typeConfig.general;
                 const isReadOnly = READ_ONLY_TYPES.has(s.type);
+                const isExistingProject = s.type === 'scaffold' && scaffoldMatchesExisting(s);
 
                 return (
                   <div key={s.id} className={`rounded-xl border p-4 ${cfg.color}`}>
@@ -221,13 +227,25 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
 
                     <p className="text-sm text-gray-700 mb-3">{s.explanation}</p>
 
-                    {/* SCAFFOLD: show project name + task list */}
-                    {s.type === 'scaffold' && s.subTasks && s.subTasks.length > 0 && (
-                      <div className="mb-3 space-y-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-xs font-semibold text-green-700">📁 Project: {s.scaffoldProjectName}</span>
+                    {/* SCAFFOLD: project existence notice + task list */}
+                    {s.type === 'scaffold' && (
+                      <div className="mb-3 space-y-2">
+                        {/* Existing vs new project banner */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                          isExistingProject
+                            ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                            : 'bg-green-100 text-green-800 border border-green-200'
+                        }`}>
+                          <span>{isExistingProject ? '📂' : '📁'}</span>
+                          <span>
+                            {isExistingProject
+                              ? `Adding tasks to existing project: "${s.scaffoldProjectName}"`
+                              : `Will create new project: "${s.scaffoldProjectName}"`
+                            }
+                          </span>
                         </div>
-                        {s.subTasks.map((sub, i) => (
+                        {/* Task list */}
+                        {s.subTasks && s.subTasks.map((sub, i) => (
                           <div key={i} className="flex items-start space-x-2 text-xs bg-white border border-green-200 rounded-lg px-3 py-2">
                             <span className="font-bold text-green-600 mt-0.5 w-4">{i + 1}.</span>
                             <div className="flex-1">
@@ -235,7 +253,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                               {sub.description && <p className="text-gray-500 mt-0.5">{sub.description}</p>}
                             </div>
                             <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                              sub.priority === 'high' ? 'bg-red-100 text-red-700' :
+                              sub.priority === 'high'   ? 'bg-red-100 text-red-700' :
                               sub.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
                               'bg-gray-100 text-gray-600'
                             }`}>{sub.priority ?? 'medium'}</span>
@@ -276,7 +294,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                       </div>
                     )}
 
-                    {/* Before → after for simple field-change types */}
+                    {/* Before → after for simple field changes */}
                     {!isReadOnly && s.type !== 'split' && s.type !== 'scaffold' && s.currentValue && (
                       <div className="flex items-center space-x-2 text-xs mb-3">
                         <span className="px-2 py-1 bg-white border border-gray-300 rounded text-gray-500 line-through">{s.currentValue}</span>
@@ -301,9 +319,13 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
                           className="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50"
                         >
                           {applying === s.id ? 'Creating...' :
-                            s.type === 'scaffold' ? `✅ Create project + ${s.subTasks?.length ?? 0} tasks` :
-                            s.type === 'split'    ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks` :
-                            '✅ Accept'}
+                            s.type === 'scaffold'
+                              ? isExistingProject
+                                ? `✅ Add ${s.subTasks?.length ?? 0} tasks to project`
+                                : `✅ Create project + ${s.subTasks?.length ?? 0} tasks`
+                              : s.type === 'split'
+                              ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks`
+                              : '✅ Accept'}
                         </button>
                         <button
                           onClick={() => handleDismiss(s.id)}
@@ -320,7 +342,7 @@ export default function AISuggestionPanel({ tasks, projects, onApplySuggestion, 
           </div>
         )}
 
-        {/* Accepted summary — only actionable changes */}
+        {/* Accepted summary */}
         {acceptedList.length > 0 && (
           <div className="bg-green-50 border border-green-200 rounded-xl p-4">
             <p className="text-sm font-semibold text-green-800 mb-2">✅ Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}</p>
