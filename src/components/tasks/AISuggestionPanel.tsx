@@ -22,22 +22,22 @@ interface Props {
 }
 
 const QUICK_PROMPTS = [
-  { label: '🔄 Sequence tasks',      prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
-  { label: '🔴 Fix priorities',       prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
-  { label: '📅 Fix deadlines',        prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
-  { label: '✂️ Break down a task',    prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
-  { label: '✏️ Improve wording',      prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
-  { label: '📁 New project + tasks',  prompt: 'Create a new project for me with tasks inside it.' },
+  { label: '\uD83D\uDD04 Sequence tasks',      prompt: 'What is the best order to tackle my tasks today? Consider priority and due dates.' },
+  { label: '\uD83D\uDD34 Fix priorities',       prompt: 'Are any of my tasks clearly set to the wrong priority? Only flag tasks where there is a specific data-backed reason such as an overdue task on low priority, or a task due within 3 days still marked low.' },
+  { label: '\uD83D\uDCC5 Fix deadlines',        prompt: 'Which tasks are overdue or have unrealistic deadlines? Suggest better due dates.' },
+  { label: '\u2702\uFE0F Break down a task',    prompt: 'Find any large or complex tasks and break them down into smaller, logical sub-tasks I can complete step by step.' },
+  { label: '\u270F\uFE0F Improve wording',      prompt: 'Which task titles or descriptions are vague? Help me make them clearer and more actionable.' },
+  { label: '\uD83D\uDCC1 New project + tasks',  prompt: 'Create a new project for me with tasks inside it.' },
 ];
 
 const typeConfig: Record<string, { icon: string; label: string; color: string }> = {
-  reprioritize: { icon: '🔴', label: 'Reprioritize',       color: 'bg-red-50 border-red-200' },
-  reschedule:   { icon: '📅', label: 'Reschedule',         color: 'bg-yellow-50 border-yellow-200' },
-  rewrite:      { icon: '✏️', label: 'Rewrite',            color: 'bg-blue-50 border-blue-200' },
-  sequence:     { icon: '🔢', label: 'Recommended Order',  color: 'bg-purple-50 border-purple-200' },
-  split:        { icon: '✂️', label: 'Split task',         color: 'bg-orange-50 border-orange-200' },
-  scaffold:     { icon: '📁', label: 'Project + Tasks',    color: 'bg-green-50 border-green-200' },
-  general:      { icon: '💡', label: 'Suggestion',         color: 'bg-gray-50 border-gray-200' },
+  reprioritize: { icon: '\uD83D\uDD34', label: 'Reprioritize',       color: 'bg-red-50 border-red-200' },
+  reschedule:   { icon: '\uD83D\uDCC5', label: 'Reschedule',         color: 'bg-yellow-50 border-yellow-200' },
+  rewrite:      { icon: '\u270F\uFE0F', label: 'Rewrite',            color: 'bg-blue-50 border-blue-200' },
+  sequence:     { icon: '\uD83D\uDD22', label: 'Recommended Order',  color: 'bg-purple-50 border-purple-200' },
+  split:        { icon: '\u2702\uFE0F', label: 'Split task',         color: 'bg-orange-50 border-orange-200' },
+  scaffold:     { icon: '\uD83D\uDCC1', label: 'Project + Tasks',    color: 'bg-green-50 border-green-200' },
+  general:      { icon: '\uD83D\uDCA1', label: 'Suggestion',         color: 'bg-gray-50 border-gray-200' },
 };
 
 const READ_ONLY_TYPES = new Set(['sequence', 'general']);
@@ -58,6 +58,7 @@ export default function AISuggestionPanel({
   const [qaCreateNewProject, setQaCreateNewProject] = useState(false);
 
   // --- Suggest state ---
+  const [scopeProjectId, setScopeProjectId] = useState<string | null>(null); // null = all projects
   const [userPrompt, setUserPrompt]   = useState('');
   const [loading, setLoading]         = useState(false);
   const [hasQueried, setHasQueried]   = useState(false);
@@ -72,6 +73,8 @@ export default function AISuggestionPanel({
     (acc, p) => { acc[p.id] = p; return acc; },
     {} as Record<string, typeof projects[0]>,
   );
+
+  const scopeProject = scopeProjectId ? projectMap[scopeProjectId] : null;
 
   // ─── Quick Add ────────────────────────────────────────────────────────────
   const handleQaParse = async () => {
@@ -127,7 +130,7 @@ export default function AISuggestionPanel({
         ? ` in new project "${qaNewProjectName}"` : '';
       setQaInput(''); setQaPreview(null); setQaConfidence(null);
       setQaNewProjectName(null); setQaCreateNewProject(false);
-      setQaSuccess(`✅ Task created${note}!`);
+      setQaSuccess(`\u2705 Task created${note}!`);
       setTimeout(() => setQaSuccess(null), 4000);
     } catch (err: any) {
       setQaError(err.message);
@@ -142,16 +145,29 @@ export default function AISuggestionPanel({
   };
 
   // ─── Suggest ──────────────────────────────────────────────────────────────
-  const buildSnapshots = (): TaskSnapshot[] =>
-    tasks.filter((t) => t.status !== 'done').map((t) => ({
+  /**
+   * Build task snapshots scoped to the selected project (or all tasks if none selected).
+   * Also injects a scope prefix into the user prompt so the AI knows the context.
+   */
+  const buildSnapshots = (): TaskSnapshot[] => {
+    const source = scopeProjectId
+      ? tasks.filter((t) => t.project_id === scopeProjectId && t.status !== 'done')
+      : tasks.filter((t) => t.status !== 'done');
+    return source.map((t) => ({
       id: t.id, title: t.title, description: t.description ?? undefined,
       status: t.status, priority: t.priority,
       due_date: t.due_date ?? undefined,
       project_name: t.project_id ? (projectMap[t.project_id]?.name ?? undefined) : undefined,
     }));
+  };
+
+  const buildPrompt = (base: string): string => {
+    if (!scopeProject) return base;
+    return `[Project scope: "${scopeProject.name}"] ${base}`;
+  };
 
   const handleAsk = async (prompt?: string) => {
-    const finalPrompt = prompt ?? userPrompt;
+    const finalPrompt = buildPrompt(prompt ?? userPrompt);
     if (!finalPrompt.trim()) return;
     setLoading(true); setError(null); setSuggestions([]);
     setApplied(new Set()); setRejected(new Set()); setFading(new Set());
@@ -220,7 +236,7 @@ export default function AISuggestionPanel({
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-blue-600">
-        <h2 className="text-lg font-bold text-white">🤖 AI Assistant</h2>
+        <h2 className="text-lg font-bold text-white">\uD83E\uDD16 AI Assistant</h2>
         <button onClick={onClose} className="text-white hover:text-indigo-200 text-2xl leading-none">&times;</button>
       </div>
 
@@ -233,7 +249,7 @@ export default function AISuggestionPanel({
                 ? 'border-b-2 border-indigo-600 text-indigo-700 bg-indigo-50'
                 : 'text-gray-500 hover:text-gray-700'
             }`}>
-            {tab === 'quick-add' ? '⚡ Quick Add Task' : '✨ Suggestions'}
+            {tab === 'quick-add' ? '\u26A1 Quick Add Task' : '\u2728 Suggestions'}
           </button>
         ))}
       </div>
@@ -254,11 +270,11 @@ export default function AISuggestionPanel({
                 disabled={qaLoading} />
               <button onClick={handleQaParse} disabled={qaLoading || !qaInput.trim()}
                 className="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                {qaLoading && !qaPreview ? '🧠...' : 'Parse'}
+                {qaLoading && !qaPreview ? '\uD83E\uDDE0...' : 'Parse'}
               </button>
             </div>
 
-            {qaError   && <p className="text-xs text-red-600">⚠️ {qaError}</p>}
+            {qaError   && <p className="text-xs text-red-600">\u26A0\uFE0F {qaError}</p>}
             {qaSuccess && <p className="text-xs text-green-600 font-medium">{qaSuccess}</p>}
 
             {qaPreview && (
@@ -267,7 +283,7 @@ export default function AISuggestionPanel({
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Review &amp; confirm</span>
                   {qaConfidence && (
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${confidenceBadge[qaConfidence]}`}>
-                      {qaConfidence === 'high' ? '✅ High confidence' : qaConfidence === 'medium' ? '⚠️ Review' : '❓ Review carefully'}
+                      {qaConfidence === 'high' ? '\u2705 High confidence' : qaConfidence === 'medium' ? '\u26A0\uFE0F Review' : '\u2753 Review carefully'}
                     </span>
                   )}
                 </div>
@@ -287,9 +303,9 @@ export default function AISuggestionPanel({
                     <label className="text-xs font-medium text-gray-500">Priority</label>
                     <select value={qaPreview.priority} onChange={(e) => handleQaEdit('priority', e.target.value)}
                       className={`mt-1 w-full border rounded-lg px-2 py-1.5 text-sm font-medium focus:outline-none ${priorityColor[qaPreview.priority]}`}>
-                      <option value="high">🔴 High</option>
-                      <option value="medium">🟡 Medium</option>
-                      <option value="low">🟢 Low</option>
+                      <option value="high">\uD83D\uDD34 High</option>
+                      <option value="medium">\uD83D\uDFE1 Medium</option>
+                      <option value="low">\uD83D\uDFE2 Low</option>
                     </select>
                   </div>
                   <div className="flex-1">
@@ -300,17 +316,17 @@ export default function AISuggestionPanel({
                 </div>
                 {qaPreview.project_name && !qaNewProjectName && (
                   <div className="text-xs text-indigo-700 bg-indigo-50 rounded-lg px-3 py-1.5">
-                    📁 Matched project: <strong>{qaPreview.project_name}</strong>
+                    \uD83D\uDCC1 Matched project: <strong>{qaPreview.project_name}</strong>
                   </div>
                 )}
                 {qaNewProjectName && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    <p className="text-xs font-semibold text-amber-800 mb-1.5">📁 &quot;{qaNewProjectName}&quot; doesn&apos;t exist yet</p>
+                    <p className="text-xs font-semibold text-amber-800 mb-1.5">\uD83D\uDCC1 &quot;{qaNewProjectName}&quot; doesn&apos;t exist yet</p>
                     <div className="flex space-x-2">
                       <button type="button" onClick={() => setQaCreateNewProject(true)}
                         className={`flex-1 py-1 text-xs font-medium rounded-lg border transition-colors ${
                           qaCreateNewProject ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                        }`}>✅ Create project</button>
+                        }`}>\u2705 Create project</button>
                       <button type="button" onClick={() => setQaCreateNewProject(false)}
                         className={`flex-1 py-1 text-xs font-medium rounded-lg border transition-colors ${
                           !qaCreateNewProject ? 'bg-gray-700 text-white border-gray-700' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
@@ -321,7 +337,7 @@ export default function AISuggestionPanel({
                 <div className="flex space-x-2 pt-1">
                   <button onClick={handleQaConfirm} disabled={qaLoading}
                     className="flex-1 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                    {qaLoading ? 'Creating...' : '✅ Create Task'}
+                    {qaLoading ? 'Creating...' : '\u2705 Create Task'}
                   </button>
                   <button onClick={() => { setQaPreview(null); setQaConfidence(null); setQaNewProjectName(null); }}
                     className="flex-1 py-2 border border-gray-300 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50">
@@ -336,7 +352,58 @@ export default function AISuggestionPanel({
         {/* ── SUGGEST TAB ── */}
         {activeTab === 'suggest' && (
           <>
-            {/* Quick-prompt pills — 2×3 grid for consistent layout */}
+            {/* ── Project scope selector ── */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                \uD83D\uDCC2 Project scope
+              </label>
+              <div className="relative">
+                <select
+                  value={scopeProjectId ?? ''}
+                  onChange={(e) => {
+                    setScopeProjectId(e.target.value || null);
+                    // Reset results when scope changes so stale cards don't show
+                    setSuggestions([]); setApplied(new Set()); setRejected(new Set());
+                    setFading(new Set()); setHasQueried(false); setError(null);
+                  }}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 appearance-none pr-8"
+                >
+                  <option value="">\uD83C\uDF10 All Projects ({tasks.filter(t => t.status !== 'done').length} open tasks)</option>
+                  {projects.map((p) => {
+                    const count = tasks.filter(t => t.project_id === p.id && t.status !== 'done').length;
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({count} open task{count !== 1 ? 's' : ''})
+                      </option>
+                    );
+                  })}
+                </select>
+                <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-gray-400">\u25BE</span>
+              </div>
+
+              {/* Active scope badge */}
+              {scopeProject && (
+                <div
+                  className="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white"
+                  style={{ backgroundColor: scopeProject.color || '#6366f1' }}
+                >
+                  <span>\uD83D\uDCC2 Scoped to: <strong>{scopeProject.name}</strong></span>
+                  <button
+                    onClick={() => {
+                      setScopeProjectId(null);
+                      setSuggestions([]); setApplied(new Set()); setRejected(new Set());
+                      setFading(new Set()); setHasQueried(false); setError(null);
+                    }}
+                    className="ml-auto opacity-80 hover:opacity-100 font-bold text-sm leading-none"
+                    title="Clear scope"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Quick-prompt pills — 2\xd73 grid */}
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Quick requests</p>
               <div className="grid grid-cols-2 gap-2">
@@ -349,20 +416,22 @@ export default function AISuggestionPanel({
               </div>
             </div>
 
-            {/* Custom request — visually secondary */}
+            {/* Custom request */}
             <div className="bg-gray-50 rounded-xl p-3 space-y-2">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Custom request</p>
               <textarea rows={2} value={userPrompt} onChange={(e) => setUserPrompt(e.target.value)}
-                placeholder={'e.g. Create tasks in my "invesbot" project: get the API, put to code, UAT'}
+                placeholder={scopeProject
+                  ? `e.g. "Break down the big tasks in ${scopeProject.name}"`
+                  : 'e.g. Create tasks in my "invesbot" project: get the API, put to code, UAT'}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none bg-white" />
               <button onClick={() => handleAsk()} disabled={loading || !userPrompt.trim()}
                 className="w-full py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50">
-                {loading ? '🧠 Thinking...' : '✨ Get suggestions'}
+                {loading ? '\uD83E\uDDE0 Thinking...' : '\u2728 Get suggestions'}
               </button>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">⚠️ {error}</div>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">\u26A0\uFE0F {error}</div>
             )}
 
             {loading && (
@@ -371,15 +440,16 @@ export default function AISuggestionPanel({
               </div>
             )}
 
-            {/* Persistent applied summary — visible as soon as first change is accepted */}
+            {/* Persistent applied summary */}
             {acceptedList.length > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl p-4">
                 <p className="text-sm font-semibold text-green-800 mb-2">
-                  ✅ Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}
+                  \u2705 Applied {acceptedList.length} change{acceptedList.length > 1 ? 's' : ''}
+                  {scopeProject ? ` in \u201c${scopeProject.name}\u201d` : ''}
                 </p>
                 <ul className="space-y-1">
                   {acceptedList.map((s) => (
-                    <li key={s.id} className="text-xs text-green-700">· {acceptedSummaryLabel(s)}</li>
+                    <li key={s.id} className="text-xs text-green-700">\u00B7 {acceptedSummaryLabel(s)}</li>
                   ))}
                 </ul>
               </div>
@@ -390,6 +460,11 @@ export default function AISuggestionPanel({
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                   {pending.length} suggestion{pending.length > 1 ? 's' : ''} to review
+                  {scopeProject && (
+                    <span className="ml-2 normal-case font-normal text-gray-400">
+                      &mdash; {scopeProject.name}
+                    </span>
+                  )}
                 </p>
                 <div className="space-y-3">
                   {pending.map((s) => {
@@ -409,10 +484,9 @@ export default function AISuggestionPanel({
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs font-semibold text-gray-500 uppercase">{cfg.icon} {cfg.label}</span>
-                              {/* Scaffold count badge */}
                               {s.type === 'scaffold' && scaffoldTaskCount > 0 && (
                                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                                  {isExistingProject ? '' : '1 project · '}{scaffoldTaskCount} task{scaffoldTaskCount !== 1 ? 's' : ''}
+                                  {isExistingProject ? '' : '1 project \u00B7 '}{scaffoldTaskCount} task{scaffoldTaskCount !== 1 ? 's' : ''}
                                 </span>
                               )}
                             </div>
@@ -435,8 +509,8 @@ export default function AISuggestionPanel({
                                 ? 'bg-blue-100 text-blue-800 border border-blue-200'
                                 : 'bg-green-100 text-green-800 border border-green-200'
                             }`}>
-                              <span>{isExistingProject ? '📂' : '📁'}</span>
-                              <span>{isExistingProject ? `Adding to: "${s.scaffoldProjectName}"` : `New project: "${s.scaffoldProjectName}"`}</span>
+                              <span>{isExistingProject ? '\uD83D\uDCC2' : '\uD83D\uDCC1'}</span>
+                              <span>{isExistingProject ? `Adding to: \u201c${s.scaffoldProjectName}\u201d` : `New project: \u201c${s.scaffoldProjectName}\u201d`}</span>
                             </div>
                             {s.subTasks?.map((sub, i) => (
                               <div key={i} className="flex items-start space-x-2 text-xs bg-white border border-green-200 rounded-lg px-3 py-2">
@@ -444,7 +518,7 @@ export default function AISuggestionPanel({
                                 <div className="flex-1">
                                   <p className="font-medium text-gray-800">{sub.title}</p>
                                   {sub.description && <p className="text-gray-500 mt-0.5">{sub.description}</p>}
-                                  {sub.due_date && <p className="text-indigo-500 mt-0.5">📅 {sub.due_date}</p>}
+                                  {sub.due_date && <p className="text-indigo-500 mt-0.5">\uD83D\uDCC5 {sub.due_date}</p>}
                                 </div>
                                 <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                                   sub.priority === 'high' ? 'bg-red-100 text-red-700'
@@ -488,11 +562,11 @@ export default function AISuggestionPanel({
                           </div>
                         )}
 
-                        {/* Before → after diff */}
+                        {/* Before \u2192 after diff */}
                         {!isReadOnly && s.type !== 'split' && s.type !== 'scaffold' && s.currentValue && (
                           <div className="flex items-center space-x-2 text-xs mb-3">
                             <span className="px-2 py-1 bg-white border border-gray-300 rounded text-gray-500 line-through">{s.currentValue}</span>
-                            <span className="text-gray-400">→</span>
+                            <span className="text-gray-400">\u2192</span>
                             <span className="px-2 py-1 bg-white border border-indigo-300 rounded text-indigo-700 font-medium">{s.proposedValue}</span>
                           </div>
                         )}
@@ -501,21 +575,21 @@ export default function AISuggestionPanel({
                         {isReadOnly ? (
                           <button onClick={() => handleSkip(s.id)}
                             className="w-full py-1.5 rounded-lg border border-gray-300 text-gray-500 text-xs font-medium hover:bg-gray-50">
-                            Got it — Dismiss
+                            Got it \u2014 Dismiss
                           </button>
                         ) : (
                           <div className="flex space-x-2">
                             <button onClick={() => handleAccept(s)}
                               disabled={applying === s.id}
                               className="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 disabled:opacity-50">
-                              {applying === s.id ? 'Applying…' :
+                              {applying === s.id ? 'Applying\u2026' :
                                 s.type === 'scaffold'
                                   ? (isExistingProject
-                                      ? `✅ Add ${scaffoldTaskCount} task${scaffoldTaskCount !== 1 ? 's' : ''}`
-                                      : `✅ Create project + ${scaffoldTaskCount} task${scaffoldTaskCount !== 1 ? 's' : ''}`)
+                                      ? `\u2705 Add ${scaffoldTaskCount} task${scaffoldTaskCount !== 1 ? 's' : ''}`
+                                      : `\u2705 Create project + ${scaffoldTaskCount} task${scaffoldTaskCount !== 1 ? 's' : ''}`)
                                   : s.type === 'split'
-                                    ? `✅ Create ${s.subTasks?.length ?? ''} sub-tasks`
-                                    : '✅ Accept'}
+                                    ? `\u2705 Create ${s.subTasks?.length ?? ''} sub-tasks`
+                                    : '\u2705 Accept'}
                             </button>
                             <button onClick={() => handleSkip(s.id)}
                               disabled={applying === s.id}
@@ -531,12 +605,16 @@ export default function AISuggestionPanel({
               </div>
             )}
 
-            {/* Empty state — AI returned 0 suggestions */}
+            {/* Empty state */}
             {hasQueried && !loading && suggestions.length === 0 && !error && (
               <div className="text-center py-8">
-                <p className="text-2xl mb-2">🎉</p>
+                <p className="text-2xl mb-2">\uD83C\uDF89</p>
                 <p className="text-sm font-medium text-gray-700">Looks good!</p>
-                <p className="text-xs text-gray-400 mt-1">No suggestions needed — your tasks are well organised.</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  No suggestions needed
+                  {scopeProject ? ` for \u201c${scopeProject.name}\u201d` : ''}
+                  \u2014 your tasks are well organised.
+                </p>
               </div>
             )}
 
@@ -545,20 +623,20 @@ export default function AISuggestionPanel({
               <div className="text-center py-6 text-gray-400 text-sm">All reviewed. Ask something else!</div>
             )}
 
-            {/* Privacy footer — only shown after first AI query */}
+            {/* Privacy footer */}
             {hasQueried && (
               <div className="pt-2 border-t border-gray-100">
-                <p className="text-xs text-gray-400 text-center">🔒 Notes &amp; Docs are <strong>never</strong> shared with AI</p>
+                <p className="text-xs text-gray-400 text-center">\uD83D\uDD12 Notes &amp; Docs are <strong>never</strong> shared with AI</p>
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Bottom bar — always visible, no privacy note until user has queried */}
+      {/* Bottom bar */}
       {(!hasQueried || activeTab === 'quick-add') && (
         <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
-          <p className="text-xs text-gray-400 text-center">🔒 Your task data is <strong>never</strong> stored by the AI</p>
+          <p className="text-xs text-gray-400 text-center">\uD83D\uDD12 Your task data is <strong>never</strong> stored by the AI</p>
         </div>
       )}
     </div>
