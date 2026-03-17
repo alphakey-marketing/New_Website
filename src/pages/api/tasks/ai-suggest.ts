@@ -8,7 +8,7 @@ export interface TaskSnapshot {
   description?: string;
   status: string;
   priority: string;
-  due_date?: string;          // always string | undefined after buildSnapshots coercion
+  due_date?: string;
   project_name?: string;
 }
 
@@ -33,7 +33,6 @@ interface RequestBody {
   userPrompt: string;
 }
 
-/** Analyse the prompt once, returning both flags to avoid calling toLowerCase() twice. */
 function analysePrompt(prompt: string): { includeDesc: boolean; temperature: number } {
   const lower = prompt.toLowerCase();
 
@@ -103,6 +102,14 @@ You must ONLY produce suggestion types that are directly relevant to the user's 
 - DO NOT add reprioritize or reschedule suggestions unless the user's request explicitly asks for them
 - DO NOT mix suggestion types \u2014 respond only to what was asked
 
+== CRITICAL RULE: taskId MUST BE SET FOR TASK-LEVEL TYPES ==
+For types: split, reprioritize, reschedule, rewrite
+- taskId MUST be set to the EXACT task ID (the "ID:" value from the task list)
+- NEVER leave taskId as "" for these types
+- If you cannot identify the exact task ID, do not include that suggestion
+For types: scaffold, sequence, general
+- taskId should be set to ""
+
 == DATE HANDLING ==
 Today is ${today}. Use this to resolve ALL relative date references.
 When a user mentions a due date (e.g. "by Wednesday", "done by this Friday", "due next Monday", "by end of week"), you MUST:
@@ -121,7 +128,7 @@ Instead, add the new tasks directly to the existing project by setting scaffoldP
   "suggestions": [
     {
       "id": "s1",
-      "taskId": "<task id or empty string>",
+      "taskId": "<REQUIRED: exact task ID for split/reprioritize/reschedule/rewrite; empty string for scaffold/sequence/general>",
       "taskTitle": "<task title>",
       "type": "<type>",
       "explanation": "<1-2 sentences, friendly tone>",
@@ -145,8 +152,9 @@ Use when the user wants to create a NEW PROJECT with tasks inside it.
   - NEVER put date info in title or description \u2014 use due_date field only
 
 == TYPE: split ==
-- Set proposedValue to e.g. "3 sub-tasks"
+- taskId MUST be the exact ID of the task being split (see CRITICAL RULE above)
 - Set currentValue to the original task title
+- Set proposedValue to e.g. "3 sub-tasks"
 - Include subTasks array: { title, description, priority, due_date }
 - Do NOT put sub-task titles inside proposedValue
 
@@ -164,9 +172,11 @@ ONLY if user explicitly asks. AND only if ONE of these conditions is met:
   b) Task due within 3 days but set to low priority
   c) Two tasks conflict in priority (blocker is lower priority than blocked)
 If no task meets these conditions, return zero reprioritize suggestions.
+- taskId MUST be the exact ID of the task to reprioritize
 
 == TYPE: reschedule ==
 ONLY if user explicitly asks to fix deadlines or reschedule.
+- taskId MUST be the exact ID of the task to reschedule
 
 == TYPE: general ==
 - Set taskId, taskTitle, currentValue all to ""
@@ -196,7 +206,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const today = new Date().toISOString().split('T')[0];
   const { includeDesc, temperature } = analysePrompt(userPrompt);
 
-  // Deduplicate by ID, then cap to 50 non-done tasks sorted by due date
   const seen = new Set<string>();
   const cappedTasks = tasks
     .filter((t) => t.status !== 'done' && !seen.has(t.id) && seen.add(t.id))
