@@ -16,9 +16,7 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
   const [generatedAt, setGeneratedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [appliedStale, setAppliedStale] = useState<Set<string>>(new Set());
-  // Collapsed by default — only expand once the user generates a briefing
   const [expanded, setExpanded] = useState(false);
-  // Stale task pending destructive confirm: stores taskId
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const projectMap = projects.reduce(
@@ -32,7 +30,7 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
     setBriefing(null);
     setAppliedStale(new Set());
     setPendingDeleteId(null);
-    setExpanded(true); // auto-expand when generating
+    setExpanded(true);
     try {
       const snapshots = tasks
         .filter((t) => t.status !== 'done')
@@ -45,7 +43,6 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
           due_date: t.due_date,
           project_name: t.project_id ? projectMap[t.project_id]?.name : undefined,
         }));
-      // `today` is now derived server-side; no need to send it
       const data = await aiRequest<DailyFocusResponse>('/api/tasks/ai-daily-focus', { tasks: snapshots });
       setBriefing(data);
       setGeneratedAt(new Date());
@@ -58,20 +55,28 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
 
   const handleApplyStale = async (stale: StaleTask) => {
     if (stale.suggestion === 'drop') {
-      // Require explicit second-click confirmation before deleting
       if (pendingDeleteId !== stale.taskId) {
         setPendingDeleteId(stale.taskId);
         return;
       }
-      if (onDeleteTask) await onDeleteTask(stale.taskId);
-    } else {
-      if (stale.suggestion === 'reschedule') {
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        await onUpdateTask(stale.taskId, { due_date: nextWeek.toISOString().split('T')[0] });
-      } else if (stale.suggestion === 'reprioritize') {
-        await onUpdateTask(stale.taskId, { priority: 'low' });
+      // Only mark applied if the handler actually exists and runs
+      if (onDeleteTask) {
+        await onDeleteTask(stale.taskId);
+        setPendingDeleteId(null);
+        setAppliedStale((prev) => new Set(prev).add(stale.taskId));
+      } else {
+        // Prop missing — reset the confirm state without silently swallowing
+        setPendingDeleteId(null);
+        console.warn('AIDailyBriefing: onDeleteTask prop not provided; cannot delete task', stale.taskId);
       }
+      return;
+    }
+    if (stale.suggestion === 'reschedule') {
+      const nextWeek = new Date();
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      await onUpdateTask(stale.taskId, { due_date: nextWeek.toISOString().split('T')[0] });
+    } else if (stale.suggestion === 'reprioritize') {
+      await onUpdateTask(stale.taskId, { priority: 'low' });
     }
     setPendingDeleteId(null);
     setAppliedStale((prev) => new Set(prev).add(stale.taskId));
@@ -233,7 +238,6 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
                           <p className="text-sm font-medium text-gray-800">{st.taskTitle}</p>
                           <p className="text-xs text-gray-500 mt-0.5">{st.reason}</p>
                           <p className="text-xs text-orange-600 mt-0.5">Stale for {st.daysStale} days</p>
-                          {/* Inline hint when delete confirm is pending */}
                           {st.suggestion === 'drop' && pendingDeleteId === st.taskId && (
                             <p className="text-xs text-red-600 mt-1 font-medium">Click again to permanently delete this task.</p>
                           )}
@@ -246,7 +250,6 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
                           >
                             {staleActionLabel(st)}
                           </button>
-                          {/* Cancel confirm */}
                           {pendingDeleteId === st.taskId && (
                             <button
                               onClick={() => setPendingDeleteId(null)}

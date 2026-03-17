@@ -116,14 +116,32 @@ export default function TasksPage() {
     setEditingTask(null);
   };
 
+  /**
+   * Remove deletedId from every other task's blocked_by array.
+   * Runs as fire-and-forget updates in parallel — a reload follows immediately.
+   */
+  const cleanupBlockedBy = async (deletedId: string, currentTasks: Task[]) => {
+    const affected = currentTasks.filter(
+      (t) => t.id !== deletedId && Array.isArray(t.blocked_by) && t.blocked_by.includes(deletedId),
+    );
+    await Promise.all(
+      affected.map((t) => {
+        const updated = (t.blocked_by ?? []).filter((id) => id !== deletedId);
+        return taskService.updateTask(t.id, { blocked_by: updated.length > 0 ? updated : null } as any);
+      }),
+    );
+  };
+
   const handleDeleteTask = async (task: Task) => {
     await taskService.deleteTask(task.id);
+    await cleanupBlockedBy(task.id, tasks);
     await loadTasks();
     setDeleteConfirm(null);
   };
 
   const handleDeleteTaskById = async (taskId: string) => {
     await taskService.deleteTask(taskId);
+    await cleanupBlockedBy(taskId, tasks);
     await loadTasks();
   };
 
@@ -250,7 +268,6 @@ export default function TasksPage() {
     return matchesProject && matchesFilter && matchesSearch;
   });
 
-  // Open tasks only (todo + in_progress) — used for sidebar badges
   const openTaskCountsByProject = tasks
     .filter((t) => t.status !== 'done')
     .reduce((acc, task) => {
