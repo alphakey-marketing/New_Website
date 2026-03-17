@@ -10,6 +10,30 @@ interface TaskFormProps {
   onCancel: () => void;
 }
 
+/** Shared priority dropdown — used in both create and edit modes */
+function PrioritySelect({
+  value,
+  onChange,
+  className,
+}: {
+  value: TaskFormData['priority'];
+  onChange: (v: TaskFormData['priority']) => void;
+  className?: string;
+}) {
+  return (
+    <select
+      id="priority"
+      className={className ?? 'mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'}
+      value={value}
+      onChange={(e) => onChange(e.target.value as TaskFormData['priority'])}
+    >
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+  );
+}
+
 export default function TaskForm({ task, allTasks = [], projects = [], initialProjectId, onSubmit, onCancel }: TaskFormProps) {
   const isEditing = !!task;
 
@@ -146,8 +170,8 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
               </div>
             )}
 
-            {/* Status — only shown when editing an existing task */}
-            {isEditing && (
+            {/* Status + Priority (edit mode: 2-col grid) */}
+            {isEditing ? (
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
@@ -164,34 +188,19 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
                 </div>
                 <div>
                   <label htmlFor="priority" className="block text-sm font-medium text-gray-700">Priority</label>
-                  <select
-                    id="priority"
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  <PrioritySelect
                     value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskFormData['priority'] })}
-                  >
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
+                    onChange={(v) => setFormData({ ...formData, priority: v })}
+                  />
                 </div>
               </div>
-            )}
-
-            {/* Priority only (create mode) */}
-            {!isEditing && (
+            ) : (
               <div>
                 <label htmlFor="priority" className="block text-sm font-medium text-gray-700">Priority</label>
-                <select
-                  id="priority"
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                <PrioritySelect
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as TaskFormData['priority'] })}
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
+                  onChange={(v) => setFormData({ ...formData, priority: v })}
+                />
               </div>
             )}
 

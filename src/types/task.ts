@@ -1,4 +1,4 @@
-export type TaskStatus = 'todo' | 'in_progress' | 'done';
+export type TaskStatus   = 'todo' | 'in_progress' | 'done';
 export type TaskPriority = 'low' | 'medium' | 'high';
 
 export interface Task {
@@ -26,3 +26,18 @@ export interface TaskFormData {
   /** Optional: IDs of tasks that must be 'done' before this task can start */
   blocked_by?: string[] | null;
 }
+
+/**
+ * The shape passed to taskService.createTask from application code.
+ * Omits DB-managed fields (id, user_id, created_at, updated_at).
+ * Status is optional because new tasks always start as 'todo' when omitted.
+ */
+export type CreateTaskInput = {
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  status?: TaskStatus;
+  due_date?: string | null;
+  project_id?: string | null;
+  blocked_by?: string[] | null;
+};

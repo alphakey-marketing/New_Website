@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Task } from '../../types/task';
-import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { isPast, isToday } from 'date-fns';
+import { isBlocked, formatDueDate } from '../../utils/taskUtils';
 
 interface TaskListProps {
   tasks: Task[];
@@ -24,25 +25,12 @@ const priorityConfig = {
   low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',       dot: 'bg-gray-400',   label: 'Low',    order: 2 },
 };
 
-function formatDueDate(dateStr: string) {
-  const date = new Date(dateStr);
-  if (isPast(date) && !isToday(date)) return { label: `Overdue \u00b7 ${format(date, 'MMM d')}`, cls: 'text-red-600 font-semibold' };
-  if (isToday(date))    return { label: 'Due Today',    cls: 'text-orange-600 font-semibold' };
-  if (isTomorrow(date)) return { label: 'Due Tomorrow', cls: 'text-yellow-600 font-semibold' };
-  return { label: format(date, 'MMM d, yyyy'), cls: 'text-gray-400' };
-}
-
 function contrastColor(hex: string): string {
   const c = hex.replace('#', '');
   const r = parseInt(c.substring(0, 2), 16);
   const g = parseInt(c.substring(2, 4), 16);
   const b = parseInt(c.substring(4, 6), 16);
   return (r * 299 + g * 587 + b * 114) / 1000 > 128 ? '#1f2937' : '#ffffff';
-}
-
-function isBlocked(task: Task, taskMap: Record<string, Task>): boolean {
-  if (!task.blocked_by || task.blocked_by.length === 0) return false;
-  return task.blocked_by.some((id) => taskMap[id] && taskMap[id].status !== 'done');
 }
 
 export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, projects = [] }: TaskListProps) {
@@ -78,7 +66,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
     {} as Record<string, typeof projects[0]>,
   );
 
-  // --- Progress stats ---
   const total    = tasks.length;
   const done     = tasks.filter((t) => t.status === 'done').length;
   const overdue  = tasks.filter(
@@ -162,7 +149,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
             const textColor   = contrastColor(bgColor);
             const descVisible = expandedDesc.has(task.id);
 
-            // Row: left-border accent for overdue/blocked, hover-reveal actions
             const rowBorder   = blocked ? 'border-l-4 border-orange-400' : isOverdue ? 'border-l-4 border-red-400' : 'border-l-4 border-transparent';
             const rowBg       = blocked ? 'bg-orange-50 opacity-80' : isOverdue ? 'bg-red-50' : 'bg-white hover:bg-gray-50 transition-colors';
 
@@ -189,7 +175,6 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                               \uD83D\uDD12 Blocked
                             </span>
                           )}
-                          {/* Description toggle — only shown when task has a description */}
                           {task.description && (
                             <button
                               onClick={() => toggleDesc(task.id)}
@@ -204,14 +189,12 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                             Waiting on: {blockerTitles.join(', ')}
                           </p>
                         )}
-                        {/* Description — collapsed by default, expands on click */}
                         {task.description && descVisible && (
                           <p className="mt-1 text-xs text-gray-500 leading-relaxed">{task.description}</p>
                         )}
                       </div>
                     </div>
 
-                    {/* Actions — hover-reveal only */}
                     <div className="flex-shrink-0 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => onEdit(task)}

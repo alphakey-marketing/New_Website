@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Task } from '../../types/task';
-import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { isPast, isToday, isTomorrow, format } from 'date-fns';
+import { isBlocked, formatDueDate } from '../../utils/taskUtils';
 
 interface FocusListProps {
   tasks: Task[];
@@ -13,23 +14,10 @@ interface FocusListProps {
 const priorityOrder = { high: 0, medium: 1, low: 2 };
 
 const priorityConfig = {
-  high:   { color: 'bg-red-100 text-red-700 border border-red-200',          icon: '🔴', label: 'High' },
-  medium: { color: 'bg-yellow-100 text-yellow-800 border border-yellow-200', icon: '🟡', label: 'Medium' },
-  low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',        icon: '🟢', label: 'Low' },
+  high:   { color: 'bg-red-100 text-red-700 border border-red-200',          icon: '\uD83D\uDD34', label: 'High' },
+  medium: { color: 'bg-yellow-100 text-yellow-800 border border-yellow-200', icon: '\uD83D\uDFE1', label: 'Medium' },
+  low:    { color: 'bg-gray-100 text-gray-600 border border-gray-200',        icon: '\uD83D\uDFE2', label: 'Low' },
 };
-
-function formatDueDate(dateStr: string) {
-  const date = new Date(dateStr);
-  if (isPast(date) && !isToday(date)) return { label: `Overdue: ${format(date, 'MMM d')}`, cls: 'text-red-600 font-bold' };
-  if (isToday(date))    return { label: 'Today',    cls: 'text-orange-500 font-semibold' };
-  if (isTomorrow(date)) return { label: 'Tomorrow', cls: 'text-yellow-600 font-semibold' };
-  return { label: format(date, 'MMM d'), cls: 'text-gray-400' };
-}
-
-function isBlocked(task: Task, taskMap: Record<string, Task>): boolean {
-  if (!task.blocked_by || task.blocked_by.length === 0) return false;
-  return task.blocked_by.some((id) => taskMap[id] && taskMap[id].status !== 'done');
-}
 
 export default function FocusList({ tasks, projects, onEdit, onStatusChange, onNewTask }: FocusListProps) {
   const [limit, setLimit] = useState(7);
@@ -91,7 +79,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     onClick={() => handleNewTask(null)}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
-                    📂 No project
+                    \uD83D\uDCC2 No project
                   </button>
                   {projects.map((p) => (
                     <button
@@ -147,7 +135,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                   blocked ? 'bg-orange-200 text-orange-600' : index === 0 ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'
                 }`}>
-                  {blocked ? '🔒' : index + 1}
+                  {blocked ? '\uD83D\uDD12' : index + 1}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -159,7 +147,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     </span>
                     {blocked ? (
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-100 border border-orange-300 text-orange-700">
-                        🔒 Blocked
+                        \uD83D\uDD12 Blocked
                       </span>
                     ) : (
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${pc.color}`}>
@@ -184,7 +172,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                 </div>
 
                 {due && !blocked && (
-                  <div className={`flex-shrink-0 text-xs font-medium ${due.cls}`}>⏰ {due.label}</div>
+                  <div className={`flex-shrink-0 text-xs font-medium ${due.cls}`}>\u23F0 {due.label}</div>
                 )}
 
                 <div className="flex-shrink-0 flex items-center space-x-2">
@@ -195,7 +183,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     onChange={(e) => {
                       const next = e.target.value as Task['status'];
                       if (blocked && next === 'in_progress') {
-                        alert(`🔒 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '• ' + t).join('\n')}`);
+                        alert(`\uD83D\uDD12 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '\u2022 ' + t).join('\n')}`);
                         return;
                       }
                       onStatusChange(task, next);
@@ -206,7 +194,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                   >
                     <option value="todo">To Do</option>
                     <option value="in_progress" disabled={blocked}>In Progress</option>
-                    <option value="done">✅ Done</option>
+                    <option value="done">\u2705 Done</option>
                   </select>
                   <button
                     onClick={() => onEdit(task)}
