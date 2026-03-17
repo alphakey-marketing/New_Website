@@ -8,7 +8,7 @@ export interface TaskSnapshot {
   description?: string;
   status: string;
   priority: string;
-  due_date?: string | null;
+  due_date?: string;          // always string | undefined after buildSnapshots coercion
   project_name?: string;
 }
 
@@ -33,10 +33,11 @@ interface RequestBody {
   userPrompt: string;
 }
 
-/** Detect description-oriented intents (rewrite / split / improve wording). */
-function needsDescriptions(prompt: string): boolean {
+/** Analyse the prompt once, returning both flags to avoid calling toLowerCase() twice. */
+function analysePrompt(prompt: string): { includeDesc: boolean; temperature: number } {
   const lower = prompt.toLowerCase();
-  return (
+
+  const includeDesc =
     lower.includes('description') ||
     lower.includes('rewrite') ||
     lower.includes('improve') ||
@@ -52,30 +53,18 @@ function needsDescriptions(prompt: string): boolean {
     (lower.includes('split') &&
       !lower.includes('split my time') &&
       !lower.includes('split between') &&
-      !lower.includes('split across'))
-  );
-}
+      !lower.includes('split across'));
 
-/**
- * Detect the primary intent of the prompt so we can tune temperature.
- *
- * - reprioritize / reschedule  → 0.1  (must be deterministic)
- * - sequence                   → 0.1  (logical ordering, not creative)
- * - scaffold / split           → 0.4  (creative task naming benefits from variety)
- * - rewrite / general          → 0.3  (some creativity wanted)
- * - default                    → 0.2
- */
-function detectTemperature(prompt: string): number {
-  const lower = prompt.toLowerCase();
+  let temperature = 0.2;
   if (
     lower.includes('priorit') ||
     lower.includes('reschedule') ||
     lower.includes('deadline') ||
     lower.includes('sequence') ||
     lower.includes('order')
-  ) return 0.1;
-
-  if (
+  ) {
+    temperature = 0.1;
+  } else if (
     lower.includes('scaffold') ||
     lower.includes('create project') ||
     lower.includes('new project') ||
@@ -84,17 +73,19 @@ function detectTemperature(prompt: string): number {
     lower.includes('split') ||
     lower.includes('sub-task') ||
     lower.includes('subtask')
-  ) return 0.4;
-
-  if (
+  ) {
+    temperature = 0.4;
+  } else if (
     lower.includes('rewrite') ||
     lower.includes('improve') ||
     lower.includes('wording') ||
     lower.includes('rename') ||
     lower.includes('simplify')
-  ) return 0.3;
+  ) {
+    temperature = 0.3;
+  }
 
-  return 0.2;
+  return { includeDesc, temperature };
 }
 
 function buildSystemPrompt(today: string): string {
@@ -203,12 +194,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!tasks || !Array.isArray(tasks)) return res.status(400).json({ error: 'tasks array is required' });
 
   const today = new Date().toISOString().split('T')[0];
-  const includeDesc = needsDescriptions(userPrompt);
-  const temperature = detectTemperature(userPrompt);
+  const { includeDesc, temperature } = analysePrompt(userPrompt);
 
-  // Cap to 50 non-done tasks sorted by due date
+  // Deduplicate by ID, then cap to 50 non-done tasks sorted by due date
+  const seen = new Set<string>();
   const cappedTasks = tasks
-    .filter((t) => t.status !== 'done')
+    .filter((t) => t.status !== 'done' && !seen.has(t.id) && seen.add(t.id))
     .sort((a, b) => {
       if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
       if (a.due_date) return -1;
@@ -238,7 +229,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const systemPrompt = buildSystemPrompt(today);
   const userMessage = [
-    `Today is ${today}.`,
     projectList ? `Existing projects: ${projectList}` : '',
     '',
     'Existing tasks:',

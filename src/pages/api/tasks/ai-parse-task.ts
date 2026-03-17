@@ -10,10 +10,10 @@ export interface ParsedTask {
   project_name?: string;
 }
 
+// raw_input removed — it was returned but never consumed by the UI
 export interface ParseTaskResponse {
   task: ParsedTask;
   confidence: 'high' | 'medium' | 'low';
-  raw_input: string;
 }
 
 function buildSystemPrompt(today: string): string {
@@ -50,7 +50,6 @@ Rules:
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Auth guard — reject unauthenticated direct API calls
   const user = await getSessionFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -66,7 +65,7 @@ Parse this into a task: "${input}"`;
   try {
     const raw = await callOpenRouter(buildSystemPrompt(today), userMessage, { temperature: 0.1, max_tokens: 256 });
     const parsed = safeParseJSON<ParseTaskResponse>(raw);
-    return res.status(200).json({ ...parsed, raw_input: input });
+    return res.status(200).json(parsed);
   } catch (error: any) {
     console.error('ai-parse-task error:', error);
     return res.status(500).json({ error: error.message });

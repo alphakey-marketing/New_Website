@@ -81,15 +81,15 @@ motivationalNote: short, warm, specific to their situation.`;
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Auth guard — reject unauthenticated direct API calls
   const user = await getSessionFromRequest(req);
   if (!user) return res.status(401).json({ error: 'Unauthorized' });
 
-  const { tasks, today }: { tasks: TaskSnapshot[]; today: string } = req.body;
+  const { tasks }: { tasks: TaskSnapshot[] } = req.body;
   if (!tasks?.length) return res.status(400).json({ error: 'tasks array is required' });
 
-  // Cap to 30 tasks: daily focus only needs the top 3, so prioritise
-  // high-priority + soonest due tasks to keep the payload tight
+  // Always derive today server-side — never trust client-supplied date
+  const today = new Date().toISOString().split('T')[0];
+
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
   const cappedTasks = tasks
     .filter((t) => t.status !== 'done')
@@ -110,7 +110,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `Status: ${t.status}`,
       `Priority: ${t.priority}`,
       t.due_date ? `Due: ${t.due_date}` : 'Due: not set',
-      t.description ? `Desc: ${t.description.slice(0, 80)}` : '',
+      // Only include description when it adds meaningful context (>20 chars)
+      t.description && t.description.length > 20 ? `Desc: ${t.description.slice(0, 80)}` : '',
     ].filter(Boolean).join(' | ')
   ).join('\n');
 
