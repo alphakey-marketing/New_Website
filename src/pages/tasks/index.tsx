@@ -21,27 +21,27 @@ type ViewMode = 'list' | 'kanban' | 'focus';
 
 export default function TasksPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [archivedProjects, setArchivedProjects] = useState<Project[]>([]);
+  const [user, setUser]                           = useState<User | null>(null);
+  const [loading, setLoading]                     = useState(true);
+  const [tasks, setTasks]                         = useState<Task[]>([]);
+  const [projects, setProjects]                   = useState<Project[]>([]);
+  const [archivedProjects, setArchivedProjects]   = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('focus');
-  const [showTaskForm, setShowTaskForm] = useState(false);
-  const [showProjectForm, setShowProjectForm] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const [showAIPanel, setShowAIPanel] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<Task | null>(null);
+  const [viewMode, setViewMode]                   = useState<ViewMode>('focus');
+  const [showTaskForm, setShowTaskForm]           = useState(false);
+  const [showProjectForm, setShowProjectForm]     = useState(false);
+  const [showExportMenu, setShowExportMenu]       = useState(false);
+  const [showAIPanel, setShowAIPanel]             = useState(false);
+  const [editingTask, setEditingTask]             = useState<Task | null>(null);
+  const [editingProject, setEditingProject]       = useState<Project | null>(null);
+  const [deleteConfirm, setDeleteConfirm]         = useState<Task | null>(null);
   const [deleteProjectConfirm, setDeleteProjectConfirm] = useState<Project | null>(null);
-  const [filter, setFilter] = useState<'all' | 'todo' | 'in_progress' | 'done'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [importLoading, setImportLoading] = useState(false);
-  const [archiveToast, setArchiveToast] = useState<{ project: Project; timer: ReturnType<typeof setTimeout> } | null>(null);
-  const newTaskProjectRef = useRef<string | null>(null);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [filter, setFilter]                       = useState<'all' | 'todo' | 'in_progress' | 'done'>('all');
+  const [searchQuery, setSearchQuery]             = useState('');
+  const [importLoading, setImportLoading]         = useState(false);
+  const [archiveToast, setArchiveToast]           = useState<{ project: Project; timer: ReturnType<typeof setTimeout> } | null>(null);
+  const newTaskProjectRef                         = useRef<string | null>(null);
+  const [showUserMenu, setShowUserMenu]           = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -58,7 +58,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     if (!user) return;
-    const tasksChannel = taskService.subscribeToTasks(user.id, () => loadTasks());
+    const tasksChannel    = taskService.subscribeToTasks(user.id, () => loadTasks());
     const projectsChannel = projectService.subscribeToProjects(user.id, () => loadProjects());
     return () => { tasksChannel.unsubscribe(); projectsChannel.unsubscribe(); };
   }, [user]);
@@ -154,9 +154,7 @@ export default function TasksPage() {
     setDeleteProjectConfirm(null);
   };
 
-  // Archive: soft-hide project, show undo toast for 5 s
   const handleArchiveProject = async (project: Project) => {
-    // Clear any existing toast timer first
     if (archiveToast) clearTimeout(archiveToast.timer);
     await projectService.archiveProject(project.id);
     await loadProjects();
@@ -165,7 +163,6 @@ export default function TasksPage() {
     setArchiveToast({ project, timer });
   };
 
-  // Undo archive from toast
   const handleUndoArchive = async () => {
     if (!archiveToast) return;
     clearTimeout(archiveToast.timer);
@@ -174,7 +171,6 @@ export default function TasksPage() {
     setArchiveToast(null);
   };
 
-  // Restore from archived drawer
   const handleUnarchiveProject = async (project: Project) => {
     await projectService.unarchiveProject(project.id);
     await loadProjects();
@@ -191,18 +187,13 @@ export default function TasksPage() {
     setShowTaskForm(true);
   };
 
-  // ---------------------------------------------------------------------------
-  // AI: apply suggestion
-  // ---------------------------------------------------------------------------
   const handleApplySuggestion = async (suggestion: AISuggestion) => {
     if (suggestion.type === 'scaffold') {
       if (!suggestion.scaffoldProjectName) throw new Error('No project name provided by AI.');
       if (!suggestion.subTasks?.length)    throw new Error('No tasks provided by AI.');
-
       const existingProject = projects.find(
-        (p) => p.name.trim().toLowerCase() === suggestion.scaffoldProjectName!.trim().toLowerCase()
+        (p) => p.name.trim().toLowerCase() === suggestion.scaffoldProjectName!.trim().toLowerCase(),
       );
-
       const targetProjectId = existingProject
         ? existingProject.id
         : (await projectService.createProject({
@@ -210,53 +201,41 @@ export default function TasksPage() {
             description: '',
             color: suggestion.scaffoldProjectColor ?? '#6366f1',
           } as any)).id;
-
       for (const sub of suggestion.subTasks) {
-        const resolvedDueDate = sub.due_date ? new Date(sub.due_date).toISOString() : null;
         await taskService.createTask({
-          title: sub.title,
-          description: sub.description ?? '',
+          title: sub.title, description: sub.description ?? '',
           project_id: targetProjectId,
           priority: (sub.priority ?? 'medium') as Task['priority'],
           status: 'todo',
-          due_date: resolvedDueDate,
+          due_date: sub.due_date ? new Date(sub.due_date).toISOString() : null,
         } as any);
       }
-      await loadProjects();
-      await loadTasks();
+      await loadProjects(); await loadTasks();
       return;
     }
-
     if (suggestion.type === 'split') {
       const originalTask = tasks.find((t) => t.id === suggestion.taskId);
       if (!suggestion.subTasks?.length) throw new Error('No sub-tasks provided by AI.');
       for (const sub of suggestion.subTasks) {
-        const resolvedDueDate = sub.due_date ? new Date(sub.due_date).toISOString() : (originalTask?.due_date ?? null);
         await taskService.createTask({
-          title: sub.title,
-          description: sub.description ?? '',
+          title: sub.title, description: sub.description ?? '',
           project_id: originalTask?.project_id ?? null,
           priority: (sub.priority ?? originalTask?.priority ?? 'medium') as Task['priority'],
           status: 'todo',
-          due_date: resolvedDueDate,
+          due_date: sub.due_date ? new Date(sub.due_date).toISOString() : (originalTask?.due_date ?? null),
         } as any);
       }
-      await loadTasks();
-      return;
+      await loadTasks(); return;
     }
-
     if (suggestion.type === 'sequence' || suggestion.type === 'general') return;
-
     if (!suggestion.taskId || !suggestion.field) return;
     const task = tasks.find((t) => t.id === suggestion.taskId);
     if (!task) return;
-
     const update: Partial<TaskFormData> = {};
     if (suggestion.field === 'priority')    update.priority    = suggestion.proposedValue as Task['priority'];
     if (suggestion.field === 'due_date')    update.due_date    = suggestion.proposedValue;
     if (suggestion.field === 'title')       update.title       = suggestion.proposedValue;
     if (suggestion.field === 'description') update.description = suggestion.proposedValue;
-
     await taskService.updateTask(task.id, update as any);
     await loadTasks();
   };
@@ -271,10 +250,15 @@ export default function TasksPage() {
     return matchesProject && matchesFilter && matchesSearch;
   });
 
-  const taskCountsByProject = tasks.reduce((acc, task) => {
-    if (task.project_id) acc[task.project_id] = (acc[task.project_id] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Open tasks only (todo + in_progress) — used for sidebar badges
+  const openTaskCountsByProject = tasks
+    .filter((t) => t.status !== 'done')
+    .reduce((acc, task) => {
+      if (task.project_id) acc[task.project_id] = (acc[task.project_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const totalOpenTasks = tasks.filter((t) => t.status !== 'done').length;
 
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '??';
 
@@ -301,8 +285,8 @@ export default function TasksPage() {
           onDeleteProject={setDeleteProjectConfirm}
           onArchiveProject={handleArchiveProject}
           onUnarchiveProject={handleUnarchiveProject}
-          taskCountsByProject={taskCountsByProject}
-          totalTasks={tasks.length}
+          openTaskCountsByProject={openTaskCountsByProject}
+          totalOpenTasks={totalOpenTasks}
         />
       )}
 
@@ -313,35 +297,32 @@ export default function TasksPage() {
             <div className="flex justify-between h-14">
               <div className="flex items-center space-x-1">
                 <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-                  <button onClick={() => setViewMode('focus')} title="Focus" className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${ viewMode === 'focus' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }`}>
-                    🎯 Focus
-                  </button>
-                  <button onClick={() => setViewMode('list')} title="List" className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${ viewMode === 'list' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }`}>
-                    List
-                  </button>
-                  <button onClick={() => setViewMode('kanban')} title="Board" className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${ viewMode === 'kanban' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }`}>
-                    Board
-                  </button>
+                  {(['focus', 'list', 'kanban'] as ViewMode[]).map((v) => (
+                    <button key={v} onClick={() => setViewMode(v)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                        viewMode === v ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                      }`}>
+                      {v === 'focus' ? '\uD83C\uDFAF Focus' : v === 'list' ? 'List' : 'Board'}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div className="flex items-center space-x-2">
                 <button onClick={() => router.push('/tasks/notes')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-blue-700 font-medium rounded-md hover:bg-gray-100 transition-colors">
-                  📝 Notes
+                  \uD83D\uDCDD Notes
                 </button>
-
                 <button
                   onClick={() => setShowAIPanel(!showAIPanel)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
                     showAIPanel ? 'bg-indigo-600 text-white border-indigo-600' : 'text-indigo-600 border-indigo-300 hover:bg-indigo-50'
                   }`}
                 >
-                  🤖 AI
+                  \uD83E\uDD16 AI
                 </button>
-
                 <div className="relative">
                   <button onClick={() => setShowExportMenu(!showExportMenu)} className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
-                    ⚙️
+                    \u2699\uFE0F
                   </button>
                   {showExportMenu && (
                     <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
@@ -355,7 +336,6 @@ export default function TasksPage() {
                     </div>
                   )}
                 </div>
-
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
@@ -385,22 +365,27 @@ export default function TasksPage() {
             {viewMode === 'list' && (
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span>{filteredTasks.filter(t => t.status==='todo').length} to do</span>
-                  <span>·</span>
-                  <span>{filteredTasks.filter(t => t.status==='in_progress').length} in progress</span>
-                  <span>·</span>
-                  <span>{filteredTasks.filter(t => t.status==='done').length} done</span>
+                  <span>{filteredTasks.filter((t) => t.status === 'todo').length} to do</span>
+                  <span>\u00b7</span>
+                  <span>{filteredTasks.filter((t) => t.status === 'in_progress').length} in progress</span>
+                  <span>\u00b7</span>
+                  <span>{filteredTasks.filter((t) => t.status === 'done').length} done</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input type="text" placeholder="Search..." className="block w-48 border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                  <select className="block border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+                  <input type="text" placeholder="Search..." className="block w-48 border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                  <select className="block border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
                     <option value="all">All</option>
                     <option value="todo">To Do</option>
                     <option value="in_progress">In Progress</option>
                     <option value="done">Done</option>
                   </select>
-                  <button onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }} className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  <button onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }}
+                    className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
                     New
                   </button>
                 </div>
@@ -409,8 +394,11 @@ export default function TasksPage() {
 
             {viewMode === 'kanban' && (
               <div className="mb-4 flex justify-end">
-                <button onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }} className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                  <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                <button onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                  <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
                   New Task
                 </button>
               </div>
@@ -418,8 +406,8 @@ export default function TasksPage() {
 
             <AIDailyBriefing tasks={tasks} projects={projects} onUpdateTask={handleUpdateTaskById} onDeleteTask={handleDeleteTaskById} />
 
-            {viewMode === 'focus'  && <FocusList tasks={tasks} projects={projects} onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }} onStatusChange={handleStatusChange} onNewTask={handleFocusNewTask} />}
-            {viewMode === 'list'   && <TaskList  tasks={filteredTasks} projects={projects} onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }} onDelete={setDeleteConfirm} onStatusChange={handleStatusChange} />}
+            {viewMode === 'focus'  && <FocusList  tasks={tasks}         projects={projects} onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }} onStatusChange={handleStatusChange} onNewTask={handleFocusNewTask} />}
+            {viewMode === 'list'   && <TaskList   tasks={filteredTasks} projects={projects} onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }} onDelete={setDeleteConfirm} onStatusChange={handleStatusChange} />}
             {viewMode === 'kanban' && <KanbanBoard tasks={filteredTasks} onEdit={(task) => { setEditingTask(task); setShowTaskForm(true); }} onDelete={setDeleteConfirm} onStatusChange={handleStatusChange} />}
           </div>
         </main>
@@ -428,26 +416,15 @@ export default function TasksPage() {
       {/* Archive undo toast */}
       {archiveToast && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl">
-          <span>📦 &quot;{archiveToast.project.name}&quot; archived</span>
-          <button
-            onClick={handleUndoArchive}
-            className="font-semibold text-indigo-300 hover:text-white underline underline-offset-2"
-          >
-            Undo
-          </button>
-          <button
-            onClick={() => { clearTimeout(archiveToast.timer); setArchiveToast(null); }}
-            className="text-gray-400 hover:text-white ml-1"
-          >
-            &times;
-          </button>
+          <span>\uD83D\uDCE6 &quot;{archiveToast.project.name}&quot; archived</span>
+          <button onClick={handleUndoArchive} className="font-semibold text-indigo-300 hover:text-white underline underline-offset-2">Undo</button>
+          <button onClick={() => { clearTimeout(archiveToast.timer); setArchiveToast(null); }} className="text-gray-400 hover:text-white ml-1">&times;</button>
         </div>
       )}
 
       {showAIPanel && (
         <AISuggestionPanel
-          tasks={tasks}
-          projects={projects}
+          tasks={tasks} projects={projects}
           onApplySuggestion={handleApplySuggestion}
           onCreateTask={handleCreateTask as any}
           onProjectCreated={loadProjects}
@@ -457,9 +434,7 @@ export default function TasksPage() {
 
       {showTaskForm && (
         <TaskForm
-          task={editingTask}
-          allTasks={tasks}
-          projects={projects}
+          task={editingTask} allTasks={tasks} projects={projects}
           initialProjectId={editingTask ? undefined : (newTaskProjectRef.current ?? selectedProjectId)}
           onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
           onCancel={() => { setShowTaskForm(false); setEditingTask(null); newTaskProjectRef.current = null; }}
@@ -467,7 +442,11 @@ export default function TasksPage() {
       )}
 
       {showProjectForm && (
-        <ProjectForm project={editingProject} onSubmit={editingProject ? handleUpdateProject : handleCreateProject} onCancel={() => { setShowProjectForm(false); setEditingProject(null); }} />
+        <ProjectForm
+          project={editingProject}
+          onSubmit={editingProject ? handleUpdateProject : handleCreateProject}
+          onCancel={() => { setShowProjectForm(false); setEditingProject(null); }}
+        />
       )}
 
       {deleteConfirm && (
