@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabaseClient';
 import { noteService } from '../../utils/noteService';
@@ -24,26 +24,34 @@ export default function NotesPage() {
   const [filterProject, setFilterProject] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
+  // Prevent the onAuthStateChange listener from firing a duplicate load
+  // on the same mount that getUser() already triggered.
+  const hasLoadedRef = useRef(false);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setUser(user);
         loadNotes();
         loadProjects();
+        hasLoadedRef.current = true;
       } else {
         router.push('/tasks/login');
       }
       setLoading(false);
     });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setUser(session.user);
-        loadNotes();
-        loadProjects();
+        // Skip the immediate duplicate fired right after getUser() resolves
+        if (!hasLoadedRef.current) {
+          loadNotes();
+          loadProjects();
+          hasLoadedRef.current = true;
+        }
       } else {
+        hasLoadedRef.current = false;
         router.push('/tasks/login');
       }
     });
@@ -53,11 +61,8 @@ export default function NotesPage() {
 
   useEffect(() => {
     if (!user) return;
-
     const channel = noteService.subscribeToNotes(user.id, () => loadNotes());
-    return () => {
-      channel.unsubscribe();
-    };
+    return () => { channel.unsubscribe(); };
   }, [user]);
 
   const loadNotes = async () => {
@@ -69,10 +74,16 @@ export default function NotesPage() {
     }
   };
 
+  // Fetch ALL projects (active + archived) so notes linked to archived
+  // projects still appear in the project filter dropdown.
   const loadProjects = async () => {
     try {
-      const data = await projectService.getProjects();
-      setProjects(data);
+      const [active, archived] = await Promise.all([
+        projectService.getProjects(),
+        projectService.getArchivedProjects(),
+      ]);
+      // Active first so they appear at the top of the dropdown
+      setProjects([...active, ...archived]);
     } catch (error) {
       console.error('Failed to load projects:', error);
     }
@@ -93,9 +104,7 @@ export default function NotesPage() {
   const handleDeleteNote = async (note: Note) => {
     await noteService.deleteNote(note.id);
     await loadNotes();
-    if (selectedNote?.id === note.id) {
-      setSelectedNote(null);
-    }
+    if (selectedNote?.id === note.id) setSelectedNote(null);
     setDeleteConfirm(null);
   };
 
@@ -109,14 +118,18 @@ export default function NotesPage() {
     router.push('/tasks/login');
   };
 
-  const allTags = Array.from(new Set(notes.flatMap((note) => note.tags || [])));
+  // Memoized so tag list doesn't recompute on every keystroke
+  const allTags = useMemo(
+    () => Array.from(new Set(notes.flatMap((note) => note.tags || []))),
+    [notes]
+  );
 
   const filteredNotes = notes.filter((note) => {
     const matchesSearch =
       searchQuery === '' ||
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       note.content?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTag = !filterTag || (note.tags && note.tags.includes(filterTag));
+    const matchesTag     = !filterTag     || (note.tags && note.tags.includes(filterTag));
     const matchesProject = !filterProject || note.project_id === filterProject;
     const matchesFavorite = !showFavoritesOnly || note.is_favorite;
     return matchesSearch && matchesTag && matchesProject && matchesFavorite;
@@ -139,7 +152,7 @@ export default function NotesPage() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-bold text-gray-900">Notes & Docs</h1>
+              <h1 className="text-xl font-bold text-gray-900">Notes &amp; Docs</h1>
               <button
                 onClick={() => router.push('/tasks')}
                 className="text-sm text-gray-600 hover:text-gray-900"
@@ -164,13 +177,9 @@ export default function NotesPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-          {/* Sidebar Header */}
           <div className="p-4 border-b border-gray-200 space-y-3">
             <button
-              onClick={() => {
-                setShowEditor(true);
-                setEditingNote(null);
-              }}
+              onClick={() => { setShowEditor(true); setEditingNote(null); }}
               className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
             >
               <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -179,7 +188,6 @@ export default function NotesPage() {
               New Note
             </button>
 
-            {/* Search */}
             <input
               type="text"
               placeholder="Search notes..."
@@ -188,7 +196,6 @@ export default function NotesPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
 
-            {/* Filters */}
             <div className="space-y-2">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -208,7 +215,7 @@ export default function NotesPage() {
                 <option value="">All Projects</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
-                    {project.name}
+                    {project.is_archived ? `📦 ${project.name}` : project.name}
                   </option>
                 ))}
               </select>
@@ -221,16 +228,13 @@ export default function NotesPage() {
                 >
                   <option value="">All Tags</option>
                   {allTags.map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tag}
-                    </option>
+                    <option key={tag} value={tag}>{tag}</option>
                   ))}
                 </select>
               )}
             </div>
           </div>
 
-          {/* Notes List */}
           <div className="flex-1 overflow-y-auto">
             <NotesList
               notes={filteredNotes}
@@ -253,26 +257,14 @@ export default function NotesPage() {
               note={editingNote}
               projects={projects}
               onSave={editingNote ? handleUpdateNote : handleCreateNote}
-              onCancel={() => {
-                setShowEditor(false);
-                setEditingNote(null);
-              }}
+              onCancel={() => { setShowEditor(false); setEditingNote(null); }}
             />
           ) : (
             <div className="h-full flex items-center justify-center text-gray-400">
               <div className="text-center">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <p className="mt-2 text-sm">Select a note or create a new one</p>
               </div>
@@ -281,7 +273,6 @@ export default function NotesPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
