@@ -170,9 +170,9 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
               </div>
             )}
 
-            {/* Status + Priority (edit mode: 2-col grid) */}
-            {isEditing ? (
-              <div className="grid grid-cols-2 gap-4">
+            {/* Status (edit only) + Priority — grid in edit, single col in create */}
+            <div className={isEditing ? 'grid grid-cols-2 gap-4' : undefined}>
+              {isEditing && (
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
                   <select
@@ -186,15 +186,7 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
                     <option value="done">Done</option>
                   </select>
                 </div>
-                <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700">Priority</label>
-                  <PrioritySelect
-                    value={formData.priority}
-                    onChange={(v) => setFormData({ ...formData, priority: v })}
-                  />
-                </div>
-              </div>
-            ) : (
+              )}
               <div>
                 <label htmlFor="priority" className="block text-sm font-medium text-gray-700">Priority</label>
                 <PrioritySelect
@@ -202,7 +194,7 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
                   onChange={(v) => setFormData({ ...formData, priority: v })}
                 />
               </div>
-            )}
+            </div>
 
             {/* Due Date */}
             <div>
@@ -223,14 +215,14 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
                 className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 text-sm font-medium text-gray-700 transition-colors"
               >
                 <span>
-                  \uD83D\uDD17 Dependencies
+                  🔗 Dependencies
                   {selectedCount > 0 && (
                     <span className="ml-2 px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
                       {selectedCount} blocker{selectedCount > 1 ? 's' : ''}
                     </span>
                   )}
                 </span>
-                <span className="text-gray-400 text-xs">{showDepsSection ? '\u25b2 hide' : '\u25bc set blockers (optional)'}</span>
+                <span className="text-gray-400 text-xs">{showDepsSection ? '▲ hide' : '▼ set blockers (optional)'}</span>
               </button>
 
               {showDepsSection && (
@@ -241,7 +233,7 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
 
                   {!activeProjectId && (
                     <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                      \u26a0\ufe0f Assign this task to a <strong>project</strong> first to set dependencies.
+                      ⚠️ Assign this task to a <strong>project</strong> first to set dependencies.
                     </p>
                   )}
 
@@ -270,9 +262,9 @@ export default function TaskForm({ task, allTasks = [], projects = [], initialPr
                             />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-800 truncate">{t.title}</p>
-                              <p className="text-xs text-gray-400 capitalize">{t.status.replace('_', ' ')} \u00b7 {t.priority}</p>
+                              <p className="text-xs text-gray-400 capitalize">{t.status.replace('_', ' ')} · {t.priority}</p>
                             </div>
-                            {isSelected && <span className="text-xs font-semibold text-orange-600">blocks \u25b6</span>}
+                            {isSelected && <span className="text-xs font-semibold text-orange-600">blocks ▶</span>}
                           </label>
                         );
                       })}

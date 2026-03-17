@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Task } from '../../types/task';
 import type { FocusTask, StaleTask, DailyFocusResponse } from '../../pages/api/tasks/ai-daily-focus';
 import { aiRequest } from '../../utils/aiRequest';
@@ -7,7 +7,8 @@ interface Props {
   tasks: Task[];
   projects: { id: string; name: string; color?: string }[];
   onUpdateTask: (taskId: string, update: { priority?: string; due_date?: string; status?: string }) => Promise<void>;
-  onDeleteTask?: (taskId: string) => Promise<void>;
+  /** Required for the "delete stale task" action to function. */
+  onDeleteTask: (taskId: string) => Promise<void>;
 }
 
 export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDeleteTask }: Props) {
@@ -18,6 +19,14 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
   const [appliedStale, setAppliedStale] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // Tick every 60s so the "X ago" label updates without needing another re-render
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!generatedAt) return;
+    const id = setInterval(() => setTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, [generatedAt]);
 
   const projectMap = projects.reduce(
     (acc, p) => { acc[p.id] = p; return acc; },
@@ -55,28 +64,20 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
 
   const handleApplyStale = async (stale: StaleTask) => {
     if (stale.suggestion === 'drop') {
+      // Two-click confirm: first click sets pendingDeleteId, second actually deletes
       if (pendingDeleteId !== stale.taskId) {
         setPendingDeleteId(stale.taskId);
         return;
       }
-      // Only mark applied if the handler actually exists and runs
-      if (onDeleteTask) {
-        await onDeleteTask(stale.taskId);
-        setPendingDeleteId(null);
-        setAppliedStale((prev) => new Set(prev).add(stale.taskId));
-      } else {
-        // Prop missing — reset the confirm state without silently swallowing
-        setPendingDeleteId(null);
-        console.warn('AIDailyBriefing: onDeleteTask prop not provided; cannot delete task', stale.taskId);
+      await onDeleteTask(stale.taskId);
+    } else {
+      if (stale.suggestion === 'reschedule') {
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        await onUpdateTask(stale.taskId, { due_date: nextWeek.toISOString().split('T')[0] });
+      } else if (stale.suggestion === 'reprioritize') {
+        await onUpdateTask(stale.taskId, { priority: 'low' });
       }
-      return;
-    }
-    if (stale.suggestion === 'reschedule') {
-      const nextWeek = new Date();
-      nextWeek.setDate(nextWeek.getDate() + 7);
-      await onUpdateTask(stale.taskId, { due_date: nextWeek.toISOString().split('T')[0] });
-    } else if (stale.suggestion === 'reprioritize') {
-      await onUpdateTask(stale.taskId, { priority: 'low' });
     }
     setPendingDeleteId(null);
     setAppliedStale((prev) => new Set(prev).add(stale.taskId));
@@ -109,8 +110,7 @@ export default function AIDailyBriefing({ tasks, projects, onUpdateTask, onDelet
 
   const formatGeneratedAt = (d: Date) => {
     const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffMin = Math.floor(diffMs / 60000);
+    const diffMin = Math.floor((now.getTime() - d.getTime()) / 60_000);
     if (diffMin < 1) return 'just now';
     if (diffMin < 60) return `${diffMin}m ago`;
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
