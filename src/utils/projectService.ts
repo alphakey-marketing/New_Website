@@ -2,15 +2,32 @@ import { supabase } from '../lib/supabaseClient';
 import type { Project, ProjectFormData } from '../types/project';
 
 export const projectService = {
-  // Get all projects for the current user
+  // Get all active (non-archived) projects for the current user
   async getProjects(): Promise<Project[]> {
     const { data, error } = await supabase
       .from('projects')
       .select('*')
+      .eq('is_archived', false)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching projects:', error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  // Get all archived projects for the current user
+  async getArchivedProjects(): Promise<Project[]> {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('is_archived', true)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching archived projects:', error);
       throw error;
     }
 
@@ -36,7 +53,7 @@ export const projectService = {
   // Create a new project
   async createProject(projectData: ProjectFormData): Promise<Project> {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       throw new Error('User not authenticated');
     }
@@ -46,6 +63,7 @@ export const projectService = {
       .insert([{
         ...projectData,
         user_id: user.id,
+        is_archived: false,
       }])
       .select()
       .single();
@@ -75,7 +93,33 @@ export const projectService = {
     return data;
   },
 
-  // Delete a project
+  // Archive a project (soft-hide, preserves all tasks)
+  async archiveProject(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('projects')
+      .update({ is_archived: true })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error archiving project:', error);
+      throw error;
+    }
+  },
+
+  // Restore an archived project back to active
+  async unarchiveProject(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('projects')
+      .update({ is_archived: false })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error unarchiving project:', error);
+      throw error;
+    }
+  },
+
+  // Delete a project permanently
   async deleteProject(id: string): Promise<void> {
     const { error } = await supabase
       .from('projects')
