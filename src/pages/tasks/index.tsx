@@ -25,6 +25,7 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [archivedProjects, setArchivedProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('focus');
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -38,7 +39,7 @@ export default function TasksPage() {
   const [filter, setFilter] = useState<'all' | 'todo' | 'in_progress' | 'done'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [importLoading, setImportLoading] = useState(false);
-  // Pre-scoped project when opening TaskForm from Focus view or sidebar
+  const [archiveToast, setArchiveToast] = useState<{ project: Project; timer: ReturnType<typeof setTimeout> } | null>(null);
   const newTaskProjectRef = useRef<string | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -68,8 +69,16 @@ export default function TasksPage() {
   };
 
   const loadProjects = async () => {
-    try { const data = await projectService.getProjects(); setProjects(data); }
-    catch (error) { console.error('Failed to load projects:', error); }
+    try {
+      const [active, archived] = await Promise.all([
+        projectService.getProjects(),
+        projectService.getArchivedProjects(),
+      ]);
+      setProjects(active);
+      setArchivedProjects(archived);
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+    }
   };
 
   const handleExport = async () => {
@@ -145,12 +154,37 @@ export default function TasksPage() {
     setDeleteProjectConfirm(null);
   };
 
+  // Archive: soft-hide project, show undo toast for 5 s
+  const handleArchiveProject = async (project: Project) => {
+    // Clear any existing toast timer first
+    if (archiveToast) clearTimeout(archiveToast.timer);
+    await projectService.archiveProject(project.id);
+    await loadProjects();
+    if (selectedProjectId === project.id) setSelectedProjectId(null);
+    const timer = setTimeout(() => setArchiveToast(null), 5000);
+    setArchiveToast({ project, timer });
+  };
+
+  // Undo archive from toast
+  const handleUndoArchive = async () => {
+    if (!archiveToast) return;
+    clearTimeout(archiveToast.timer);
+    await projectService.unarchiveProject(archiveToast.project.id);
+    await loadProjects();
+    setArchiveToast(null);
+  };
+
+  // Restore from archived drawer
+  const handleUnarchiveProject = async (project: Project) => {
+    await projectService.unarchiveProject(project.id);
+    await loadProjects();
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/tasks/login');
   };
 
-  // Open task form pre-scoped to a project (from Focus view or sidebar)
   const handleFocusNewTask = (projectId: string | null) => {
     newTaskProjectRef.current = projectId;
     setEditingTask(null);
@@ -259,11 +293,14 @@ export default function TasksPage() {
       {viewMode !== 'focus' && (
         <Sidebar
           projects={projects}
+          archivedProjects={archivedProjects}
           selectedProjectId={selectedProjectId}
           onSelectProject={setSelectedProjectId}
           onNewProject={() => setShowProjectForm(true)}
           onEditProject={(project) => { setEditingProject(project); setShowProjectForm(true); }}
           onDeleteProject={setDeleteProjectConfirm}
+          onArchiveProject={handleArchiveProject}
+          onUnarchiveProject={handleUnarchiveProject}
           taskCountsByProject={taskCountsByProject}
           totalTasks={tasks.length}
         />
@@ -388,6 +425,25 @@ export default function TasksPage() {
         </main>
       </div>
 
+      {/* Archive undo toast */}
+      {archiveToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl">
+          <span>📦 &quot;{archiveToast.project.name}&quot; archived</span>
+          <button
+            onClick={handleUndoArchive}
+            className="font-semibold text-indigo-300 hover:text-white underline underline-offset-2"
+          >
+            Undo
+          </button>
+          <button
+            onClick={() => { clearTimeout(archiveToast.timer); setArchiveToast(null); }}
+            className="text-gray-400 hover:text-white ml-1"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
       {showAIPanel && (
         <AISuggestionPanel
           tasks={tasks}
@@ -399,7 +455,6 @@ export default function TasksPage() {
         />
       )}
 
-      {/* TaskForm — initialProjectId wires the pre-scoped project into formData on mount */}
       {showTaskForm && (
         <TaskForm
           task={editingTask}
