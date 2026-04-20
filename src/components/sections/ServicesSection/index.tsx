@@ -21,13 +21,19 @@ export default function ServicesSection(props) {
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                <div className={classNames(
+                    'gap-8 lg:gap-12',
+                    services.length === 1
+                        ? 'flex justify-center'
+                        : 'grid grid-cols-1 md:grid-cols-2'
+                )}>
                     {services.map((service, index) => (
                         <div
                             key={index}
                             className={classNames(
                                 'p-8 rounded-lg border-2 transition-all hover:shadow-lg',
-                                'border-gray-200 hover:border-gray-400'
+                                'border-gray-200 hover:border-gray-400',
+                                services.length === 1 && 'max-w-2xl w-full'
                             )}
                         >
                             <div className="flex items-start justify-between mb-4">
