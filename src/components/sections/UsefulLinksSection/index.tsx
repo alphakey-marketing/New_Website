@@ -10,9 +10,19 @@ interface LinkItem {
     tag?: string;
 }
 
+interface UsefulLinksSectionProps {
+    elementId?: string;
+    colors?: 'colors-a' | 'colors-b' | 'colors-c' | 'colors-d' | 'colors-e' | 'colors-f';
+    backgroundSize?: 'full' | 'inset';
+    title?: string;
+    subtitle?: string;
+    links?: LinkItem[];
+    styles?: { self?: Record<string, unknown> };
+}
+
 const PLACEHOLDER_COUNT = 3;
 
-export default function UsefulLinksSection(props) {
+export default function UsefulLinksSection(props: UsefulLinksSectionProps) {
     const { elementId, colors, backgroundSize, title, subtitle, links = [], styles = {} } = props;
     const sectionAlign = styles.self?.textAlign ?? 'center';
 

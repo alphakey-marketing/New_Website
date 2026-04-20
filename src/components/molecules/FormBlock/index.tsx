@@ -22,7 +22,8 @@ export default function FormBlock(props) {
 
         if (whatsappPhone) {
             // Build a human-readable prefilled WhatsApp message from form data
-            const lines: string[] = ["Hi! I'd like to get in touch about your marketing services.", ''];
+            const greeting = props.whatsappGreeting ?? "Hi! I'd like to get in touch.";
+            const lines: string[] = [greeting, ''];
             if (values.firstName) lines.push(`Name: ${values.firstName}`);
             if (values.company)   lines.push(`Company: ${values.company}`);
             if (values.email)     lines.push(`Email: ${values.email}`);

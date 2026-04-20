@@ -164,6 +164,7 @@ sections:
       type: FormBlock
       elementId: sign-up-form
       whatsappPhone: "85296783395"
+      whatsappGreeting: "Hi! I'd like to get in touch about your marketing services."
       fields:
         - name: firstName
           label: Your Name
