@@ -115,24 +115,33 @@ export default function NotesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
+      {/* Header — same style as tasks/index.tsx */}
       <nav className="bg-white shadow">
         <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-bold text-gray-900">Notes &amp; Docs</h1>
+          <div className="flex justify-between h-14">
+            <div className="flex items-center space-x-3">
+              <span className="text-base font-bold text-gray-900 tracking-tight">📝 Notes</span>
+              <span className="h-5 w-px bg-gray-200" />
               <button
                 onClick={() => router.push('/tasks')}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                className="text-sm text-gray-600 hover:text-indigo-700 font-medium rounded-md px-2 py-1 hover:bg-gray-100 transition-colors"
               >
-                ← Back to Tasks
+                ← Tasks
               </button>
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">{user.email}</span>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => { setShowEditor(true); setEditingNote(null); }}
+                className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                <svg className="-ml-0.5 mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                New Note
+              </button>
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-3 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 Sign out
               </button>
@@ -144,22 +153,12 @@ export default function NotesPage() {
       {/* Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-72 bg-white border-r border-gray-200 flex flex-col">
           <div className="p-4 border-b border-gray-200 space-y-3">
-            <button
-              onClick={() => { setShowEditor(true); setEditingNote(null); }}
-              className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              New Note
-            </button>
-
             <input
               type="text"
               placeholder="Search notes..."
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -170,20 +169,20 @@ export default function NotesPage() {
                   type="checkbox"
                   checked={showFavoritesOnly}
                   onChange={(e) => setShowFavoritesOnly(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500"
+                  className="rounded text-indigo-600 focus:ring-indigo-500"
                 />
-                <span className="text-sm text-gray-700">Favorites only</span>
+                <span className="text-sm text-gray-700 font-medium">Favourites only</span>
               </label>
 
               <select
                 value={filterProject || ''}
                 onChange={(e) => setFilterProject(e.target.value || null)}
-                className="block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-2 text-sm text-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               >
                 <option value="">All Projects</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
-                    {project.is_archived ? `📦 ${project.name}` : project.name}
+                    {project.name}{project.is_archived ? ' (archived)' : ''}
                   </option>
                 ))}
               </select>
@@ -192,7 +191,7 @@ export default function NotesPage() {
                 <select
                   value={filterTag || ''}
                   onChange={(e) => setFilterTag(e.target.value || null)}
-                  className="block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-2 text-sm text-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="">All Tags</option>
                   {allTags.map((tag) => (

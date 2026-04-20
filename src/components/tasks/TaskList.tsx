@@ -13,6 +13,7 @@ interface TaskListProps {
 
 type SortKey = 'priority' | 'due_date' | 'created_at';
 
+
 const statusColors = {
   todo:        'bg-gray-100 text-gray-800',
   in_progress: 'bg-blue-100 text-blue-800',
@@ -34,12 +35,16 @@ function contrastColor(hex: string): string {
 }
 
 export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, projects = [] }: TaskListProps) {
-  const [sortKey, setSortKey]           = useState<SortKey>('priority');
-  const [expandedDesc, setExpandedDesc] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey]             = useState<SortKey>('priority');
+  const [expandedDesc, setExpandedDesc]   = useState<Set<string>>(new Set());
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const taskMap = tasks.reduce((acc, t) => { acc[t.id] = t; return acc; }, {} as Record<string, Task>);
 
-  const sorted = [...tasks].sort((a, b) => {
+  const visibleTasks = showCompleted ? tasks : tasks.filter((t) => t.status !== 'done');
+  const doneCount    = tasks.filter((t) => t.status === 'done').length;
+
+  const sorted = [...visibleTasks].sort((a, b) => {
     const aBlocked = isBlocked(a, taskMap);
     const bBlocked = isBlocked(b, taskMap);
     if (aBlocked && !bBlocked) return 1;
@@ -118,20 +123,34 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
         </div>
       </div>
 
-      {/* Sort controls */}
-      <div className="mb-3 flex items-center space-x-2 flex-wrap gap-y-1">
-        <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Sort:</span>
-        {(['priority', 'due_date', 'created_at'] as SortKey[]).map((key) => (
+      {/* Sort controls + show-completed toggle */}
+      <div className="mb-3 flex items-center justify-between flex-wrap gap-y-1">
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-gray-600 font-semibold uppercase tracking-wide">Sort:</span>
+          {(['priority', 'due_date', 'created_at'] as SortKey[]).map((key) => (
+            <button
+              key={key}
+              onClick={() => setSortKey(key)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                sortKey === key ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {key === 'priority' ? '🔴 Priority' : key === 'due_date' ? '📅 Due Date' : '🕐 Newest'}
+            </button>
+          ))}
+        </div>
+        {doneCount > 0 && (
           <button
-            key={key}
-            onClick={() => setSortKey(key)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              sortKey === key ? 'bg-blue-600 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'
+            onClick={() => setShowCompleted(!showCompleted)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+              showCompleted
+                ? 'bg-green-600 text-white border-green-600'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            {key === 'priority' ? '\uD83D\uDD34 Priority' : key === 'due_date' ? '\uD83D\uDCC5 Due Date' : '\uD83D\uDD50 Newest'}
+            {showCompleted ? `Hide completed (${doneCount})` : `Show completed (${doneCount})`}
           </button>
-        ))}
+        )}
       </div>
 
       <div className="bg-white shadow overflow-hidden rounded-lg">
@@ -172,7 +191,7 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                           </h3>
                           {blocked && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-100 border border-orange-300 text-orange-700 text-xs font-semibold">
-                              \uD83D\uDD12 Blocked
+                              🔒 Blocked
                             </span>
                           )}
                           {task.description && (
@@ -190,7 +209,7 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                           </p>
                         )}
                         {task.description && descVisible && (
-                          <p className="mt-1 text-xs text-gray-500 leading-relaxed">{task.description}</p>
+                          <p className="mt-1 text-xs text-gray-600 leading-relaxed">{task.description}</p>
                         )}
                       </div>
                     </div>
@@ -226,7 +245,7 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${pc.color}`}>
                       {pc.label}
                     </span>
-                    {due && <span className={`text-xs ${due.cls}`}>\u23F0 {due.label}</span>}
+                    {due && <span className={`text-xs font-medium ${due.cls}`}>⏰ {due.label}</span>}
                   </div>
 
                   <div className="mt-2 ml-7">

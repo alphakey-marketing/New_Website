@@ -38,8 +38,8 @@ export default function Sidebar({
           onClick={() => onSelectProject(null)}
           className={`w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
             selectedProjectId === null
-              ? 'bg-blue-100 text-blue-900'
-              : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              ? 'bg-indigo-50 text-indigo-900'
+              : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
           }`}
         >
           <div className="flex items-center">
@@ -79,8 +79,8 @@ export default function Sidebar({
                 key={project.id}
                 className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
                   selectedProjectId === project.id
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-indigo-50 text-indigo-900'
+                    : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 <button onClick={() => onSelectProject(project.id)} className="flex items-center flex-1 min-w-0">
@@ -92,7 +92,7 @@ export default function Sidebar({
                     </span>
                   ) : (
                     <span className="ml-2 inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-gray-100 text-gray-400 flex-shrink-0">
-                      \u2713
+                      ✓
                     </span>
                   )}
                 </button>

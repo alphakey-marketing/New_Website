@@ -55,7 +55,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">🎯 Today&apos;s Focus</h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-600 mt-0.5">
             {ranked.length} tasks remaining
             {overdueCount > 0 && <span className="ml-2 text-red-600 font-semibold">&middot; {overdueCount} overdue</span>}
             {blockedCount > 0 && <span className="ml-2 text-orange-500">&middot; {blockedCount} blocked</span>}
@@ -167,7 +167,7 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     <p className="text-xs text-orange-500 mt-0.5">Waiting on: {blockerTitles.join(', ')}</p>
                   )}
                   {task.description && !blocked && (
-                    <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{task.description}</p>
+                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-1">{task.description}</p>
                   )}
                 </div>
 
