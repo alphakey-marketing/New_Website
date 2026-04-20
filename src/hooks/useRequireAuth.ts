@@ -45,5 +45,5 @@ export function useRequireAuth() {
     return () => subscription.unsubscribe();
   }, [router]);
 
-  return { user, loading, hasLoadedRef };
+  return { user, loading };
 }

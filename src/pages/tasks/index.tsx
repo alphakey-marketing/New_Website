@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { taskService } from '../../utils/taskService';
 import { projectService } from '../../utils/projectService';
 import { exportService } from '../../utils/exportService';
+import type { ImportResult } from '../../utils/exportService';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useToast } from '../../hooks/useToast';
 import TaskList from '../../components/tasks/TaskList';
@@ -103,11 +104,7 @@ export default function TasksPage() {
     if (!file) return;
     setImportLoading(true);
     try {
-      const result = await exportService.importData(file) as {
-        projectsImported: number;
-        tasksImported: number;
-        notesImported: number;
-      };
+      const result = await exportService.importData(file) as ImportResult;
       addToast(
         `Import successful — ${result.projectsImported} projects, ${result.tasksImported} tasks, ${result.notesImported} notes`,
         'success',

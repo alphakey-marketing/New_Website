@@ -2,6 +2,12 @@ import { taskService } from './taskService';
 import { projectService } from './projectService';
 import { noteService } from './noteService';
 
+export interface ImportResult {
+  projectsImported: number;
+  tasksImported: number;
+  notesImported: number;
+}
+
 export const exportService = {
   // Export all data to JSON
   async exportAllData() {
