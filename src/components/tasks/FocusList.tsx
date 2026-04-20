@@ -182,10 +182,8 @@ export default function FocusList({ tasks, projects, onEdit, onStatusChange, onN
                     title={blocked ? `Blocked by: ${blockerTitles.join(', ')}` : undefined}
                     onChange={(e) => {
                       const next = e.target.value as Task['status'];
-                      if (blocked && next === 'in_progress') {
-                        alert(`🔒 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '• ' + t).join('\n')}`);
-                        return;
-                      }
+                      // In-progress option is disabled when blocked; guard defensively
+                      if (blocked && next === 'in_progress') return;
                       onStatusChange(task, next);
                     }}
                     className={`text-xs border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 ${

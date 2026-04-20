@@ -1,18 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../../lib/supabaseClient';
 import { noteService } from '../../utils/noteService';
 import { projectService } from '../../utils/projectService';
+import { useRequireAuth } from '../../hooks/useRequireAuth';
 import NotesList from '../../components/notes/NotesList';
 import NoteEditor from '../../components/notes/NoteEditor';
-import type { User } from '@supabase/supabase-js';
+import ConfirmModal from '../../components/tasks/ConfirmModal';
+import { NotesSkeletonLoader } from '../../components/tasks/SkeletonLoader';
 import type { Note, NoteFormData } from '../../types/note';
 import type { Project } from '../../types/project';
 
 export default function NotesPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useRequireAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -24,46 +25,20 @@ export default function NotesPage() {
   const [filterProject, setFilterProject] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  // Prevent the onAuthStateChange listener from firing a duplicate load
-  // on the same mount that getUser() already triggered.
-  const hasLoadedRef = useRef(false);
-
+  // Load data once the user is known
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUser(user);
-        loadNotes();
-        loadProjects();
-        hasLoadedRef.current = true;
-      } else {
-        router.push('/tasks/login');
-      }
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-        // Skip the immediate duplicate fired right after getUser() resolves
-        if (!hasLoadedRef.current) {
-          loadNotes();
-          loadProjects();
-          hasLoadedRef.current = true;
-        }
-      } else {
-        hasLoadedRef.current = false;
-        router.push('/tasks/login');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [router]);
+    if (!user) return;
+    loadNotes();
+    loadProjects();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
     const channel = noteService.subscribeToNotes(user.id, () => loadNotes());
     return () => { channel.unsubscribe(); };
-  }, [user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const loadNotes = async () => {
     try {
@@ -135,14 +110,7 @@ export default function NotesPage() {
     return matchesSearch && matchesTag && matchesProject && matchesFavorite;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
+  if (loading) return <NotesSkeletonLoader />;
   if (!user) return null;
 
   return (
@@ -274,28 +242,12 @@ export default function NotesPage() {
       </div>
 
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Note</h3>
-            <p className="text-sm text-gray-500 mb-6">
-              Are you sure you want to delete &quot;{deleteConfirm.title}&quot;? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteNote(deleteConfirm)}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmModal
+          title="Delete Note"
+          message={`Are you sure you want to delete "${deleteConfirm.title}"? This action cannot be undone.`}
+          onConfirm={() => handleDeleteNote(deleteConfirm)}
+          onCancel={() => setDeleteConfirm(null)}
+        />
       )}
     </div>
   );

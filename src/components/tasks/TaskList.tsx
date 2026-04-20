@@ -236,10 +236,8 @@ export default function TaskList({ tasks, onEdit, onDelete, onStatusChange, proj
                       title={blocked ? `Blocked by: ${blockerTitles.join(', ')}` : undefined}
                       onChange={(e) => {
                         const next = e.target.value as Task['status'];
-                        if (blocked && next === 'in_progress') {
-                          alert(`\uD83D\uDD12 This task is blocked.\n\nComplete these first:\n${blockerTitles.map((t) => '\u2022 ' + t).join('\n')}`);
-                          return;
-                        }
+                        // In-progress option is disabled when blocked; guard defensively
+                        if (blocked && next === 'in_progress') return;
                         onStatusChange(task, next);
                       }}
                       className={`text-xs font-medium px-2.5 py-1 rounded-md cursor-pointer border-0 outline-none focus:ring-2 focus:ring-blue-400 ${

@@ -1,14 +1,24 @@
 import { generateGlobalCssVariables } from '@/utils/theme-style-utils';
 import { useEffect, useState } from 'react';
+import type { AppProps } from 'next/app';
 import TaipoPoppup from '@/components/sections/TaipoPoppup';
 import '../css/main.css';
 
-export default function MyApp({ Component, pageProps }) {
+import type { ThemeStyle } from '@/types';
+
+interface GlobalPageProps {
+  global?: {
+    theme?: ThemeStyle;
+  };
+  colors?: string;
+}
+
+export default function MyApp({ Component, pageProps }: AppProps<GlobalPageProps>) {
     const { global, ...page } = pageProps;
     const { theme } = global || {};
     const [isMounted, setIsMounted] = useState(false);
 
-    const cssVars = generateGlobalCssVariables(theme);
+    const cssVars = theme ? generateGlobalCssVariables(theme) : '';
 
     useEffect(() => {
         setIsMounted(true);
