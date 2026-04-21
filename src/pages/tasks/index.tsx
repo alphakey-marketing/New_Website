@@ -7,6 +7,8 @@ import { exportService } from '../../utils/exportService';
 import type { ImportResult } from '../../utils/exportService';
 import { useRequireAuth } from '../../hooks/useRequireAuth';
 import { useToast } from '../../hooks/useToast';
+import { useTaskActions } from '../../hooks/useTaskActions';
+import { useProjectActions } from '../../hooks/useProjectActions';
 import TaskList from '../../components/tasks/TaskList';
 import TaskForm from '../../components/tasks/TaskForm';
 import KanbanBoard from '../../components/tasks/KanbanBoard';
@@ -18,9 +20,8 @@ import ProjectForm from '../../components/tasks/ProjectForm';
 import ConfirmModal from '../../components/tasks/ConfirmModal';
 import ToastContainer from '../../components/tasks/ToastContainer';
 import TasksSkeletonLoader from '../../components/tasks/SkeletonLoader';
-import type { Task, TaskFormData, TaskPriority, TaskStatus } from '../../types/task';
-import type { Project, ProjectFormData } from '../../types/project';
-import type { AISuggestion } from '../api/tasks/ai-suggest';
+import type { Task } from '../../types/task';
+import type { Project } from '../../types/project';
 
 type ViewMode = 'list' | 'kanban' | 'focus';
 
@@ -45,7 +46,6 @@ export default function TasksPage() {
   const [filter, setFilter]                       = useState<'all' | 'todo' | 'in_progress' | 'done'>('all');
   const [searchQuery, setSearchQuery]             = useState('');
   const [importLoading, setImportLoading]         = useState(false);
-  const [archiveToast, setArchiveToast]           = useState<{ project: Project; timer: ReturnType<typeof setTimeout> } | null>(null);
   const [showUserMenu, setShowUserMenu]           = useState(false);
   const newTaskProjectRef                         = useRef<string | null>(null);
 
@@ -119,96 +119,43 @@ export default function TasksPage() {
     }
   };
 
-  const handleCreateTask = async (data: TaskFormData) => {
-    const projectId = data.project_id ?? newTaskProjectRef.current ?? selectedProjectId;
-    await taskService.createTask({ ...data, project_id: projectId });
-    newTaskProjectRef.current = null;
-    await loadTasks();
-  };
+  const {
+    handleCreateTask,
+    handleUpdateTask,
+    handleDeleteTask,
+    handleDeleteTaskById,
+    handleStatusChange,
+    handleUpdateTaskById,
+    handleApplySuggestion,
+  } = useTaskActions({
+    tasksRef,
+    projectsRef,
+    newTaskProjectRef,
+    selectedProjectId,
+    editingTask,
+    setEditingTask,
+    setDeleteConfirm,
+    loadTasks,
+    loadProjects,
+  });
 
-  const handleUpdateTask = async (data: TaskFormData) => {
-    if (!editingTask) return;
-    await taskService.updateTask(editingTask.id, data);
-    await loadTasks();
-    setEditingTask(null);
-  };
-
-  const cleanupBlockedBy = async (deletedId: string, currentTasks: Task[]) => {
-    const affected = currentTasks.filter(
-      (t) => t.id !== deletedId && Array.isArray(t.blocked_by) && t.blocked_by.includes(deletedId),
-    );
-    await Promise.all(
-      affected.map((t) => {
-        const updated = (t.blocked_by ?? []).filter((id) => id !== deletedId);
-        return taskService.updateTask(t.id, { blocked_by: updated.length > 0 ? updated : null });
-      }),
-    );
-  };
-
-  const handleDeleteTask = async (task: Task) => {
-    await taskService.deleteTask(task.id);
-    await cleanupBlockedBy(task.id, tasksRef.current);
-    await loadTasks();
-    setDeleteConfirm(null);
-  };
-
-  const handleDeleteTaskById = async (taskId: string) => {
-    await taskService.deleteTask(taskId);
-    await cleanupBlockedBy(taskId, tasksRef.current);
-    await loadTasks();
-  };
-
-  const handleStatusChange = async (task: Task, newStatus: TaskStatus) => {
-    await taskService.updateTask(task.id, { status: newStatus });
-    await loadTasks();
-  };
-
-  const handleUpdateTaskById = async (
-    taskId: string,
-    update: { priority?: TaskPriority; due_date?: string; status?: TaskStatus },
-  ) => {
-    await taskService.updateTask(taskId, update);
-    await loadTasks();
-  };
-
-  const handleCreateProject = async (data: ProjectFormData) => {
-    await projectService.createProject(data); await loadProjects();
-  };
-
-  const handleUpdateProject = async (data: ProjectFormData) => {
-    if (!editingProject) return;
-    await projectService.updateProject(editingProject.id, data);
-    await loadProjects(); setEditingProject(null);
-  };
-
-  const handleDeleteProject = async (project: Project) => {
-    await projectService.deleteProject(project.id);
-    await loadProjects();
-    if (selectedProjectId === project.id) setSelectedProjectId(null);
-    setDeleteProjectConfirm(null);
-  };
-
-  const handleArchiveProject = async (project: Project) => {
-    if (archiveToast) clearTimeout(archiveToast.timer);
-    await projectService.archiveProject(project.id);
-    await loadProjects();
-    if (selectedProjectId === project.id) setSelectedProjectId(null);
-    const timer = setTimeout(() => setArchiveToast(null), 5000);
-    setArchiveToast({ project, timer });
-  };
-
-  const handleUndoArchive = async () => {
-    if (!archiveToast) return;
-    clearTimeout(archiveToast.timer);
-    await projectService.unarchiveProject(archiveToast.project.id);
-    await loadProjects();
-    setArchiveToast(null);
-  };
-
-  const handleUnarchiveProject = async (project: Project) => {
-    await projectService.unarchiveProject(project.id);
-    await loadProjects();
-  };
+  const {
+    archiveToast,
+    setArchiveToast,
+    handleCreateProject,
+    handleUpdateProject,
+    handleDeleteProject,
+    handleArchiveProject,
+    handleUndoArchive,
+    handleUnarchiveProject,
+  } = useProjectActions({
+    editingProject,
+    setEditingProject,
+    selectedProjectId,
+    setSelectedProjectId,
+    setDeleteProjectConfirm,
+    loadProjects,
+  });
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -219,90 +166,6 @@ export default function TasksPage() {
     newTaskProjectRef.current = projectId;
     setEditingTask(null);
     setShowTaskForm(true);
-  };
-
-  /**
-   * Resolve a task by ID first, then fall back to title match.
-   * Uses tasksRef so it always searches the freshest array regardless
-   * of when the closure was created.
-   */
-  const resolveTask = (taskId: string, taskTitle?: string): Task | undefined => {
-    const live = tasksRef.current;
-    if (taskId) {
-      const byId = live.find((t) => t.id === taskId);
-      if (byId) return byId;
-    }
-    // Fallback: match by title (case-insensitive) — catches AI returning taskId: ""
-    if (taskTitle) {
-      return live.find((t) => t.title.trim().toLowerCase() === taskTitle.trim().toLowerCase());
-    }
-    return undefined;
-  };
-
-  const handleApplySuggestion = async (suggestion: AISuggestion) => {
-    // ── scaffold: create (or reuse) a project then add tasks ──────────────
-    if (suggestion.type === 'scaffold') {
-      if (!suggestion.scaffoldProjectName) throw new Error('No project name provided by AI.');
-      if (!suggestion.subTasks?.length)    throw new Error('No tasks provided by AI.');
-      const existingProject = projectsRef.current.find(
-        (p) => p.name.trim().toLowerCase() === suggestion.scaffoldProjectName!.trim().toLowerCase(),
-      );
-      const targetProjectId = existingProject
-        ? existingProject.id
-        : (await projectService.createProject({
-            name: suggestion.scaffoldProjectName,
-            description: '',
-            color: suggestion.scaffoldProjectColor ?? '#6366f1',
-          })).id;
-      for (const sub of suggestion.subTasks) {
-        await taskService.createTask({
-          title:       sub.title,
-          description: sub.description ?? '',
-          project_id:  targetProjectId,
-          priority:    (sub.priority ?? 'medium') as TaskPriority,
-          status:      'todo',
-          due_date:    sub.due_date ? new Date(sub.due_date).toISOString() : null,
-        });
-      }
-      await loadProjects();
-      await loadTasks();
-      return;
-    }
-
-    // ── split: create sub-tasks inheriting the original task's project ────
-    if (suggestion.type === 'split') {
-      if (!suggestion.subTasks?.length) throw new Error('No sub-tasks provided by AI.');
-      const originalTask = resolveTask(suggestion.taskId, suggestion.taskTitle);
-      for (const sub of suggestion.subTasks) {
-        await taskService.createTask({
-          title:       sub.title,
-          description: sub.description ?? '',
-          project_id:  originalTask?.project_id ?? null,
-          priority:    (sub.priority ?? originalTask?.priority ?? 'medium') as TaskPriority,
-          status:      'todo',
-          due_date:    sub.due_date
-            ? new Date(sub.due_date).toISOString()
-            : (originalTask?.due_date ?? null),
-        });
-      }
-      await loadTasks();
-      return;
-    }
-
-    // ── sequence / general: read-only, nothing to persist ─────────────────
-    if (suggestion.type === 'sequence' || suggestion.type === 'general') return;
-
-    // ── field updates: reprioritize / reschedule / rewrite ─────────────────
-    if (!suggestion.taskId || !suggestion.field) return;
-    const task = resolveTask(suggestion.taskId, suggestion.taskTitle);
-    if (!task) return;
-    const update: Partial<TaskFormData> = {};
-    if (suggestion.field === 'priority')    update.priority    = suggestion.proposedValue as TaskPriority;
-    if (suggestion.field === 'due_date')    update.due_date    = suggestion.proposedValue;
-    if (suggestion.field === 'title')       update.title       = suggestion.proposedValue;
-    if (suggestion.field === 'description') update.description = suggestion.proposedValue;
-    await taskService.updateTask(task.id, update);
-    await loadTasks();
   };
 
   const filteredTasks = tasks.filter((task) => {
