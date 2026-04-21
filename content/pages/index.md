@@ -135,6 +135,59 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
+  - type: UsefulLinksSection
+    elementId: useful-links
+    colors: colors-f
+    title: "Tools & Projects"
+    subtitle: "Apps and resources I've built — more coming soon"
+    links:
+      - title: "Task Manager"
+        description: "A lightweight task and notes manager I built for day-to-day productivity."
+        url: "/tasks"
+        icon: "✅"
+        tag: "App"
+      - title: "Interactive Story"
+        url: "https://storymvp.replit.app"
+        icon: "📖"
+        tag: "Interactive"
+      - title: "Iron Dunes"
+        url: "https://irondunes.replit.app"
+        icon: "🏜️"
+        tag: "Game"
+      - title: "AttentionOS"
+        url: "https://super-human.replit.app"
+        icon: "🧠"
+        tag: "App"
+      - title: "miniRPG"
+        url: "https://Mini-RPG.replit.app"
+        icon: "⚔️"
+        tag: "Game"
+      - title: "Ninjaworld"
+        url: "https://ninjaworld.replit.app"
+        icon: "🥷"
+        tag: "Game"
+      - title: "Runefall"
+        url: "https://runefall.replit.app"
+        icon: "🪨"
+        tag: "Game"
+      - title: "Flashcard"
+        url: "https://jpflashmind.replit.app"
+        icon: "🃏"
+        tag: "App"
+      - title: "Shadowing Practice"
+        url: "https://umai-jp.replit.app"
+        icon: "🗣️"
+        tag: "App"
+    styles:
+      self:
+        height: auto
+        width: wide
+        padding:
+          - pt-24
+          - pb-24
+          - pl-4
+          - pr-4
+        textAlign: center
   - type: ContactSection
     colors: colors-f
     backgroundSize: full
@@ -142,6 +195,8 @@ sections:
     form:
       type: FormBlock
       elementId: sign-up-form
+      whatsappPhone: "85296783395"
+      whatsappGreeting: "Hi! I'd like to get in touch about your marketing services."
       fields:
         - name: firstName
           label: Your Name

@@ -43,3 +43,4 @@ attached_assets/*.json
 .replit
 attached_assets/*.json
 .replit
+tsconfig.tsbuildinfo

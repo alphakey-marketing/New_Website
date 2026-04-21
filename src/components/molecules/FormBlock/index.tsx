@@ -7,7 +7,7 @@ import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-
 
 export default function FormBlock(props) {
     const formRef = React.useRef<HTMLFormElement>(null);
-    const { elementId, className, fields = [], submitLabel, styles = {} } = props;
+    const { elementId, className, fields = [], submitLabel, styles = {}, whatsappPhone } = props;
 
     if (fields.length === 0) {
         return null;
@@ -18,8 +18,22 @@ export default function FormBlock(props) {
 
         if (!formRef.current) return;
         const data = new FormData(formRef.current);
-        const value = Object.fromEntries(data.entries());
-        alert(`Form data: ${JSON.stringify(value)}`);
+        const values = Object.fromEntries(data.entries());
+
+        if (whatsappPhone) {
+            // Build a human-readable prefilled WhatsApp message from form data
+            const greeting = props.whatsappGreeting ?? "Hi! I'd like to get in touch.";
+            const lines: string[] = [greeting, ''];
+            if (values.firstName) lines.push(`Name: ${values.firstName}`);
+            if (values.company)   lines.push(`Company: ${values.company}`);
+            if (values.email)     lines.push(`Email: ${values.email}`);
+            if (values.message)   lines.push(`\nMessage:\n${values.message}`);
+
+            const encoded = encodeURIComponent(lines.join('\n'));
+            window.open(`https://wa.me/${whatsappPhone}?text=${encoded}`, '_blank', 'noopener,noreferrer');
+        } else {
+            alert(`Form data: ${JSON.stringify(values)}`);
+        }
     }
 
     return (
