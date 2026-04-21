@@ -48,7 +48,7 @@ export default function TaskCard({ task, onEdit, onDelete, isDragging }: TaskCar
     >
       <h4 className="font-medium text-gray-900 mb-1">{task.title}</h4>
       {task.description && (
-        <p className="text-xs text-gray-400 mb-2 line-clamp-1">{task.description}</p>
+        <p className="text-xs text-gray-600 mb-2 line-clamp-1">{task.description}</p>
       )}
 
       <div className="flex items-center justify-between">
@@ -57,7 +57,7 @@ export default function TaskCard({ task, onEdit, onDelete, isDragging }: TaskCar
             {priorityLabels[task.priority]}
           </span>
           {due && (
-            <span className={`text-xs ${due.cls}`}>\u23F0 {due.label}</span>
+            <span className={`text-xs font-medium ${due.cls}`}>⏰ {due.label}</span>
           )}
         </div>
 

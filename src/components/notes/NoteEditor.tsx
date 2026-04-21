@@ -135,7 +135,7 @@ export default function NoteEditor({ note, projects, onSave, onCancel }: NoteEdi
             <button
               onClick={handleSubmit}
               disabled={loading || !title.trim()}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save'}
             </button>
@@ -179,12 +179,12 @@ export default function NoteEditor({ note, projects, onSave, onCancel }: NoteEdi
           <select
             value={projectId || ''}
             onChange={(e) => setProjectId(e.target.value || undefined)}
-            className="block border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="block border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">No Project</option>
             {projects.map((project) => (
               <option key={project.id} value={project.id}>
-                {(project as any).is_archived ? `📦 ${project.name}` : project.name}
+                {(project as any).is_archived ? `${project.name} (archived)` : project.name}
               </option>
             ))}
           </select>
@@ -196,7 +196,7 @@ export default function NoteEditor({ note, projects, onSave, onCancel }: NoteEdi
           <div className="flex flex-wrap gap-2 mb-2">
             {tags.map((tag) => (
               <span key={tag}
-                className="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-blue-100 text-blue-800">
+                className="inline-flex items-center px-2 py-1 rounded-md text-sm font-medium bg-indigo-100 text-indigo-800">
                 {tag}
                 <button onClick={() => handleRemoveTag(tag)} className="ml-1 inline-flex items-center justify-center">
                   <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
@@ -212,7 +212,7 @@ export default function NoteEditor({ note, projects, onSave, onCancel }: NoteEdi
             <input
               type="text"
               placeholder="Add tag..."
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => {
@@ -241,7 +241,7 @@ export default function NoteEditor({ note, projects, onSave, onCancel }: NoteEdi
           ) : (
             <textarea
               placeholder="Start writing... (supports Markdown)"
-              className="block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 text-base focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono"
+              className="block w-full border border-gray-300 rounded-md shadow-sm py-3 px-4 text-base focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 font-mono"
               rows={20}
               value={content}
               onChange={(e) => setContent(e.target.value)}

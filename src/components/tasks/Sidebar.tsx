@@ -38,8 +38,8 @@ export default function Sidebar({
           onClick={() => onSelectProject(null)}
           className={`w-full group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
             selectedProjectId === null
-              ? 'bg-blue-100 text-blue-900'
-              : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+              ? 'bg-indigo-50 text-indigo-900'
+              : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
           }`}
         >
           <div className="flex items-center">
@@ -60,6 +60,7 @@ export default function Sidebar({
           <button
             onClick={onNewProject}
             title="New project"
+            aria-label="New project"
             className="p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,8 +79,8 @@ export default function Sidebar({
                 key={project.id}
                 className={`group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md ${
                   selectedProjectId === project.id
-                    ? 'bg-blue-100 text-blue-900'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-indigo-50 text-indigo-900'
+                    : 'text-gray-800 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 <button onClick={() => onSelectProject(project.id)} className="flex items-center flex-1 min-w-0">
@@ -91,26 +92,26 @@ export default function Sidebar({
                     </span>
                   ) : (
                     <span className="ml-2 inline-block py-0.5 px-2 text-xs font-medium rounded-full bg-gray-100 text-gray-400 flex-shrink-0">
-                      \u2713
+                      ✓
                     </span>
                   )}
                 </button>
 
                 {/* Edit / Archive / Delete — hover-reveal */}
                 <div className="ml-1 flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                  <button onClick={() => onEditProject(project)} className="p-1 rounded hover:bg-gray-200" title="Edit project">
+                  <button onClick={() => onEditProject(project)} className="p-1 rounded hover:bg-gray-200" title="Edit project" aria-label={`Edit project ${project.name}`}>
                     <svg className="h-3.5 w-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
-                  <button onClick={() => onArchiveProject(project)} className="p-1 rounded hover:bg-amber-100" title="Archive project">
+                  <button onClick={() => onArchiveProject(project)} className="p-1 rounded hover:bg-amber-100" title="Archive project" aria-label={`Archive project ${project.name}`}>
                     <svg className="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
                   </button>
-                  <button onClick={() => onDeleteProject(project)} className="p-1 rounded hover:bg-red-100" title="Delete project">
+                  <button onClick={() => onDeleteProject(project)} className="p-1 rounded hover:bg-red-100" title="Delete project" aria-label={`Delete project ${project.name}`}>
                     <svg className="h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

@@ -47,7 +47,7 @@ export default function NotesList({
           <div
             key={note.id}
             className={`group relative p-4 cursor-pointer transition-colors hover:bg-gray-50 ${
-              isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : 'border-l-4 border-transparent'
+              isSelected ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'border-l-4 border-transparent'
             }`}
             onClick={() => onSelectNote(note)}
           >
@@ -55,7 +55,7 @@ export default function NotesList({
               <div className="flex-1 min-w-0 pr-2">
                 {/* Title + favourite star */}
                 <div className="flex items-center space-x-2">
-                  <h3 className="text-sm font-medium text-gray-900 truncate">{note.title}</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 truncate">{note.title}</h3>
                   {note.is_favorite && (
                     <svg className="h-3.5 w-3.5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
@@ -65,11 +65,11 @@ export default function NotesList({
 
                 {/* Content snippet */}
                 {snippet && (
-                  <p className="mt-0.5 text-xs text-gray-400 truncate">{snippet}</p>
+                  <p className="mt-0.5 text-xs text-gray-600 truncate">{snippet}</p>
                 )}
 
                 {/* Timestamp */}
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-gray-500">
                   {format(new Date(note.updated_at), 'MMM d, yyyy h:mm a')}
                 </p>
 
@@ -78,7 +78,7 @@ export default function NotesList({
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {visibleTags.map((tag, index) => (
                       <span key={index}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                       className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
                         {tag}
                       </span>
                     ))}
