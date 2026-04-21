@@ -20,10 +20,12 @@ import ProjectForm from '../../components/tasks/ProjectForm';
 import ConfirmModal from '../../components/tasks/ConfirmModal';
 import ToastContainer from '../../components/tasks/ToastContainer';
 import TasksSkeletonLoader from '../../components/tasks/SkeletonLoader';
+import TasksNavbar from '../../components/tasks/TasksNavbar';
+import ListViewToolbar from '../../components/tasks/ListViewToolbar';
+import ArchiveUndoToast from '../../components/tasks/ArchiveUndoToast';
+import type { ViewMode } from '../../components/tasks/TasksNavbar';
 import type { Task } from '../../types/task';
 import type { Project } from '../../types/project';
-
-type ViewMode = 'list' | 'kanban' | 'focus';
 
 export default function TasksPage() {
   const router = useRouter();
@@ -210,117 +212,36 @@ export default function TasksPage() {
 
       <div className="flex-1 flex flex-col">
         {/* Navbar */}
-        <nav className="bg-white shadow">
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-14">
-              <div className="flex items-center space-x-1">
-                <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-                  {(['focus', 'list', 'kanban'] as ViewMode[]).map((v) => (
-                    <button key={v} onClick={() => setViewMode(v)}
-                      aria-label={`Switch to ${v} view`}
-                      aria-pressed={viewMode === v}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                        viewMode === v ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                      }`}>
-                      {v === 'focus' ? '🎯 Focus' : v === 'list' ? 'List' : 'Board'}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <button onClick={() => router.push('/tasks/notes')} className="px-3 py-1.5 text-sm text-gray-600 hover:text-blue-700 font-medium rounded-md hover:bg-gray-100 transition-colors">
-                  📝 Notes
-                </button>
-                <button
-                  onClick={() => setShowAIPanel(!showAIPanel)}
-                  aria-label="Toggle AI suggestion panel"
-                  aria-expanded={showAIPanel}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md border transition-colors ${
-                    showAIPanel ? 'bg-indigo-600 text-white border-indigo-600' : 'text-indigo-600 border-indigo-300 hover:bg-indigo-50'
-                  }`}
-                >
-                  🤖 AI
-                </button>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    aria-label="Open settings and data export menu"
-                    aria-expanded={showExportMenu}
-                    className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                  >
-                    ⚙️
-                  </button>
-                  {showExportMenu && (
-                    <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                      <div className="py-1">
-                        <button onClick={handleExport} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Export</button>
-                        <label className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                          {importLoading ? 'Importing…' : 'Import'}
-                          <input type="file" accept=".json" className="hidden" onChange={handleImport} disabled={importLoading} />
-                        </label>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    aria-label={`User menu — ${user.email ?? 'account'}`}
-                    aria-expanded={showUserMenu}
-                    className="w-8 h-8 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center hover:bg-indigo-700 transition-colors"
-                    title={user.email ?? ''}
-                  >
-                    {initials}
-                  </button>
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
-                      <div className="py-1">
-                        <p className="px-4 py-2 text-xs text-gray-500 truncate">{user.email}</p>
-                        <hr className="border-gray-100" />
-                        <button onClick={handleSignOut} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
+        <TasksNavbar
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          showAIPanel={showAIPanel}
+          onToggleAIPanel={() => setShowAIPanel(!showAIPanel)}
+          showExportMenu={showExportMenu}
+          onToggleExportMenu={() => setShowExportMenu(!showExportMenu)}
+          showUserMenu={showUserMenu}
+          onToggleUserMenu={() => setShowUserMenu(!showUserMenu)}
+          userEmail={user.email ?? ''}
+          userInitials={initials}
+          onSignOut={handleSignOut}
+          onExport={handleExport}
+          onImport={handleImport}
+          importLoading={importLoading}
+          onNavigateToNotes={() => router.push('/tasks/notes')}
+        />
 
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
 
             {viewMode === 'list' && (
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <span>{filteredTasks.filter((t) => t.status === 'todo').length} to do</span>
-                  <span>&middot;</span>
-                  <span>{filteredTasks.filter((t) => t.status === 'in_progress').length} in progress</span>
-                  <span>&middot;</span>
-                  <span>{filteredTasks.filter((t) => t.status === 'done').length} done</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input type="text" placeholder="Search..." className="block w-48 border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                  <select className="block border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
-                    <option value="all">All</option>
-                    <option value="todo">To Do</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="done">Done</option>
-                  </select>
-                  <button
-                    onClick={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }}
-                    aria-label="Create new task"
-                    className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                    <svg className="-ml-0.5 mr-1.5 h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    New
-                  </button>
-                </div>
-              </div>
+              <ListViewToolbar
+                filteredTasks={filteredTasks}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                filter={filter}
+                onFilterChange={setFilter}
+                onNewTask={() => { newTaskProjectRef.current = selectedProjectId; setShowTaskForm(true); }}
+              />
             )}
 
             {viewMode === 'kanban' && (
@@ -346,19 +267,12 @@ export default function TasksPage() {
         </main>
       </div>
 
-      {/* Archive undo toast */}
       {archiveToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl">
-          <span>📦 &quot;{archiveToast.project.name}&quot; archived</span>
-          <button onClick={handleUndoArchive} className="font-semibold text-indigo-300 hover:text-white underline underline-offset-2">Undo</button>
-          <button
-            onClick={() => { clearTimeout(archiveToast.timer); setArchiveToast(null); }}
-            aria-label="Dismiss archive notification"
-            className="text-gray-400 hover:text-white ml-1"
-          >
-            &times;
-          </button>
-        </div>
+        <ArchiveUndoToast
+          projectName={archiveToast.project.name}
+          onUndo={handleUndoArchive}
+          onDismiss={() => { clearTimeout(archiveToast.timer); setArchiveToast(null); }}
+        />
       )}
 
       {showAIPanel && (
