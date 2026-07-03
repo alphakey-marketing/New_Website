@@ -1,5 +1,5 @@
 ### Overview
-This project is a personal portfolio website for a marketing professional, built with Next.js. Its primary purpose is to showcase the professional's work and experience. Key features include bilingual content (English and Chinese), a modern cosmic visual theme with twinkling stars, and a dedicated Japanese Learning Hub. The website aims to present a professional yet engaging online presence, highlighting the user's marketing expertise and offering additional educational resources.
+This project is a personal portfolio website for a marketing professional, built with Next.js. Its primary purpose is to showcase the professional's work and experience. Key features include bilingual content (English and Chinese) and a modern cosmic visual theme with twinkling stars. The website aims to present a professional yet engaging online presence, highlighting the user's marketing expertise.
 
 ### User Preferences
 I prefer that the agent focuses on maintaining the existing cosmic theme and bilingual (English/Traditional Chinese) architecture. When making changes, prioritize the use of Tailwind CSS for styling and ensure responsiveness across devices. For new features or modifications, please ask for confirmation before implementing major structural changes. I value clear, concise explanations for any proposed alterations or additions. Do not make changes to the existing file structure in `/content/pages/` or `/public/images/`.
@@ -17,30 +17,13 @@ The project is built on **Next.js 15 with React 19** and uses **Tailwind CSS 4.0
 - **StarfieldBackground Component:** A canvas-based animation (`requestAnimationFrame`) provides the site-wide twinkling stars effect.
 - **Component-Based Design:** Reusable components are organized into atoms, molecules, sections, and effects.
 - **Content Structure:** English content resides in `/content/pages/`, Chinese content in `/content/pages/zh/`.
-- **Listening Practice - Kanji with Furigana:** RubyText component renders kanji with hiragana furigana on top using HTML ruby tags. Kanji data includes proper ruby markup for all listening paragraphs.
 
 **Feature Specifications:**
 - **Personal Portfolio:** Showcases marketing case studies, professional resume, and contact information.
 - **RandomFactButton:** Displays bilingual fun facts about the portfolio owner.
-- **Japanese Learning Hub:** A significant addition with multiple interactive tabs and features:
-    - **Exercises - Personal SRS Tab:** Manually add difficult words with difficulty levels (1-5 stars), generate multiple-choice exercises covering meaning/reading/writing, localStorage persistence. No login required. **Now accessible alongside other exercises via navigation tabs.**
-    - **Exercises - Verb/Noun/Adjective Conjugation:** Practice verb conjugations (8 N5 forms), noun conjugations, and adjective conjugations with detailed explanations.
-    - **Exercises - Grammar:** Comprehensive N5 Grammar Exercise (65 fill-in-the-blank questions with bilingual explanations and progress tracking).
-    - **Exercises - Common Patterns & Te-Form & Potential Form:** Additional grammar pattern exercises for advanced learners.
-    - **Listening/Pronunciation:** N5 shadow speaking practice with 3 paragraphs and high-quality pronunciation powered by Google Cloud Text-to-Speech API. **Now displays kanji with hiragana furigana on top using ruby text formatting.**
-    - **Dictionary:** Live search functionality powered by Jisho.org API.
-    - **Vocabulary Section:** Organized by categories (Nouns, Verbs, Adjectives, Adverbs, Expressions, Particles, Katakana) with kanji, hiragana, bilingual meanings, and example sentences. Covers N5 and expanded N4 content.
 
-**Authentication:**
-- Admin login (admin/admin) with localStorage persistence
-- Login state propagates immediately to enable SRS features and premium content
-- Component remounting strategy ensures UI reflects authentication state instantly
-
-**Text-to-Speech Implementation:**
-- Backend API route (`/api/tts`) authenticates with Google Cloud using service account JWT
-- Frontend client (`ttsClient.ts`) handles audio playback and state management
-- Supports both Pronunciation and Listening sections in English and Chinese versions
-- Bypasses OS dependencies - works on any device regardless of installed language packs
+### Recent Changes (July 3, 2026)
+- **Removed Japanese Learning Hub:** Deleted the entire feature (components, `/api/auth`, `/api/dictionary`, `/api/flashcards`, `progressTracking.ts`, `ttsClient.ts`, related CSS, and the `googleapis` dependency) as it's no longer in use.
 
 ### Recent Changes (January 13, 2026)
 - **Security Dependency Updates:** Updated transitive dependencies (axios, form-data, glob, jws, node-forge, qs) for security compliance. Fixed breaking change in glob package by updating import from `glob.sync()` to `globSync()` in `src/utils/content.ts`.
@@ -53,5 +36,3 @@ The project is built on **Next.js 15 with React 19** and uses **Tailwind CSS 4.0
 
 ### External Dependencies
 - **Stackbit:** For Git-based content management.
-- **Jisho.org API:** Utilized for the live dictionary search functionality within the Japanese Learning Hub.
-- **Google Cloud Text-to-Speech API:** Provides high-quality Japanese pronunciation without OS language support requirements.

@@ -26,8 +26,7 @@ export default function Header(props) {
         'Projects': { en: 'Projects', zh: '過往項目' },
         'Blog': { en: 'Blog', zh: '網誌' },
         'Contact': { en: 'Contact', zh: '聯絡我們' },
-        'Personal': { en: 'Personal', zh: '個人專區' },
-        'Japanese Learning': { en: 'Japanese Learning', zh: '日語學習' }
+        'Personal': { en: 'Personal', zh: '個人專區' }
     };
     
     const translateLabel = (label) => {
