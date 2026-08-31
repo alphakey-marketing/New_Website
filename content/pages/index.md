@@ -193,17 +193,37 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-  - type: CtaSection
+  - type: ContactSection
     elementId: lead-magnet
     colors: colors-f
     title: "Free: 5 AI Tools to Cut Your Marketing Time in Half"
     text: |
-      No sign-up needed — just click and read.
-    actions:
-      - type: Button
-        label: "Read it free 📖"
-        url: "/ai-tools"
-        style: primary
+      Drop your WhatsApp, hit the button, and read it right now — no waiting.
+    form:
+      type: FormBlock
+      elementId: lead-magnet-form
+      whatsappPhone: "85296783395"
+      whatsappGreeting: "Hi Key! I just checked out the '5 AI Tools' page."
+      redirectUrl: "/ai-tools"
+      submitLabel: "Read it free 📖"
+      fields:
+        - name: firstName
+          label: Your Name
+          hideLabel: true
+          placeholder: Your Name
+          isRequired: true
+          width: 1/2
+          type: TextFormControl
+        - name: whatsapp
+          label: WhatsApp Number
+          hideLabel: true
+          placeholder: WhatsApp Number
+          isRequired: true
+          width: 1/2
+          type: TextFormControl
+      styles:
+        self:
+          textAlign: center
     styles:
       self:
         height: auto

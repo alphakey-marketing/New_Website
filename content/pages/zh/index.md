@@ -193,17 +193,37 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-  - type: CtaSection
+  - type: ContactSection
     elementId: lead-magnet
     colors: colors-f
     title: "免費：5個AI工具幫你慳返一半marketing時間"
     text: |
-      唔使留低資料，撳一下即刻睇。
-    actions:
-      - type: Button
-        label: "免費睇 📖"
-        url: "/zh/ai-tools"
-        style: primary
+      填低個WhatsApp，撳掣即刻睇，唔使等。
+    form:
+      type: FormBlock
+      elementId: lead-magnet-form
+      whatsappPhone: "85296783395"
+      whatsappGreeting: "你好Key！我啱啱睇咗「5個AI工具」個page。"
+      redirectUrl: "/zh/ai-tools"
+      submitLabel: "免費睇 📖"
+      fields:
+        - name: firstName
+          label: 你的名字
+          hideLabel: true
+          placeholder: 你的名字
+          isRequired: true
+          width: 1/2
+          type: TextFormControl
+        - name: whatsapp
+          label: Whatsapp 電話
+          hideLabel: true
+          placeholder: Whatsapp 電話
+          isRequired: true
+          width: 1/2
+          type: TextFormControl
+      styles:
+        self:
+          textAlign: center
     styles:
       self:
         height: auto

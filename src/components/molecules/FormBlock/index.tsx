@@ -7,7 +7,7 @@ import { mapStylesToClassNames as mapStyles } from '@/utils/map-styles-to-class-
 
 export default function FormBlock(props) {
     const formRef = React.useRef<HTMLFormElement>(null);
-    const { elementId, className, fields = [], submitLabel, styles = {}, whatsappPhone } = props;
+    const { elementId, className, fields = [], submitLabel, styles = {}, whatsappPhone, redirectUrl } = props;
 
     if (fields.length === 0) {
         return null;
@@ -38,6 +38,11 @@ export default function FormBlock(props) {
             window.open(`https://wa.me/${whatsappPhone}?text=${encoded}`, '_blank', 'noopener,noreferrer');
         } else {
             alert(`Form data: ${JSON.stringify(values)}`);
+        }
+
+        // lead captured — send them straight to the content instead of making them wait for a reply
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
         }
     }
 
