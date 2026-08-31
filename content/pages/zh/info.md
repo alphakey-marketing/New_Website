@@ -13,8 +13,8 @@ sections:
   - elementId: ''
     colors: colors-f
     backgroundSize: full
-    title: 🚀 Key Chan
-    subtitle: 洞察本質的行銷策略師 | 收益增長專家
+    title: 🚀 KeyMarketing
+    subtitle: AI驅動營銷代理 | 收益增長專家
     text: >
       ## 📍 聯絡資訊
 
@@ -25,26 +25,26 @@ sections:
 
       **電郵：** curryfishcake@gmail.com  
 
-      **語言：** 中文（粵語/普通話）、英文 — 流利三語通行無阻
+      **語言：** 中文（粵語/普通話）、英文 — 流利三語服務
 
 
       ---
 
 
-      ## 💡 個人簡介
+      ## 💡 關於我們
 
 
-      我是一個結合理性分析與靈性直覺的新世代市場營銷專家，相信「數據會說話，直覺能洞察，策略可變現」。五年來，我憑藉細心觀察和多角度思維幫助企業實現營收暴漲，最高紀錄是4個月內實現332%的收益增長。
+      我叫Key，結合 AI 工具與8年實戰策略經驗，相信「數據話我知而家發生咩事，策略令呢一切變成實際收益」。憑藉細心嘅市場分析和嚴謹執行幫助企業實現營收增長，最高紀錄是4個月內為客戶實現332%的收益增長。
 
 
-      我的獨特優勢在於能夠看到事情的三個面向（對、錯、中性），並運用靈性直覺洞察事物的核心情緒和隱藏層面。這讓我不只是會做廣告的人，更是一個能夠深度理解品牌本質和消費者內心需求的「洞察型增長駭客」。
+      我嘅方法會從三個角度睇每一個決定 — 邊樣做得好、邊樣做得唔好、邊樣中性 — 確保決策建基於全面資訊，而唔止睇表面。呢個先係我唔只係一間廣告代理嘅原因：我係真正理解品牌定位同消費者行為嘅增長夥伴。
 
 
-      從研究大蒜怎麼讓免疫力暴增，到玩轉數位廣告成效，我靠這身跨界背景和超靈直覺，準確讀懂消費者的心跳節奏，還能預測他們下一秒想買什麼!
+      由效果廣告到 AI 輔助內容工作流程，我結合跨界背景同嚴謹分析，幫品牌一直行前一步，掌握消費者下一步需要咩。
     media:
       type: ImageBlock
       url: /images/profile-photo.jpg
-      altText: Key Chan 陳君彥 - 香港高街專業照片
+      altText: Key Chan 陳君彥，Alphakey Marketing 創辦人 - 香港高街專業照片
     styles:
       self:
         height: auto
@@ -74,19 +74,15 @@ sections:
         borderStyle: solid
   - type: FeaturedItemsSection
     colors: colors-f
-    subtitle: '🏆 職業亮點'
+    subtitle: '🏆 實績記錄'
     items:
       - type: FeaturedItem
         title: 高級市務主任
         subtitle: '香港領先的電信公司'
         text: |
-          **🌟 收益多元化革命：**
+          呢個部門一直靠實體門市搵錢，線上收入幾近零——一旦市道逆轉就冇退路。
 
-          💎 從零開始建立線上收益流 — 透過創新數碼策略和細心觀察市場機會，將部門線上收益從近乎零發展至顯著規模
-
-          🔄 收益結構轉型專家 — 運用多角度分析成功幫助部門實現多元化收益模式，降低單一渠道依賴風險
-
-          🧠 運用直覺洞察和數據分析相結合的方法，精準定位客戶需求並提升轉化效率
+          我幫佢哋由零開始起咗一條全新線上收入渠道，配合客戶數據做精準分群，結果**線上收益佔比由近乎0升到約一成**，減低咗過度依賴單一渠道嘅風險。
         styles:
           self:
             textAlign: left
@@ -94,27 +90,19 @@ sections:
         title: 營銷及客戶獲取經理
         subtitle: '香港創新教育科技公司'
         text: |
-          **🎯 銷售與潛客開發成就：**
+          呢間公司當時流量唔缺，但成交極少——問題出喺潛在客戶唔夠信心。
 
-          💰 4個月內實現332%營收增長 — 通過深度洞察客戶痛點和全方位營銷策略重新定義了公司的增長軌跡
-
-          🎣 建立穩定的季度潛客獲取機制，憑藉對市場動態的敏銳洞察100%完成營收目標
-
-          👥 領導3人營銷團隊，以同理心和細心觀察統籌數碼和傳統營銷活動的全方位執行
+          我做咗客戶痛點研究，重新設計成個潛客開發流程，**4個月內營收升332%**，並且建立咗一個穩定嘅季度潛客機制，帶住3人團隊一齊執行。
         styles:
           self:
             textAlign: left
       - type: FeaturedItem
         title: 創辦人
-        subtitle: 'Alphaknot Marketing | 香港 (2020年8月 - 2022年10月)'
+        subtitle: '自己創業做效果營銷 | 香港 (2020年8月 - 2022年10月)'
         text: |
-          **📊 效果營銷專家：**
+          由零開始創業，冇大公司資源做後盾，一切都係自己諗策略、自己落手做。
 
-          🚀 首年實現937.5%營收增長 — 透過洞察客戶核心需求和精準高效的銷售策略創造驚人成果
-
-          📈 驚人數據表現： 網站流量提升35% | 潛客數量暴增300% | 付費客戶增長120%
-
-          ⚡ 運用直覺判斷優化廣告活動，轉化率提升25%，ROI大幅增長，同時保持90%客戶滿意度
+          憑住以數據為本嘅銷售策略，**首年營收升937.5%**——網站流量升35%、潛客升300%、付費客戶升120%，全部靠反覆test同快速調整做出嚟，唔係一步到位。
         styles:
           self:
             textAlign: left
@@ -142,51 +130,22 @@ sections:
           - pr-4
         borderWidth: 1
         borderStyle: solid
-  - type: TextSection
-    colors: colors-f
-    subtitle: '🎓 教育背景'
-    text: |
-      **營養與飲食學學士學位**  
-      威斯康星大學麥迪遜分校，美國威斯康星州 (2014-2018)
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding:
-          - pt-8
-          - pb-8
-          - pl-4
-          - pr-4
-        textAlign: left
-  - type: DividerSection
-    styles:
-      self:
-        width: wide
-        padding:
-          - pt-12
-          - pb-12
-          - pl-4
-          - pr-4
-        borderWidth: 1
-        borderStyle: solid
   - type: LabelsSection
     colors: colors-f
-    subtitle: '🛠️ 核心技能'
+    subtitle: '🛠️ 我們提供嘅服務'
     items:
       - type: Label
-        label: 消費者心理洞察
+        label: 消費者心理與研究
       - type: Label
         label: 市場趨勢預測
       - type: Label
-        label: 多角度問題分析
+        label: 品牌定位
       - type: Label
-        label: 品牌本質挖掘
+        label: AI輔助內容 & 廣告文案
       - type: Label
-        label: 直覺決策判斷
+        label: AI營銷自動化
       - type: Label
-        label: AI內容優化
-      - type: Label
-        label: 數據分析輔助
+        label: 數據分析與報告
       - type: Label
         label: Meta/Instagram廣告
       - type: Label
@@ -196,11 +155,9 @@ sections:
       - type: Label
         label: CRM系統管理
       - type: Label
-        label: 深度內容策劃
+        label: 內容策略與策劃
       - type: Label
         label: 社交媒體策略
-      - type: Label
-        label: 品牌定位
       - type: Label
         label: 活動統籌
       - type: Label
@@ -224,19 +181,19 @@ sections:
         borderStyle: solid
   - type: TextSection
     colors: colors-f
-    subtitle: '🌟 我的營銷哲學'
+    subtitle: '🌟 我們嘅做法'
     text: |
-      > 「真正的營銷不是說服人們購買，而是洞察他們內心真正的需求，並以最真誠的方式滿足它。」
+      > 「好嘅營銷唔係說服人們購買，而係理解佢哋真正嘅需求，並以最直接嘅方式滿足佢。」
 
-      我相信最有效的營銷來自於：
+      實際做法係：
 
-      👁️ **深度洞察客戶本質** — 看到表面需求背後的真實情感和動機
+      👁️ **深度客戶研究** — 理解表面需求背後嘅真實動機，唔止睇表面
 
-      🔍 **三維思考模式** — 從正面、負面和中性角度全面分析問題
+      🔍 **三方面分析** — 喺落實策略前，由邊樣做得好、邊樣做得唔好、邊樣中性三個角度衡量每個決定
 
-      💖 **情感共鳴連結** — 透過直覺理解建立品牌與消費者的深層連結
+      ⚡ **AI 加速執行** — 用 AI 工具加快內容、投放同報告嘅速度，令策略更快變成成果
 
-      🔄 **細心持續優化** — 用心觀察每個細節，持續改進策略效果
+      🔄 **持續優化** — 緊密追蹤成效，並根據數據調整廣告活動
     styles:
       self:
         height: auto
@@ -258,15 +215,17 @@ sections:
           - pr-4
         borderWidth: 1
         borderStyle: solid
-  - type: TextSection
+  - type: CtaSection
+    elementId: ''
     colors: colors-f
-    subtitle: '🎯 我的獨特優勢'
+    title: "睇完想知實際點合作？"
     text: |
-      **洞察本質的策略思維：** 結合理性分析與靈性直覺，能夠深度洞察品牌核心價值和消費者內心需求，為企業提供全方位、深層次的行銷解決方案。
-
-      **多角度問題解決能力：** 具備看到事情三個面向（對、錯、中性）的能力，幫助企業在複雜的市場環境中找到最佳的營銷策略和商業機會。
-
-      **細心執行與成果導向：** 注重細節執行，用心觀察市場變化，確保策略落地並創造實際的商業價值。
+      我有兩套方案，睇你而家想自己操作，定係想我幫你把緊方向。
+    actions:
+      - type: Button
+        label: "睇返兩個方案 👉"
+        url: "/zh#tiers"
+        style: primary
     styles:
       self:
         height: auto
@@ -276,77 +235,7 @@ sections:
           - pb-8
           - pl-4
           - pr-4
-        textAlign: left
-  - type: DividerSection
-    styles:
-      self:
-        width: wide
-        padding:
-          - pt-12
-          - pb-12
-          - pl-4
-          - pr-4
-        borderWidth: 1
-        borderStyle: solid
-  - type: TextSection
-    colors: colors-f
-    subtitle: '📈 職業成長軌跡'
-    text: |
-      從創業者到團隊管理者，再到洞察型收益策略師，我的職業路徑展現了：
-
-      🏗️ **從零到一的創業精神** — 親手建立並成功運營營銷公司
-
-      👑 **細心的領導統籌能力** — 以同理心管理團隊創造破紀錄的營收增長
-
-      🧠 **直覺洞察的商業創新** — 運用靈性直覺開拓全新收益來源
-
-      💡 **持續學習的適應能力** — 保持開放心態，在變化中持續成長
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding:
-          - pt-8
-          - pb-8
-          - pl-4
-          - pr-4
-        textAlign: left
-  - type: DividerSection
-    styles:
-      self:
-        width: wide
-        padding:
-          - pt-12
-          - pb-12
-          - pl-4
-          - pr-4
-        borderWidth: 1
-        borderStyle: solid
-  - type: TextSection
-    colors: colors-f
-    subtitle: '🎯 尋找機會'
-    text: |
-      正在尋找能夠發揮我的深度洞察能力、策略思維專長和團隊領導經驗的市場營銷職位。特別感興趣於：
-
-      ✨ 品牌策略經理或總監職位
-
-      ✨ 商業發展與增長策略角色
-
-      ✨ 重視創新思維和深度洞察的企業環境
-
-      ✨ 關注消費者體驗和品牌本質的企業文化
-
-      **準備好讓深度洞察為您的品牌帶來突破性增長了嗎？讓我們一起探索品牌的真正潛力！** ✨🧠
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding:
-          - pt-8
-          - pb-8
-          - pl-4
-          - pr-4
-        textAlign: left
+        textAlign: center
   - type: DividerSection
     styles:
       self:
@@ -360,11 +249,13 @@ sections:
         borderStyle: solid
   - type: ContactSection
     backgroundSize: full
-    title: "讓我們一起合作... 💬"
+    title: "一齊合作，我同你... 💬"
     colors: colors-f
     form:
       type: FormBlock
       elementId: contact-form
+      whatsappPhone: "85296783395"
+      whatsappGreeting: "你好Key！我想傾吓合作機會。"
       fields:
         - name: firstName
           label: 你的名字

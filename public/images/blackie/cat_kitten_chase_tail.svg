@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- 追自己條尾: round-face kitten spinning in place chasing its own tail, expression 大笑 -->
+
+<!-- big swirling tail loop -->
+<path d="M 700 560 C 800 590, 850 690, 810 780 C 780 848, 700 880, 620 862 C 660 850, 690 826, 700 792 C 660 812, 610 806, 580 774 C 556 748, 552 710, 570 680" fill="none" stroke="#262229" stroke-width="42" stroke-linecap="round"></path>
+
+<!-- body, twisted as if turning -->
+<ellipse cx="500" cy="710" rx="165" ry="140" fill="#262229"></ellipse>
+
+<!-- back legs, splayed for spinning balance -->
+<ellipse cx="600" cy="856" rx="40" ry="24" fill="#262229"></ellipse>
+<ellipse cx="440" cy="866" rx="42" ry="24" fill="#262229"></ellipse>
+<ellipse cx="598" cy="860" rx="14" ry="8" fill="#7A7480"></ellipse>
+<ellipse cx="438" cy="870" rx="14" ry="8" fill="#7A7480"></ellipse>
+
+<!-- head, ROUND, turned back sharply toward the tail -->
+<ellipse cx="622" cy="560" rx="160" ry="152" fill="#262229"></ellipse>
+
+<!-- ears -->
+<path d="M 550 462 C 528 396, 504 344, 486 310 C 534 328, 584 366, 614 416 C 598 434, 576 452, 550 462 Z" fill="#262229"></path>
+<path d="M 694 454 C 704 388, 710 330, 706 292 C 670 322, 640 362, 628 412 C 646 428, 668 444, 694 454 Z" fill="#262229"></path>
+<path d="M 544 430 C 528 386, 512 346, 496 318 C 526 334, 554 364, 572 398 C 564 410, 554 422, 544 430 Z" fill="#3A3440"></path>
+<path d="M 686 420 C 692 378, 696 340, 694 310 C 672 330, 654 358, 644 392 C 656 402, 672 414, 686 420 Z" fill="#3A3440"></path>
+
+<!-- eyes, dizzy delighted -->
+<path d="M 552 548 C 550 522, 572 504, 596 508 C 620 512, 634 534, 628 556 C 622 578, 598 590, 578 585 C 562 581, 552 566, 552 548 Z" fill="#C99A3E"></path>
+<path d="M 692 546 C 694 520, 672 503, 648 507 C 624 511, 610 533, 616 555 C 622 577, 646 589, 666 584 C 682 580, 692 565, 692 546 Z" fill="#C99A3E"></path>
+<ellipse cx="588" cy="548" rx="8" ry="11" fill="#1A1720"></ellipse>
+<ellipse cx="656" cy="546" rx="8" ry="11" fill="#1A1720"></ellipse>
+
+<!-- eyebrows, playful -->
+<path d="M 544 490 Q 576 468, 612 486" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none"></path>
+<path d="M 634 486 Q 666 468, 702 490" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" fill="none"></path>
+
+<!-- nose -->
+<path d="M 606 588 L 632 590 L 619 606 Z" fill="#1A1720"></path>
+
+<!-- mouth, laughing -->
+<path d="M 619 606 Q 619 618, 606 624" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 619 606 Q 619 618, 632 624" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers -->
+<path d="M 540 580 Q 468 570, 400 568" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 544 596 Q 472 600, 404 610" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+<path d="M 708 578 Q 776 566, 840 556" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 704 594 Q 770 600, 832 610" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+</svg>

@@ -13,15 +13,15 @@ sections:
   - elementId: ''
     colors: colors-f
     backgroundSize: full
-    title: 「咖啡還是茶？對、錯還是中性？我都會細心考慮。」
+    title: "冇時間搵客？我用8年經驗同AI，幫你嘅生意搵返啲客，同埋慳返你嘅時間"
     subtitle: >-
-      Hi，我是個有點奇怪的營銷人。
+      我叫 Key，一個人做marketing做咗8年，而家用AI令自己快過一支team。
 
-      白天，我幫品牌寫文案、分析數據、設計策略；晚上，我會靜心冥想，用靈性直覺感受品牌背後的真實能量。週末？你會在羽球場找到我，大汗淋漓地追著小白球跑。
 
-      朋友說我很細心（有時候細心到有點煩），但我最自豪的是能從「對、錯、中性」三個角度看問題。這讓我在營銷這個充滿灰色地帶的世界裡，總能找到平衡點。
+      你嘅對手可能已經用緊AI搶緊你嘅客 —— 我幫你手起刀落追返嚟，甚至反超前。
 
-      我相信最好的營銷策略，就像打羽毛球一樣：需要技巧，更需要直覺。
+
+      唔使請一隊人，唔使自己捱晒啲時間做marketing。我有兩套方法，睇你而家喺邊個階段。
     styles:
       self:
         height: auto
@@ -39,59 +39,35 @@ sections:
         flexDirection: row-reverse
         textAlign: left
     type: HeroSection
-    actions: []
-  - type: RandomFactSection
-    elementId: random-fact
+    actions:
+      - type: Button
+        label: "睇下邊套岩我 👇"
+        url: "/zh#tiers"
+        style: secondary
+  - type: TextSection
+    elementId: proof
     colors: colors-f
+    subtitle: "點解要信我"
+    text: |
+      過去8年，我幫唔同企業做到**4個月內332%營收增長** —— 靠嘅係細心市場分析同嚴謹執行，唔係好彩。
+
+      *(呢度會放客戶感言 / 成效影片)*
+
+      依家我將呢套經驗配AI，幫你唔使成日諗「點樣搵多啲客」，亦唔使自己捱時間做，就搞得掂。
     styles:
       self:
         height: auto
         width: wide
         padding:
-          - pt-12
-          - pb-12
-          - pl-4
-          - pr-4
-        textAlign: center
-  - type: ServicesSection
-    elementId: services
-    colors: colors-f
-    title: "我提供的服務"
-    subtitle: "選擇最共鳴的道路"
-    services:
-      - title: "市場營銷 & 網站建設"
-        icon: "💼"
-        description: "透過策略性的市場營銷方案和專業網站開發，全面提升你的網上形象，達成業務目標。"
-        features:
-          - "網站設計與開發"
-          - "數字營銷策略"
-          - "搜索引擎優化 (SEO)"
-          - "社交媒體管理"
-          - "品牌發展"
-        phone: "85296783395"
-      - title: "阿卡莎靈性對話 & 能量療愈"
-        icon: "✨"
-        description: "透過阿卡莎記錄靈性對話和能量療愈，獲得深層靈性洞察和整體身心靈復原。"
-        features:
-          - "阿卡莎記錄靈性對話"
-          - "能量療愈課程"
-          - "靈性指引"
-          - "脈輪平衡"
-          - "個人蛻變"
-        phone: "85296783395"
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding:
-          - pt-24
-          - pb-24
+          - pt-16
+          - pb-16
           - pl-4
           - pr-4
         textAlign: center
   - colors: colors-f
     type: FeaturedProjectsSection
-    elementId: ''
+    elementId: case-studies
+    subtitle: "實際成效 —— 唔講得個「like」字"
     actions:
       - type: Link
         label: See all projects
@@ -102,9 +78,81 @@ sections:
     showReadMoreLink: true
     variant: variant-b
     projects:
-      - content/pages/projects/project-two.md
-      - content/pages/projects/project-three.md
-      - content/pages/projects/project-one.md
+      - content/pages/zh/projects/project-two.md
+      - content/pages/zh/projects/project-three.md
+      - content/pages/zh/projects/project-one.md
+    styles:
+      self:
+        height: auto
+        width: wide
+        padding:
+          - pt-16
+          - pb-16
+          - pl-4
+          - pr-4
+        textAlign: left
+  - type: FeaturedItemsSection
+    elementId: tiers
+    colors: colors-f
+    subtitle: "兩種同我合作嘅方式"
+    items:
+      - type: FeaturedItem
+        title: "AI Launch System"
+        subtitle: "我幫你裝好套會搵到客嘅系統，之後你自己揸"
+        text: |
+          我幫你設置好 AI 驅動嘅營銷系統、儀表板同活動，再教識你點用 —— 之後唔使長期靠我，慳返你自己捱時間做嘅工夫。
+
+          **$9,980** 一次性設置費 + **$980/月** 維持系統運作、工具授權同社群支援 *(可隨時取消月費，系統仍然係你嘅)*
+
+          ✅ AI輔助內容 & 廣告文案工作流程
+
+          ✅ SEO 及廣告活動設置
+
+          ✅ 為你業務配置好嘅營銷自動化工具
+
+          ✅ 文件同教學片，唔怕唔識用
+
+          ✅ 送你入專屬社群，持續有貼士同支援
+        actions:
+          - type: Button
+            label: "即刻裝返套 AI Launch System 🚀"
+            url: "https://wa.me/85296783395?text=你好Key%EF%BC%81我想了解下AI%20Launch%20System。"
+            style: primary
+        styles:
+          self:
+            textAlign: left
+      - type: FeaturedItem
+        title: "AI Growth Partner"
+        subtitle: "我幫你把緊方向，你唔使一個人捱"
+        text: |
+          我做你嘅外部Marketing Director —— 定期通話 + WhatsApp直接跟進，同你一齊度策略、諗計劃、拆解卡住嘅問題。
+
+          唔理你有冇team，我都幫你搵AI工具同自動化，頂替一個team嘅工作量。
+
+          **$5,000/月**
+
+          ✅ 包含「AI Launch System」所有內容
+
+          ✅ 每月Scheduled Call，一齊度策略同track進度
+
+          ✅ WhatsApp直接聯絡我，隨時brainstorm/請教
+
+          ✅ 有team就教你team點做啱，冇team就用AI幫你頂執行
+
+          ✅ 以收益為本嘅報告，唔講得個「like」字
+
+          我每個月只接3-5位Growth Partner客戶，唔係擺姿態，係想真係跟得住每一個。
+        actions:
+          - type: Button
+            label: "申請做 AI Growth Partner 🚀"
+            url: "https://wa.me/85296783395?text=你好Key%EF%BC%81我想申請做AI%20Growth%20Partner客戶。"
+            style: primary
+        styles:
+          self:
+            textAlign: left
+    columns: 2
+    spacingX: 24
+    spacingY: 24
     styles:
       self:
         height: auto
@@ -114,8 +162,58 @@ sections:
           - pb-24
           - pl-4
           - pr-4
+        textAlign: center
+  - type: TextSection
+    elementId: faq
+    colors: colors-f
+    subtitle: "仲有啲疑問？"
+    text: |
+      **我完全唔識用AI/marketing，跟得上咩？**
+
+      唔使識。AI Launch System會連埋文件同教學片一齊比你，跟住做就得。
+
+      **幾耐先見到效果？**
+
+      睇返你嘅起點，一般4-8星期會開始見到流量/查詢有變化。
+
+      **AI做嘢會唔會冇人情味，好假？**
+
+      AI淨係幫手加快重複性工作（例如寫初稿、跑數據），策略同把關全部係我親自睇，唔會交由AI亂噏。
+
+      **同請一個全職marketing相比，邊樣抵？**
+
+      全職請人月薪隨時二萬幾起跳，AI Growth Partner等於用零頭成本，攞到策略同執行力。
+    styles:
+      self:
+        height: auto
+        width: wide
+        padding:
+          - pt-16
+          - pb-16
+          - pl-4
+          - pr-4
         textAlign: left
-    subtitle: Projects
+  - type: CtaSection
+    elementId: lead-magnet
+    colors: colors-f
+    title: "免費：5個AI工具幫你慳返一半marketing時間"
+    text: |
+      唔使留低資料，撳一下即刻睇。
+    actions:
+      - type: Button
+        label: "免費睇 📖"
+        url: "/zh/ai-tools"
+        style: primary
+    styles:
+      self:
+        height: auto
+        width: narrow
+        padding:
+          - pt-16
+          - pb-16
+          - pl-4
+          - pr-4
+        textAlign: center
   - type: FeaturedPostsSection
     elementId: ''
     colors: colors-f
@@ -145,31 +243,42 @@ sections:
   - type: ContactSection
     colors: colors-f
     backgroundSize: full
-    title: "靈性感知 + 專業細心~ 助你營銷睇得透，做得自在，揾我傾吓啦...\U0001F4AC"
+    title: "AI 驅動 + 8年經驗，想營銷做得自在，揾我傾吓啦... 💬"
     form:
       type: FormBlock
       elementId: sign-up-form
+      whatsappPhone: "85296783395"
+      whatsappGreeting: "你好Key！我想了解下你嘅marketing服務。"
       fields:
         - name: firstName
           label: 你的名字
           hideLabel: true
-          placeholder: First Name
+          placeholder: 你的名字
           isRequired: true
           width: 1/2
           type: TextFormControl
-        - name: Whatsapp 電話
+        - name: whatsapp
           label: Whatsapp 電話
           hideLabel: true
           placeholder: Whatsapp 電話
           isRequired: true
           width: 1/2
-          type: EmailFormControl
-        - name: updatesConsent
-          label: 我想收到每月最新分享文章
+          type: TextFormControl
+        - name: interestedTier
+          label: 想了解邊個方案
+          hideLabel: true
+          placeholder: 想了解邊個方案
           isRequired: false
           width: full
-          type: CheckboxFormControl
-      submitLabel: "提交\U0001F680"
+          type: TextFormControl
+        - name: message
+          label: 訊息
+          hideLabel: true
+          placeholder: 想講多少少？（選填）
+          isRequired: false
+          width: full
+          type: TextareaFormControl
+      submitLabel: "提交🚀"
       styles:
         self:
           textAlign: center

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- 探索: round-face kitten walking, side profile facing right, curious, expression 呆萌 -->
+
+<!-- far legs (mid-stride, behind) -->
+<path d="M 660 730 L 650 900" fill="none" stroke="#3A3440" stroke-width="34" stroke-linecap="round"></path>
+<path d="M 440 735 L 470 900" fill="none" stroke="#3A3440" stroke-width="34" stroke-linecap="round"></path>
+<ellipse cx="649" cy="906" rx="17" ry="10" fill="#7A7480"></ellipse>
+<ellipse cx="472" cy="906" rx="17" ry="10" fill="#7A7480"></ellipse>
+
+<!-- tail, curling up, curious -->
+<path d="M 372 660 C 300 630, 258 560, 280 494 C 296 448, 340 424, 374 438 C 398 448, 402 476, 384 492 C 370 504, 350 500, 346 484" fill="none" stroke="#262229" stroke-width="42" stroke-linecap="round"></path>
+
+<!-- body, simple horizontal oval -->
+<ellipse cx="540" cy="680" rx="190" ry="112" fill="#262229"></ellipse>
+
+<!-- near legs -->
+<path d="M 610 760 L 640 910" fill="none" stroke="#262229" stroke-width="38" stroke-linecap="round"></path>
+<path d="M 400 758 L 372 908" fill="none" stroke="#262229" stroke-width="38" stroke-linecap="round"></path>
+<ellipse cx="640" cy="916" rx="18" ry="11" fill="#7A7480"></ellipse>
+<ellipse cx="371" cy="914" rx="18" ry="11" fill="#7A7480"></ellipse>
+
+<!-- neck/shoulder patch -->
+<ellipse cx="700" cy="600" rx="94" ry="94" fill="#262229"></ellipse>
+
+<!-- head, ROUND base -->
+<ellipse cx="758" cy="540" rx="150" ry="142" fill="#262229"></ellipse>
+<!-- small round muzzle bump, not a sharp taper -->
+<ellipse cx="884" cy="560" rx="54" ry="46" fill="#262229"></ellipse>
+
+<!-- ears, floppy -->
+<path d="M 670 452 C 646 384, 620 330, 598 296 C 648 314, 700 352, 732 402 C 714 420, 692 438, 670 452 Z" fill="#262229"></path>
+<path d="M 790 440 C 802 368, 810 310, 806 270 C 768 300, 736 344, 722 396 C 744 414, 767 428, 790 440 Z" fill="#262229"></path>
+<path d="M 664 418 C 646 368, 628 328, 612 300 C 646 316, 678 348, 700 386 C 688 397, 676 408, 664 418 Z" fill="#3A3440"></path>
+<path d="M 782 406 C 790 356, 796 316, 794 284 C 768 306, 746 338, 736 376 C 751 386, 767 396, 782 406 Z" fill="#3A3440"></path>
+
+<!-- eye, curious wide -->
+<path d="M 736 508 C 732 484, 756 466, 780 472 C 804 478, 816 502, 806 522 C 796 542, 770 550, 750 540 C 736 532, 738 518, 736 508 Z" fill="#C99A3E"></path>
+<ellipse cx="776" cy="504" rx="9" ry="13" fill="#1A1720"></ellipse>
+
+<!-- eyebrow -->
+<path d="M 728 456 Q 756 438, 784 452" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none"></path>
+
+<!-- nose -->
+<path d="M 918 552 L 936 564 L 914 578 Z" fill="#1A1720"></path>
+
+<!-- mouth -->
+<path d="M 914 578 Q 906 590, 890 590" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers -->
+<path d="M 878 558 Q 946 548, 1008 534" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 878 574 Q 944 582, 1004 596" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+</svg>

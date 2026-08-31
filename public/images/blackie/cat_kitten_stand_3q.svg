@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- kitten standing, 3/4 turn, ROUND baby face (body turned slightly right, head turned back toward viewer) -->
+
+<!-- tail, curling up behind -->
+<path d="M 680 720 C 760 680, 806 604, 792 530 C 784 486, 752 458, 718 468 C 694 475, 684 500, 694 520 C 702 536, 722 542, 734 528" fill="none" stroke="#262229" stroke-width="42" stroke-linecap="round"></path>
+
+<!-- far back leg, half-hidden -->
+<ellipse cx="640" cy="880" rx="46" ry="86" fill="#3A3440"></ellipse>
+<!-- near back leg -->
+<ellipse cx="420" cy="884" rx="52" ry="90" fill="#262229"></ellipse>
+
+<!-- body, turned so right side is narrower (3/4 view) -->
+<path d="M 520 556 C 616 552, 690 606, 704 684 C 714 736, 702 788, 664 820 C 692 792, 698 750, 690 718 C 682 772, 646 806, 588 820 C 540 830, 470 830, 424 818 C 372 804, 338 772, 330 718 C 322 750, 328 792, 358 820 C 322 790, 306 738, 316 686 C 328 606, 424 560, 520 556 Z" fill="#262229"></path>
+
+<!-- near front leg -->
+<ellipse cx="460" cy="920" rx="34" ry="70" fill="#262229"></ellipse>
+<ellipse cx="460" cy="972" rx="34" ry="16" fill="#262229"></ellipse>
+<ellipse cx="458" cy="976" rx="12" ry="7" fill="#7A7480"></ellipse>
+<!-- far front leg, smaller/partly behind -->
+<ellipse cx="586" cy="912" rx="28" ry="62" fill="#3A3440"></ellipse>
+<ellipse cx="586" cy="958" rx="28" ry="14" fill="#3A3440"></ellipse>
+
+<!-- ears, floppy, head turned back toward viewer -->
+<path d="M 402 380 C 356 316, 320 260, 306 220 C 356 234, 410 270, 448 320 C 434 342, 418 362, 402 380 Z" fill="#262229"></path>
+<path d="M 668 372 C 712 306, 744 254, 754 214 C 706 228, 656 264, 622 314 C 636 335, 652 355, 668 372 Z" fill="#262229"></path>
+<path d="M 398 350 C 372 314, 352 282, 340 250 C 368 262, 396 288, 416 318 C 409 330, 401 341, 398 350 Z" fill="#3A3440"></path>
+<path d="M 674 338 C 694 306, 710 276, 718 246 C 694 258, 670 282, 654 310 C 660 320, 668 330, 674 338 Z" fill="#3A3440"></path>
+
+<!-- head, ROUND baby face, turned slightly -->
+<ellipse cx="530" cy="490" rx="176" ry="166" fill="#262229"></ellipse>
+
+<!-- eyes, both visible (head turned back to camera) -->
+<path d="M 436 488 C 433 454, 464 428, 498 431 C 532 434, 554 464, 548 496 C 542 526, 508 546, 476 542 C 448 538, 438 520, 436 488 Z" fill="#C99A3E"></path>
+<path d="M 620 486 C 622 452, 590 427, 556 430 C 522 433, 500 462, 506 494 C 512 524, 546 544, 578 540 C 606 536, 618 518, 620 486 Z" fill="#C99A3E"></path>
+<ellipse cx="476" cy="488" rx="10" ry="15" fill="#1A1720"></ellipse>
+<ellipse cx="582" cy="486" rx="9" ry="14" fill="#1A1720"></ellipse>
+
+<!-- eyebrows -->
+<path d="M 422 418 Q 464 392, 512 414" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" fill="none"></path>
+<path d="M 538 420 Q 578 404, 620 426" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" fill="none"></path>
+
+<!-- nose -->
+<path d="M 514 538 L 542 540 L 529 558" fill="#1A1720"></path>
+
+<!-- mouth -->
+<path d="M 529 558 Q 527 570, 512 573" stroke="#1A1720" stroke-width="5" stroke-linecap="round" fill="none"></path>
+<path d="M 529 558 Q 531 567, 544 570" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers -->
+<path d="M 434 542 Q 342 530, 254 516" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" fill="none"></path>
+<path d="M 434 560 Q 344 563, 260 574" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 622 540 Q 680 528, 732 516" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" fill="none"></path>
+<path d="M 622 561 Q 680 567, 730 578" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+</svg>

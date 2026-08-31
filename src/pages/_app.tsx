@@ -2,6 +2,7 @@ import { generateGlobalCssVariables } from '@/utils/theme-style-utils';
 import { useEffect, useState } from 'react';
 import type { AppProps } from 'next/app';
 import TaipoPoppup from '@/components/sections/TaipoPoppup';
+import Blackie from '@/components/Blackie';
 import '../css/main.css';
 
 import type { ThemeStyle } from '@/types';
@@ -34,6 +35,7 @@ export default function MyApp({ Component, pageProps }: AppProps<GlobalPageProps
             `}</style>
             {isMounted ? <Component {...pageProps} /> : null}
             {isMounted ? <TaipoPoppup /> : null}
+            {isMounted ? <Blackie /> : null}
         </>
     );
 }

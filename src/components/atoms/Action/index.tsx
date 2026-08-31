@@ -27,14 +27,33 @@ export default function Action(props) {
         if (style === 'secondary') {
             baseClasses.push('rounded-full');
         }
-        baseClasses.push('bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white border-2 border-transparent hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/40 hover:shadow-xl hover:shadow-purple-600/50 hover:-translate-y-1');
+        baseClasses.push('text-white border-2 border-transparent shadow-lg hover:-translate-y-1 hover:shadow-xl');
     } else {
         baseClasses.push('uppercase text-white hover:text-purple-300 border-b-2 border-transparent hover:border-purple-400');
     }
 
     return (
         <Annotated content={props}>
-            <Link href={url} aria-label={altText} id={elementId || null} className={classNames(baseClasses, className)}>
+            <Link
+                href={url}
+                aria-label={altText}
+                id={elementId || null}
+                className={classNames(baseClasses, className)}
+                style={
+                    type === 'Button'
+                        ? {
+                              backgroundColor: 'var(--theme-secondary)',
+                              color: 'var(--theme-on-secondary)'
+                          }
+                        : undefined
+                }
+                onMouseEnter={(e) => {
+                    if (type === 'Button') e.currentTarget.style.backgroundColor = 'var(--theme-primary)';
+                }}
+                onMouseLeave={(e) => {
+                    if (type === 'Button') e.currentTarget.style.backgroundColor = 'var(--theme-secondary)';
+                }}
+            >
                 {showIcon && IconComponent && iconPosition === 'left' && (
                     <IconComponent className="fill-current h-icon w-icon" />
                 )}

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- 跳起接嘢: round-face kitten leaping with all four paws off the ground, expression 大笑 -->
+
+<!-- tail, streaming behind mid-air -->
+<path d="M 360 700 C 280 690, 220 650, 200 592 C 188 554, 204 520, 236 514" fill="none" stroke="#262229" stroke-width="40" stroke-linecap="round"></path>
+
+<!-- back legs, tucked/extended behind -->
+<path d="M 420 760 C 380 800, 350 840, 336 878" fill="none" stroke="#262229" stroke-width="38" stroke-linecap="round"></path>
+<path d="M 470 780 C 440 816, 418 850, 408 882" fill="none" stroke="#262229" stroke-width="36" stroke-linecap="round"></path>
+<ellipse cx="330" cy="890" rx="17" ry="11" fill="#7A7480"></ellipse>
+<ellipse cx="403" cy="892" rx="16" ry="10" fill="#7A7480"></ellipse>
+
+<!-- body, stretched mid-air -->
+<ellipse cx="540" cy="690" rx="170" ry="100" fill="#262229"></ellipse>
+
+<!-- front paws reaching up -->
+<path d="M 660 630 C 710 570, 750 510, 780 450" fill="none" stroke="#262229" stroke-width="42" stroke-linecap="round"></path>
+<path d="M 700 660 C 750 610, 792 558, 826 508" fill="none" stroke="#262229" stroke-width="38" stroke-linecap="round"></path>
+<ellipse cx="792" cy="436" rx="19" ry="13" fill="#7A7480"></ellipse>
+<ellipse cx="838" cy="496" rx="17" ry="12" fill="#7A7480"></ellipse>
+
+<!-- head, ROUND, thrown back excitedly -->
+<ellipse cx="632" cy="500" rx="172" ry="164" fill="#262229"></ellipse>
+
+<!-- ears -->
+<path d="M 548 396 C 522 328, 496 274, 476 240 C 528 258, 582 298, 616 352 C 596 370, 572 388, 548 396 Z" fill="#262229"></path>
+<path d="M 706 388 C 720 316, 726 258, 720 220 C 682 250, 648 292, 634 344 C 656 360, 680 376, 706 388 Z" fill="#262229"></path>
+<path d="M 542 362 C 524 312, 504 272, 486 244 C 520 260, 550 292, 570 328 C 560 340, 550 351, 542 362 Z" fill="#3A3440"></path>
+<path d="M 698 354 C 704 306, 708 266, 704 234 C 680 256, 660 286, 650 322 C 664 332, 680 344, 698 354 Z" fill="#3A3440"></path>
+
+<!-- eyes, delighted -->
+<path d="M 558 486 C 556 458, 580 440, 606 443 C 632 446, 648 470, 642 492 C 636 514, 610 528, 588 523 C 570 519, 558 504, 558 486 Z" fill="#C99A3E"></path>
+<path d="M 724 484 C 726 456, 702 439, 676 442 C 650 445, 634 469, 640 491 C 646 513, 672 527, 694 522 C 712 518, 724 503, 724 484 Z" fill="#C99A3E"></path>
+<ellipse cx="595" cy="486" rx="9" ry="12" fill="#1A1720"></ellipse>
+<ellipse cx="685" cy="484" rx="9" ry="12" fill="#1A1720"></ellipse>
+
+<!-- eyebrows, excited -->
+<path d="M 546 426 Q 582 402, 622 420" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" fill="none"></path>
+<path d="M 638 420 Q 674 402, 712 424" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" fill="none"></path>
+
+<!-- nose -->
+<path d="M 610 530 L 638 532 L 624 550 Z" fill="#1A1720"></path>
+
+<!-- mouth, wide open laugh -->
+<path d="M 624 550 Q 624 564, 610 570" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 624 550 Q 624 564, 638 570" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers, streaming back -->
+<path d="M 530 528 Q 448 508, 372 486" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 534 544 Q 450 538, 372 534" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+<path d="M 710 528 Q 788 512, 860 494" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 706 544 Q 784 538, 856 534" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+</svg>
