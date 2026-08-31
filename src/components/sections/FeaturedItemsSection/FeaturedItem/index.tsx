@@ -15,7 +15,10 @@ export default function FeaturedItem(props) {
         <Annotated content={props}>
             <article
                 id={elementId || null}
-                className={classNames('overflow-hidden', mapStyles(otherSelfStyles))}
+                className={classNames(
+                    'overflow-hidden rounded-2xl border border-current/15 bg-black/5 p-8 shadow-lg backdrop-blur-sm transition-transform hover:-translate-y-1 hover:shadow-xl',
+                    mapStyles(otherSelfStyles)
+                )}
                 style={{
                     borderWidth: borderWidth ? `${borderWidth}px` : undefined
                 }}

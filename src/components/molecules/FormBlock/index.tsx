@@ -16,6 +16,9 @@ export default function FormBlock(props) {
     function handleSubmit(event) {
         event.preventDefault();
 
+        // let Blackie do a happy dance when someone reaches out
+        window.dispatchEvent(new Event('blackie:celebrate'));
+
         if (!formRef.current) return;
         const data = new FormData(formRef.current);
         const values = Object.fromEntries(data.entries());
@@ -24,10 +27,12 @@ export default function FormBlock(props) {
             // Build a human-readable prefilled WhatsApp message from form data
             const greeting = props.whatsappGreeting ?? "Hi! I'd like to get in touch.";
             const lines: string[] = [greeting, ''];
-            if (values.firstName) lines.push(`Name: ${values.firstName}`);
-            if (values.company)   lines.push(`Company: ${values.company}`);
-            if (values.email)     lines.push(`Email: ${values.email}`);
-            if (values.message)   lines.push(`\nMessage:\n${values.message}`);
+            if (values.firstName)      lines.push(`Name: ${values.firstName}`);
+            if (values.company)        lines.push(`Company: ${values.company}`);
+            if (values.email)          lines.push(`Email: ${values.email}`);
+            if (values.whatsapp)       lines.push(`WhatsApp: ${values.whatsapp}`);
+            if (values.interestedTier) lines.push(`Interested in: ${values.interestedTier}`);
+            if (values.message)        lines.push(`\nMessage:\n${values.message}`);
 
             const encoded = encodeURIComponent(lines.join('\n'));
             window.open(`https://wa.me/${whatsappPhone}?text=${encoded}`, '_blank', 'noopener,noreferrer');

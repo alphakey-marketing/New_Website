@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- kitten, sit front: ROUND baby face (not pointed), floppy sideways ears, chubby round body, short-ish proportions, big innocent round eyes. teen/adult stages sharpen into the pointed face; kitten stays round. -->
+
+<!-- tail, curling around from behind to front-right -->
+<path d="M 702 862 C 806 838, 862 772, 848 686 C 841 634, 812 588, 762 597 C 728 603, 712 638, 726 663 C 736 682, 762 692, 780 674 C 793 660, 784 643, 770 641" fill="none" stroke="#262229" stroke-width="45" stroke-linecap="round"></path>
+
+<!-- ears, floppy to the sides, small on the round head -->
+<path d="M 372 396 C 322 338, 284 288, 270 250 C 320 262, 376 296, 414 342 C 402 362, 388 380, 372 396 Z" fill="#262229"></path>
+<path d="M 656 392 C 704 334, 740 284, 752 246 C 704 260, 650 294, 614 340 C 626 360, 640 378, 656 392 Z" fill="#262229"></path>
+<path d="M 368 366 C 344 328, 326 296, 316 264 C 344 278, 370 302, 390 330 C 383 342, 375 354, 368 366 Z" fill="#3A3440"></path>
+<path d="M 660 362 C 682 326, 698 294, 706 262 C 680 274, 656 298, 638 326 C 645 338, 652 350, 660 362 Z" fill="#3A3440"></path>
+
+<!-- body, chubby kitten sit -->
+<path d="M 512 610 C 638 613, 733 720, 748 818 C 758 894, 691 958, 589 969 C 549 973, 518 972, 480 975 C 452 977, 424 971, 398 962 C 340 943, 255 882, 270 803 C 278 760, 305 725, 340 694 C 378 660, 430 612, 512 610 Z" fill="#262229"></path>
+
+<!-- front paws -->
+<ellipse cx="426" cy="960" rx="49" ry="27" fill="#262229"></ellipse>
+<ellipse cx="564" cy="965" rx="42" ry="32" fill="#262229"></ellipse>
+<ellipse cx="424" cy="963" rx="14" ry="8" fill="#7A7480"></ellipse>
+<ellipse cx="566" cy="970" rx="18" ry="10" fill="#7A7480"></ellipse>
+
+<!-- head, ROUND baby face, no pointed jaw taper -->
+<ellipse cx="512" cy="470" rx="182" ry="172" fill="#262229"></ellipse>
+
+<!-- eyes, big and round, spaced further apart, still asymmetric sizes for a hand-drawn touch -->
+<path d="M 398 468 C 395 434, 426 408, 460 411 C 494 414, 518 444, 512 476 C 506 506, 470 526, 440 522 C 414 518, 400 500, 398 468 Z" fill="#C99A3E"></path>
+<path d="M 630 466 C 632 432, 600 407, 566 410 C 532 413, 509 442, 516 474 C 523 504, 558 524, 588 520 C 614 516, 628 498, 630 466 Z" fill="#C99A3E"></path>
+<ellipse cx="438" cy="468" rx="11" ry="16" fill="#1A1720"></ellipse>
+<ellipse cx="586" cy="466" rx="10" ry="15" fill="#1A1720"></ellipse>
+
+<!-- eyebrows, hand-drawn asymmetric -->
+<path d="M 384 400 Q 426 374, 474 396" stroke="#FFFFFF" stroke-width="6.5" stroke-linecap="round" fill="none"></path>
+<path d="M 552 402 Q 592 386, 634 408" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" fill="none"></path>
+
+<!-- nose, black, small on the round face -->
+<path d="M 498 520 L 526 522 L 513 540 Z" fill="#1A1720"></path>
+
+<!-- mouth, uneven curve -->
+<path d="M 513 540 Q 511 552, 496 555" stroke="#1A1720" stroke-width="5" stroke-linecap="round" fill="none"></path>
+<path d="M 513 540 Q 515 549, 528 552" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers, white, uneven lengths and angles -->
+<path d="M 410 524 Q 314 512, 224 498" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" fill="none"></path>
+<path d="M 410 542 Q 316 546, 228 558" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 616 522 Q 712 508, 804 492" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" fill="none"></path>
+<path d="M 616 540 Q 710 546, 800 558" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+</svg>

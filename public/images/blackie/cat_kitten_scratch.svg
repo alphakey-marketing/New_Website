@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- 抓癢: round-face kitten sitting, hind leg raised scratching its neck, expression 悶悶不樂 -->
+
+<!-- tail, wrapped low -->
+<path d="M 700 830 C 780 812, 826 750, 806 682 C 794 640, 758 616, 726 628" fill="none" stroke="#262229" stroke-width="42" stroke-linecap="round"></path>
+
+<!-- far back leg on the ground -->
+<ellipse cx="590" cy="900" rx="42" ry="26" fill="#3A3440"></ellipse>
+
+<!-- body, sitting -->
+<ellipse cx="500" cy="750" rx="150" ry="130" fill="#262229"></ellipse>
+
+<!-- front paw on ground -->
+<ellipse cx="420" cy="878" rx="42" ry="24" fill="#262229"></ellipse>
+<ellipse cx="418" cy="882" rx="14" ry="8" fill="#7A7480"></ellipse>
+
+<!-- raised hind leg -->
+<path d="M 630 800 C 660 720, 660 640, 616 580" fill="none" stroke="#262229" stroke-width="44" stroke-linecap="round"></path>
+<ellipse cx="606" cy="566" rx="20" ry="14" fill="#7A7480"></ellipse>
+
+<!-- head, ROUND, tilted to meet the scratching paw -->
+<ellipse cx="480" cy="500" rx="160" ry="154" fill="#262229"></ellipse>
+
+<!-- ears -->
+<path d="M 396 400 C 358 340, 328 288, 314 250 C 360 264, 412 298, 448 348 C 434 366, 416 384, 396 400 Z" fill="#262229"></path>
+<path d="M 606 392 C 646 332, 674 282, 682 246 C 638 258, 592 292, 562 340 C 576 358, 592 376, 606 392 Z" fill="#262229"></path>
+<path d="M 392 372 C 366 336, 346 306, 334 276 C 364 288, 392 312, 412 340 C 405 351, 398 362, 392 372 Z" fill="#3A3440"></path>
+<path d="M 610 364 C 630 334, 646 306, 654 278 C 630 288, 606 310, 588 336 C 595 346, 602 356, 610 364 Z" fill="#3A3440"></path>
+
+<!-- eyes, half-lidded annoyed -->
+<path d="M 398 540 Q 422 552, 448 542" stroke="#262229" stroke-width="9" stroke-linecap="round" fill="none"></path>
+<path d="M 400 538 Q 422 548, 446 540" stroke="#C99A3E" stroke-width="4" stroke-linecap="round" fill="none"></path>
+<path d="M 512 536 Q 534 548, 558 538" stroke="#262229" stroke-width="8" stroke-linecap="round" fill="none"></path>
+<path d="M 514 534 Q 534 544, 556 536" stroke="#C99A3E" stroke-width="4" stroke-linecap="round" fill="none"></path>
+
+<!-- eyebrows, annoyed slant -->
+<path d="M 390 500 Q 422 510, 452 500" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round" fill="none"></path>
+
+<!-- nose -->
+<path d="M 456 568 L 482 570 L 470 586 Z" fill="#1A1720"></path>
+
+<!-- mouth, downturned -->
+<path d="M 470 586 Q 466 598, 452 596" stroke="#1A1720" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers, drooping -->
+<path d="M 378 572 Q 298 580, 220 596" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 382 588 Q 304 604, 230 626" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+<path d="M 562 568 Q 634 568, 700 574" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+</svg>

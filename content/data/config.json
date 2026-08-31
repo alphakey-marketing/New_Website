@@ -5,9 +5,14 @@
         "type": "Header",
         "headerVariant": "variant-c",
         "isSticky": false,
-        "title": "Personal",
+        "title": "KeyMarketing",
         "isTitleVisible": true,
         "primaryLinks": [
+            {
+                "type": "Link",
+                "label": "Pricing",
+                "url": "/#tiers"
+            },
             {
                 "type": "Link",
                 "label": "About",
@@ -62,7 +67,7 @@
             "address": "Sai Wan, Central and Western District, Hong Kong",
             "addressAltText": "My location"
         },
-        "copyrightText": "Edited with sincerity",
+        "copyrightText": "© KeyMarketing. AI-Powered Marketing.",
         "styles": {
             "self": {
                 "width": "narrow",

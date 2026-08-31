@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<!-- 瞓覺: round-face kitten curled into a ball, tail wrapped around body, eyes closed -->
+
+<!-- tail, wrapped around the curled body -->
+<path d="M 300 780 C 220 760, 180 690, 210 620 C 236 560, 300 528, 370 540 C 420 548, 450 580, 456 610" fill="none" stroke="#262229" stroke-width="42" stroke-linecap="round"></path>
+
+<!-- curled body, clean rounded mass -->
+<path d="M 512 560 C 650 558, 764 634, 774 730 C 782 812, 716 866, 610 872 C 500 878, 400 852, 342 792 C 296 744, 288 664, 336 612 C 384 570, 450 562, 512 560 Z" fill="#262229"></path>
+
+<!-- little ear tips peeking out of the curl -->
+<path d="M 404 592 C 386 558, 374 526, 376 498 C 402 512, 426 536, 440 566 C 428 576, 416 584, 404 592 Z" fill="#262229"></path>
+<path d="M 476 574 C 472 538, 474 504, 484 476 C 502 498, 514 528, 518 560 C 505 566, 490 570, 476 574 Z" fill="#262229"></path>
+<path d="M 400 578 C 388 552, 380 528, 380 506 C 398 518, 414 536, 424 558 C 417 566, 409 572, 400 578 Z" fill="#3A3440"></path>
+<path d="M 482 566 C 480 538, 482 512, 490 490 C 502 508, 510 530, 512 552 C 502 558, 492 562, 482 566 Z" fill="#3A3440"></path>
+
+<!-- muzzle tucked in, ROUND face patch -->
+<ellipse cx="420" cy="636" rx="76" ry="66" fill="#262229"></ellipse>
+
+<!-- closed eyes, gentle downward curves -->
+<path d="M 396 626 Q 410 636, 426 628" stroke="#14121A" stroke-width="4.5" stroke-linecap="round" fill="none"></path>
+<path d="M 442 630 Q 456 640, 470 630" stroke="#14121A" stroke-width="4" stroke-linecap="round" fill="none"></path>
+
+<!-- nose -->
+<path d="M 422 648 L 440 652 L 428 662 Z" fill="#1A1720"></path>
+
+<!-- small content mouth -->
+<path d="M 428 662 Q 432 668, 440 666" stroke="#1A1720" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+
+<!-- whiskers, relaxed, drooping -->
+<path d="M 394 640 Q 338 646, 286 656" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+<path d="M 396 654 Q 342 664, 294 680" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+<path d="M 466 646 Q 510 640, 550 636" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"></path>
+<path d="M 464 658 Q 506 668, 544 680" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" fill="none"></path>
+</svg>

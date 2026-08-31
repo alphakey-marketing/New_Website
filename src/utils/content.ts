@@ -50,7 +50,7 @@ function readContent(file: string): types.ContentObject {
     }
 
     content.__metadata = {
-        id: file,
+        id: file.split(path.sep).join('/'),
         modelName: content.type
     };
 

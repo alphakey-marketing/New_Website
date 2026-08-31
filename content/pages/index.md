@@ -13,18 +13,15 @@ sections:
   - elementId: ''
     colors: colors-f
     backgroundSize: full
-    title: "Coffee or tea? Right, wrong, or neutral? I carefully consider it all."
+    title: "No Time to Find New Customers? I Use 8 Years of Experience + AI to Get You More Clients — and Give You Your Time Back"
     subtitle: >-
-      Hi, I'm a slightly unconventional marketer.
+      I'm Key — I've run marketing solo for 8 years, and now I use AI to move faster than an entire team.
 
 
-      By day, I craft copy, analyze data, and design strategies for brands. By night, I meditate in stillness, using intuition to sense the authentic energy behind each brand. Weekends? You'll find me on the badminton court, chasing that little white shuttlecock with sweat dripping down.
+      Your competitors may already be using AI to steal your customers. I'll help you close that gap fast — and get ahead of it.
 
 
-      Friends say I'm detail-oriented (sometimes annoyingly so), but what I'm most proud of is my ability to view problems from three perspectives: right, wrong, and neutral. This helps me find balance in the gray-area world of marketing.
-
-
-      I believe the best marketing strategy is like playing badminton: it requires technique, but even more so, intuition.
+      No need to hire a team. No need to spend your own hours buried in marketing. I have two ways to work together, depending on where your business is right now.
     styles:
       self:
         height: auto
@@ -42,49 +39,35 @@ sections:
         flexDirection: row-reverse
         textAlign: left
     type: HeroSection
-    actions: []
-  - type: RandomFactSection
-    elementId: random-fact
+    actions:
+      - type: Button
+        label: "See which option fits you 👇"
+        url: "/#tiers"
+        style: secondary
+  - type: TextSection
+    elementId: proof
     colors: colors-f
+    subtitle: "Why listen to me"
+    text: |
+      Over 8 years, I've helped businesses hit up to **332% revenue growth in 4 months** — through careful market analysis and disciplined execution, not luck.
+
+      *(Client testimonial / results video goes here)*
+
+      Now I'm pairing that same experience with AI, so you stop worrying about where your next customer is coming from, without burning your own hours doing it.
     styles:
       self:
         height: auto
         width: wide
         padding:
-          - pt-12
-          - pb-12
-          - pl-4
-          - pr-4
-        textAlign: center
-  - type: ServicesSection
-    elementId: services
-    colors: colors-f
-    title: "Marketing Services"
-    subtitle: "Strategic solutions for business growth"
-    services:
-      - title: "Marketing & Website Building"
-        icon: "💼"
-        description: "Transform your online presence with strategic marketing solutions and professional website development tailored to your business goals."
-        features:
-          - "Website Design & Development"
-          - "Digital Marketing Strategy"
-          - "SEO Optimization"
-          - "Social Media Management"
-          - "Brand Development"
-        phone: "85296783395"
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding:
-          - pt-24
-          - pb-24
+          - pt-16
+          - pb-16
           - pl-4
           - pr-4
         textAlign: center
   - colors: colors-f
     type: FeaturedProjectsSection
-    elementId: ''
+    elementId: case-studies
+    subtitle: "Real Results — Not Vanity Metrics"
     actions:
       - type: Link
         label: See all projects
@@ -103,12 +86,153 @@ sections:
         height: auto
         width: wide
         padding:
+          - pt-16
+          - pb-16
+          - pl-4
+          - pr-4
+        textAlign: left
+  - type: FeaturedItemsSection
+    elementId: tiers
+    colors: colors-f
+    subtitle: "Two Ways to Work With Me"
+    items:
+      - type: FeaturedItem
+        title: "AI Launch System"
+        subtitle: "I set up a system built to bring you customers, you take the wheel"
+        text: |
+          I set up your AI-powered marketing systems, dashboards, and campaigns — then teach you how to run them yourself, so you're not stuck doing it forever.
+
+          **$9,980** one-time setup + **$980/month** to keep the system, tools, and community access running *(cancel the monthly anytime — the system stays yours)*
+
+          ✅ AI-assisted content & ad copy workflows
+
+          ✅ SEO and campaign setup
+
+          ✅ Marketing automation tools configured for your business
+
+          ✅ Docs + walkthroughs so you're never stuck
+
+          ✅ Access to a private community for ongoing tips and support
+        actions:
+          - type: Button
+            label: "Get the AI Launch System 🚀"
+            url: "https://wa.me/85296783395?text=Hi%20Key!%20I'm%20interested%20in%20the%20AI%20Launch%20System."
+            style: primary
+        styles:
+          self:
+            textAlign: left
+      - type: FeaturedItem
+        title: "AI Growth Partner"
+        subtitle: "I steer the strategy, you're never on your own"
+        text: |
+          I act as your outside Marketing Director — scheduled calls plus direct WhatsApp access, so we brainstorm strategy and solve what's stuck together.
+
+          Whether or not you have a team, I'll find the AI tools and automation to cover the work a full marketing team would normally do.
+
+          **$5,000/month**
+
+          ✅ Everything in AI Launch System
+
+          ✅ Monthly scheduled call to set strategy and track progress
+
+          ✅ Direct WhatsApp access to me — brainstorm or ask anytime
+
+          ✅ Hands-on direction for your team, or AI-driven execution if you're solo
+
+          ✅ Revenue-focused reporting, not vanity metrics
+
+          I only take on 3-5 Growth Partner clients at a time — not for show, but because I actually want to stay close to every one of them.
+        actions:
+          - type: Button
+            label: "Apply for AI Growth Partner 🚀"
+            url: "https://wa.me/85296783395?text=Hi%20Key!%20I'm%20interested%20in%20becoming%20an%20AI%20Growth%20Partner%20client."
+            style: primary
+        styles:
+          self:
+            textAlign: left
+    columns: 2
+    spacingX: 24
+    spacingY: 24
+    styles:
+      self:
+        height: auto
+        width: wide
+        padding:
           - pt-24
           - pb-24
           - pl-4
           - pr-4
+        textAlign: center
+  - type: TextSection
+    elementId: faq
+    colors: colors-f
+    subtitle: "Still have questions?"
+    text: |
+      **I don't know anything about AI or marketing — can I keep up?**
+
+      You don't need to. The AI Launch System comes with docs and walkthroughs — just follow along.
+
+      **How soon will I see results?**
+
+      Depends on your starting point, but most clients see traffic/inquiry changes within 4-8 weeks.
+
+      **Won't AI make everything feel fake and impersonal?**
+
+      AI only speeds up repetitive work (drafting, running numbers). Strategy and quality control are always mine — nothing goes out unchecked.
+
+      **How does this compare to hiring a full-time marketer?**
+
+      A full-time hire easily costs $20k+/month. AI Growth Partner gets you strategy and execution power for a fraction of that.
+    styles:
+      self:
+        height: auto
+        width: wide
+        padding:
+          - pt-16
+          - pb-16
+          - pl-4
+          - pr-4
         textAlign: left
-    subtitle: Featured Case Studies
+  - type: ContactSection
+    elementId: lead-magnet
+    colors: colors-f
+    title: "Free: 5 AI Tools to Cut Your Marketing Time in Half"
+    text: |
+      Drop your WhatsApp and I'll personally send you the "AI Marketing Starter Pack" — no charge, no card needed.
+    form:
+      type: FormBlock
+      elementId: lead-magnet-form
+      whatsappPhone: "85296783395"
+      whatsappGreeting: "Hi Key! I'd like the free '5 AI Tools' resource."
+      submitLabel: "Get it free 📥"
+      fields:
+        - name: firstName
+          label: Your Name
+          hideLabel: true
+          placeholder: Your Name
+          isRequired: true
+          width: 1/2
+          type: TextFormControl
+        - name: whatsapp
+          label: WhatsApp Number
+          hideLabel: true
+          placeholder: WhatsApp Number
+          isRequired: true
+          width: 1/2
+          type: TextFormControl
+      styles:
+        self:
+          textAlign: center
+    styles:
+      self:
+        height: auto
+        width: narrow
+        padding:
+          - pt-16
+          - pb-16
+          - pl-4
+          - pr-4
+        textAlign: center
   - type: FeaturedPostsSection
     elementId: ''
     colors: colors-f
@@ -135,59 +259,6 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-  - type: UsefulLinksSection
-    elementId: useful-links
-    colors: colors-f
-    title: "Tools & Projects"
-    subtitle: "Apps and resources I've built — more coming soon"
-    links:
-      - title: "Task Manager"
-        description: "A lightweight task and notes manager I built for day-to-day productivity."
-        url: "/tasks"
-        icon: "✅"
-        tag: "App"
-      - title: "Interactive Story"
-        url: "https://storymvp.replit.app"
-        icon: "📖"
-        tag: "Interactive"
-      - title: "Iron Dunes"
-        url: "https://irondunes.replit.app"
-        icon: "🏜️"
-        tag: "Game"
-      - title: "AttentionOS"
-        url: "https://super-human.replit.app"
-        icon: "🧠"
-        tag: "App"
-      - title: "miniRPG"
-        url: "https://Mini-RPG.replit.app"
-        icon: "⚔️"
-        tag: "Game"
-      - title: "Ninjaworld"
-        url: "https://ninjaworld.replit.app"
-        icon: "🥷"
-        tag: "Game"
-      - title: "Runefall"
-        url: "https://runefall.replit.app"
-        icon: "🪨"
-        tag: "Game"
-      - title: "Flashcard"
-        url: "https://jpflashmind.replit.app"
-        icon: "🃏"
-        tag: "App"
-      - title: "Shadowing Practice"
-        url: "https://umai-jp.replit.app"
-        icon: "🗣️"
-        tag: "App"
-    styles:
-      self:
-        height: auto
-        width: wide
-        padding:
-          - pt-24
-          - pb-24
-          - pl-4
-          - pr-4
-        textAlign: center
   - type: ContactSection
     colors: colors-f
     backgroundSize: full
@@ -205,20 +276,20 @@ sections:
           isRequired: true
           width: 1/2
           type: TextFormControl
-        - name: company
-          label: Company Name
+        - name: whatsapp
+          label: WhatsApp Number
           hideLabel: true
-          placeholder: Company Name
+          placeholder: WhatsApp Number
           isRequired: false
           width: 1/2
           type: TextFormControl
-        - name: email
-          label: Email Address
+        - name: interestedTier
+          label: Which option are you interested in?
           hideLabel: true
-          placeholder: Email Address
-          isRequired: true
+          placeholder: Which option are you interested in?
+          isRequired: false
           width: full
-          type: EmailFormControl
+          type: TextFormControl
         - name: message
           label: Project Details
           hideLabel: true
@@ -226,11 +297,6 @@ sections:
           isRequired: false
           width: full
           type: TextareaFormControl
-        - name: updatesConsent
-          label: I'd like to receive marketing insights and case studies
-          isRequired: false
-          width: full
-          type: CheckboxFormControl
       submitLabel: "Get in Touch 🚀"
       styles:
         self:
