@@ -103,25 +103,18 @@ sections:
         text: |
           I set up your AI-powered marketing systems, dashboards, and campaigns — then teach you how to run them yourself, so you're not stuck doing it forever.
 
-          **$9,980** one-time setup *(or 2 payments of $4,990)* + **$980/month** keeps the system licensed, updated, and refreshed — not just switched on *(cancel the monthly anytime — the system stays yours)*
+          > **$9,980** one-time setup *(or 2 payments of $4,990)* + **$980/month** keeps the system licensed, updated, and refreshed — not just switched on *(cancel the monthly anytime — the system stays yours)*
 
           *(First 5 clients lock in this rate — price reviews after that.)*
 
-          ✅ AI-assisted content & ad copy workflows
-
-          ✅ SEO and campaign setup
-
-          ✅ Marketing automation tools configured for your business
-
-          ✅ Social media & brand guideline doc (voice, tone, visual style)
-
-          ✅ Tool & platform costs covered — nothing separate to license yourself
-
-          ✅ Workflows updated as better AI tools become available
-
-          ✅ Monthly content refresh + automated performance snapshot
-
-          ✅ Docs + walkthroughs, plus a private community, whenever you need them
+          - ✅ AI-assisted content & ad copy workflows
+          - ✅ SEO and campaign setup
+          - ✅ Marketing automation tools configured for your business
+          - ✅ Social media & brand guideline doc (voice, tone, visual style)
+          - ✅ Tool & platform costs covered — nothing separate to license yourself
+          - ✅ Workflows updated as better AI tools become available
+          - ✅ Monthly content refresh + automated performance snapshot
+          - ✅ Docs + walkthroughs, plus a private community, whenever you need them
 
           **Add-on: AI-built website (up to 3 static pages) + setup — $3,000**
         actions:
@@ -140,17 +133,13 @@ sections:
 
           Whether or not you have a team, I'll find the AI tools and automation to cover the work a full marketing team would normally do.
 
-          **$5,000/month** *(vs. $20k+/month for a full-time hire)* — month-to-month, no lock-in, but only 3-5 spots open at a time
+          > **$5,000/month** *(vs. $20k+/month for a full-time hire)* — month-to-month, no lock-in, but only 3-5 spots open at a time
 
-          ✅ **Includes the full AI Launch System — no separate $9,980 setup fee — plus:**
-
-          ✅ Monthly scheduled call to set strategy and track progress
-
-          ✅ Direct WhatsApp access to me — brainstorm or ask anytime
-
-          ✅ Hands-on direction for your team, or AI-driven execution if you're solo
-
-          ✅ Revenue-focused reporting, not vanity metrics
+          - ✅ **Includes the full AI Launch System — no separate $9,980 setup fee — plus:**
+          - ✅ Monthly scheduled call to set strategy and track progress
+          - ✅ Direct WhatsApp access to me — brainstorm or ask anytime
+          - ✅ Hands-on direction for your team, or AI-driven execution if you're solo
+          - ✅ Revenue-focused reporting, not vanity metrics
 
           *(Kept small on purpose — I want to stay close to every client, not spread thin.)*
         actions:
@@ -275,52 +264,18 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-  - type: ContactSection
+  - type: CtaSection
+    elementId: ''
     colors: colors-f
     backgroundSize: full
     title: "Let's transform your marketing strategy together 💬"
-    form:
-      type: FormBlock
-      elementId: sign-up-form
-      whatsappPhone: "85296783395"
-      whatsappGreeting: "Hi! I'd like to get in touch about your marketing services."
-      fields:
-        - name: firstName
-          label: Your Name
-          hideLabel: true
-          placeholder: Your Name
-          isRequired: true
-          width: 1/2
-          type: TextFormControl
-        - name: whatsapp
-          label: WhatsApp Number
-          hideLabel: true
-          placeholder: WhatsApp Number
-          isRequired: false
-          width: 1/2
-          type: TextFormControl
-        - name: interestedTier
-          label: Which option are you interested in?
-          hideLabel: true
-          defaultValue: Which option are you interested in?
-          options:
-            - AI Launch System
-            - AI Growth Partner
-            - Not sure yet
-          isRequired: false
-          width: full
-          type: SelectFormControl
-        - name: message
-          label: Project Details
-          hideLabel: true
-          placeholder: Tell me about your marketing goals and challenges
-          isRequired: false
-          width: full
-          type: TextareaFormControl
-      submitLabel: "Get in Touch 🚀"
-      styles:
-        self:
-          textAlign: center
+    text: |
+      Tell me a bit about your business and which option you're leaning toward — I read every message myself.
+    actions:
+      - type: Button
+        label: "Chat with me on WhatsApp 🚀"
+        url: "https://wa.me/85296783395?text=Hi%20Key!%20I'd%20like%20to%20get%20in%20touch%20about%20your%20marketing%20services."
+        style: primary
     styles:
       self:
         height: auto

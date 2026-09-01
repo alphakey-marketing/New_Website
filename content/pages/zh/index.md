@@ -71,8 +71,8 @@ sections:
     subtitle: "實際成效 —— 唔講得個「like」字"
     actions:
       - type: Link
-        label: See all projects
-        url: /projects
+        label: 睇晒所有項目
+        url: /zh/projects
     showDate: false
     showDescription: true
     showFeaturedImage: true
@@ -103,25 +103,18 @@ sections:
         text: |
           我幫你設置好 AI 驅動嘅營銷系統、儀表板同活動，再教識你點用 —— 之後唔使長期靠我，慳返你自己捱時間做嘅工夫。
 
-          **$9,980** 一次性設置費 *(或分2期，每期$4,990)* + **$980/月** 令個系統持續更新、續牌、有新嘢 —— 唔係交咗貨就算 *(可隨時取消月費，系統仍然係你嘅)*
+          > **$9,980** 一次性設置費 *(或分2期，每期$4,990)* + **$980/月** 令個系統持續更新、續牌、有新嘢 —— 唔係交咗貨就算 *(可隨時取消月費，系統仍然係你嘅)*
 
           *(頭5位客戶可鎖定呢個價，之後會檢討價錢。)*
 
-          ✅ AI輔助內容 & 廣告文案工作流程
-
-          ✅ SEO 及廣告活動設置
-
-          ✅ 為你業務配置好嘅營銷自動化工具
-
-          ✅ 社交媒體 & 品牌指引文件（語調、風格、視覺）
-
-          ✅ 工具同平台費用全包，唔使自己另外課金
-
-          ✅ 有更好嘅AI工具出，就幫你更新套流程
-
-          ✅ 每月content refresh + 自動化成效報告
-
-          ✅ 文件、教學片，仲有專屬社群，隨時搵到
+          - ✅ AI輔助內容 & 廣告文案工作流程
+          - ✅ SEO 及廣告活動設置
+          - ✅ 為你業務配置好嘅營銷自動化工具
+          - ✅ 社交媒體 & 品牌指引文件（語調、風格、視覺）
+          - ✅ 工具同平台費用全包，唔使自己另外課金
+          - ✅ 有更好嘅AI工具出，就幫你更新套流程
+          - ✅ 每月content refresh + 自動化成效報告
+          - ✅ 文件、教學片，仲有專屬社群，隨時搵到
 
           **加購：AI建網站（最多3頁靜態頁）連設置 —— $3,000**
         actions:
@@ -140,17 +133,13 @@ sections:
 
           唔理你有冇team，我都幫你搵AI工具同自動化，頂替一個team嘅工作量。
 
-          **$5,000/月** *(相比全職請人月薪二萬幾起跳)* —— 月費制，冇長約，但每次只開3-5個位
+          > **$5,000/月** *(相比全職請人月薪二萬幾起跳)* —— 月費制，冇長約，但每次只開3-5個位
 
-          ✅ **包含完整「AI Launch System」—— 唔另收$9,980設置費 —— 仲加埋：**
-
-          ✅ 每月Scheduled Call，一齊度策略同track進度
-
-          ✅ WhatsApp直接聯絡我，隨時brainstorm/請教
-
-          ✅ 有team就教你team點做啱，冇team就用AI幫你頂執行
-
-          ✅ 以收益為本嘅報告，唔講得個「like」字
+          - ✅ **包含完整「AI Launch System」—— 唔另收$9,980設置費 —— 仲加埋：**
+          - ✅ 每月Scheduled Call，一齊度策略同track進度
+          - ✅ WhatsApp直接聯絡我，隨時brainstorm/請教
+          - ✅ 有team就教你team點做啱，冇team就用AI幫你頂執行
+          - ✅ 以收益為本嘅報告，唔講得個「like」字
 
           *(刻意開得少 —— 我想真係跟得住每一個客，唔想做到攤薄晒。)*
         actions:
@@ -257,11 +246,11 @@ sections:
     showFeaturedImage: false
     actions:
       - type: Link
-        label: See all posts
-        url: /blog
+        label: 睇晒所有文章
+        url: /zh/blog
     posts:
-      - content/pages/blog/post-five.md
-      - content/pages/blog/post-six.md
+      - content/pages/zh/blog/post-five.md
+      - content/pages/zh/blog/post-six.md
     showDate: true
     showExcerpt: true
     showReadMoreLink: true
@@ -275,52 +264,18 @@ sections:
           - pl-4
           - pr-4
         textAlign: left
-  - type: ContactSection
+  - type: CtaSection
+    elementId: ''
     colors: colors-f
     backgroundSize: full
     title: "AI 驅動 + 8年經驗，想營銷做得自在，揾我傾吓啦... 💬"
-    form:
-      type: FormBlock
-      elementId: sign-up-form
-      whatsappPhone: "85296783395"
-      whatsappGreeting: "你好Key！我想了解下你嘅marketing服務。"
-      fields:
-        - name: firstName
-          label: 你的名字
-          hideLabel: true
-          placeholder: 你的名字
-          isRequired: true
-          width: 1/2
-          type: TextFormControl
-        - name: whatsapp
-          label: Whatsapp 電話
-          hideLabel: true
-          placeholder: Whatsapp 電話
-          isRequired: true
-          width: 1/2
-          type: TextFormControl
-        - name: interestedTier
-          label: 想了解邊個方案
-          hideLabel: true
-          defaultValue: 想了解邊個方案
-          options:
-            - AI Launch System
-            - AI Growth Partner
-            - 未決定
-          isRequired: false
-          width: full
-          type: SelectFormControl
-        - name: message
-          label: 訊息
-          hideLabel: true
-          placeholder: 想講多少少？（選填）
-          isRequired: false
-          width: full
-          type: TextareaFormControl
-      submitLabel: "提交🚀"
-      styles:
-        self:
-          textAlign: center
+    text: |
+      同我講兩句你盤生意嘅情況、想了解邊個方案 —— 每個訊息我都親自睇。
+    actions:
+      - type: Button
+        label: "WhatsApp 我 🚀"
+        url: "https://wa.me/85296783395?text=你好Key%EF%BC%81我想了解下你嘅marketing服務。"
+        style: primary
     styles:
       self:
         height: auto

@@ -22,6 +22,7 @@ export default function Header(props) {
     const isZh = router.asPath?.startsWith('/zh') ?? false;
     
     const translations = {
+        'Pricing': { en: 'Pricing', zh: '服務方案' },
         'About': { en: 'About', zh: '簡介' },
         'Projects': { en: 'Projects', zh: '過往項目' },
         'Blog': { en: 'Blog', zh: '網誌' },
@@ -191,7 +192,17 @@ function MobileMenu(props) {
                         </div>
                     </div>
                     {(primaryLinks.length > 0 || socialLinks.length > 0) && (
-                        <div className="flex flex-col items-center justify-center px-4 py-20 space-y-12 grow">
+                        <div
+                            className="flex flex-col items-center justify-center px-4 py-20 space-y-12 grow"
+                            onClick={(e) => {
+                                // Same-page anchor links (e.g. "/#tiers") don't trigger
+                                // Next.js routeChangeStart, so the menu never auto-closes.
+                                // Close on any link click instead, regardless of route change.
+                                if ((e.target as HTMLElement).closest('a')) {
+                                    setIsMenuOpen(false);
+                                }
+                            }}
+                        >
                             {primaryLinks.length > 0 && (
                                 <ul className="space-y-6">
                                     <ListOfLinks links={primaryLinks} inMobileMenu={true} />

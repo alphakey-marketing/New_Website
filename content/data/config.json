@@ -46,6 +46,12 @@
             },
             {
                 "type": "Link",
+                "label": "Projects",
+                "url": "/projects",
+                "altText": ""
+            },
+            {
+                "type": "Link",
                 "label": "Contact",
                 "url": "mailto:curryfishcake@gmail.com",
                 "altText": ""
@@ -63,9 +69,7 @@
             "phoneNumber": "+85296783395",
             "phoneAltText": "WhatsApp me",
             "email": "curryfishcake@gmail.com",
-            "emailAltText": "Email me",
-            "address": "Sai Wan, Central and Western District, Hong Kong",
-            "addressAltText": "My location"
+            "emailAltText": "Email me"
         },
         "copyrightText": "© KeyMarketing. AI-Powered Marketing.",
         "styles": {

@@ -140,6 +140,63 @@ layer(base);
     }
 }
 
+/* Pricing tier cards (#tiers): give the price its own visual block, and lay
+   the checklist out as a scannable grid instead of one long stacked column. */
+#tiers .prose blockquote {
+    margin: 1.5rem 0 0;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid currentColor;
+    border-radius: 0 0.5rem 0.5rem 0;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    font-style: normal;
+    font-size: 1.25em;
+    line-height: 1.45;
+}
+#tiers .prose blockquote p {
+    margin: 0;
+}
+#tiers .prose blockquote + p {
+    margin-top: 0.5rem;
+    font-size: 0.9em;
+    opacity: 0.75;
+}
+#tiers .prose ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 0.65rem 1.5rem;
+}
+#tiers .prose ul li {
+    margin: 0;
+    padding-left: 0;
+}
+@media (min-width: 640px) {
+    #tiers .prose ul {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+#tiers .prose ul + p {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+    font-size: 0.95em;
+}
+
+/* FAQ (#faq): turn bold "question" lines into distinct card-like blocks
+   instead of one continuous run of paragraphs. */
+#faq .prose p:has(> strong:only-child) {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+    font-size: 1.1em;
+}
+#faq .prose p:first-of-type:has(> strong:only-child) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
 @utility bottom-shadow-* {
     box-shadow: 0 calc(--value(integer) * 1px) 0 0 currentColor;
 }
