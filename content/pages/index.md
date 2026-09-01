@@ -103,7 +103,7 @@ sections:
         text: |
           I set up your AI-powered marketing systems, dashboards, and campaigns — then teach you how to run them yourself, so you're not stuck doing it forever.
 
-          > **$9,980** one-time setup *(or 2 payments of $4,990)* + **$980/month** keeps the system licensed, updated, and refreshed — not just switched on *(cancel the monthly anytime — the system stays yours)*
+          > **$4,980** one-time setup + **$980/month** keeps the system licensed, updated, and refreshed — not just switched on *(cancel the monthly anytime — the system stays yours)*
 
           *(First 5 clients lock in this rate — price reviews after that.)*
 
@@ -135,7 +135,7 @@ sections:
 
           > **$5,000/month** *(vs. $20k+/month for a full-time hire)* — month-to-month, no lock-in, but only 3-5 spots open at a time
 
-          - ✅ **Includes the full AI Launch System — no separate $9,980 setup fee — plus:**
+          - ✅ **Includes the full AI Launch System — setup fee waived after your first 2 months — plus:**
           - ✅ Monthly scheduled call to set strategy and track progress
           - ✅ Direct WhatsApp access to me — brainstorm or ask anytime
           - ✅ Hands-on direction for your team, or AI-driven execution if you're solo
