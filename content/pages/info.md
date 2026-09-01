@@ -137,8 +137,6 @@ sections:
       - type: Label
         label: Consumer Psychology & Research
       - type: Label
-        label: Market Trend Forecasting
-      - type: Label
         label: Brand Positioning
       - type: Label
         label: AI-Assisted Content & Ad Copy
@@ -151,23 +149,7 @@ sections:
       - type: Label
         label: SEO/SEM Optimization
       - type: Label
-        label: Email Marketing
-      - type: Label
         label: CRM System Management
-      - type: Label
-        label: Content Strategy & Planning
-      - type: Label
-        label: Social Media Strategy
-      - type: Label
-        label: Event Coordination
-      - type: Label
-        label: Online Channel Development
-      - type: Label
-        label: Business Model Transformation
-      - type: Label
-        label: Customer Behavior Analysis
-      - type: Label
-        label: Marketing ROI Optimization
   - type: DividerSection
     styles:
       self:

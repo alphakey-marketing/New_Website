@@ -49,9 +49,10 @@ sections:
     colors: colors-f
     subtitle: "點解要信我"
     text: |
-      過去8年，我幫唔同企業做到**4個月內332%營收增長** —— 靠嘅係細心市場分析同嚴謹執行，唔係好彩。
+      過去8年，我幫唔同企業做到三位數營收增長 —— 靠嘅係細心市場分析同嚴謹執行，唔係好彩。*(具體數字喺下面案例入面)*
 
-      *(呢度會放客戶感言 / 成效影片)*
+      > 「我啲檔期爆到有waiting list，做marketing終於唔再係我嘅頭痛。」
+      > —— 一位催眠治療師客戶，[睇個案例 →](/zh/projects/project-one)
 
       依家我將呢套經驗配AI，幫你唔使成日諗「點樣搵多啲客」，亦唔使自己捱時間做，就搞得掂。
     styles:
@@ -102,7 +103,9 @@ sections:
         text: |
           我幫你設置好 AI 驅動嘅營銷系統、儀表板同活動，再教識你點用 —— 之後唔使長期靠我，慳返你自己捱時間做嘅工夫。
 
-          **$9,980** 一次性設置費 + **$980/月** 維持系統運作、工具授權同社群支援 *(可隨時取消月費，系統仍然係你嘅)*
+          **$9,980** 一次性設置費 *(或分2期，每期$4,990)* + **$980/月** 令個系統持續更新、續牌、有新嘢 —— 唔係交咗貨就算 *(可隨時取消月費，系統仍然係你嘅)*
+
+          *(頭5位客戶可鎖定呢個價，之後會檢討價錢。)*
 
           ✅ AI輔助內容 & 廣告文案工作流程
 
@@ -110,9 +113,17 @@ sections:
 
           ✅ 為你業務配置好嘅營銷自動化工具
 
-          ✅ 文件同教學片，唔怕唔識用
+          ✅ 社交媒體 & 品牌指引文件（語調、風格、視覺）
 
-          ✅ 送你入專屬社群，持續有貼士同支援
+          ✅ 工具同平台費用全包，唔使自己另外課金
+
+          ✅ 有更好嘅AI工具出，就幫你更新套流程
+
+          ✅ 每月content refresh + 自動化成效報告
+
+          ✅ 文件、教學片，仲有專屬社群，隨時搵到
+
+          **加購：AI建網站（最多3頁靜態頁）連設置 —— $3,000**
         actions:
           - type: Button
             label: "即刻裝返套 AI Launch System 🚀"
@@ -129,9 +140,9 @@ sections:
 
           唔理你有冇team，我都幫你搵AI工具同自動化，頂替一個team嘅工作量。
 
-          **$5,000/月**
+          **$5,000/月** *(相比全職請人月薪二萬幾起跳)* —— 月費制，冇長約，但每次只開3-5個位
 
-          ✅ 包含「AI Launch System」所有內容
+          ✅ **包含完整「AI Launch System」—— 唔另收$9,980設置費 —— 仲加埋：**
 
           ✅ 每月Scheduled Call，一齊度策略同track進度
 
@@ -141,7 +152,7 @@ sections:
 
           ✅ 以收益為本嘅報告，唔講得個「like」字
 
-          我每個月只接3-5位Growth Partner客戶，唔係擺姿態，係想真係跟得住每一個。
+          *(刻意開得少 —— 我想真係跟得住每一個客，唔想做到攤薄晒。)*
         actions:
           - type: Button
             label: "申請做 AI Growth Partner 🚀"
@@ -171,6 +182,10 @@ sections:
       **我完全唔識用AI/marketing，跟得上咩？**
 
       唔使識。AI Launch System會連埋文件同教學片一齊比你，跟住做就得。
+
+      **裝好之後，如果自己搞唔掂點算？**
+
+      放心，有文件、教學片同專屬社群幫你，唔會冇人理。如果之後想升級到有人幫手把關，隨時可以轉去AI Growth Partner。
 
       **幾耐先見到效果？**
 
@@ -287,10 +302,14 @@ sections:
         - name: interestedTier
           label: 想了解邊個方案
           hideLabel: true
-          placeholder: 想了解邊個方案
+          defaultValue: 想了解邊個方案
+          options:
+            - AI Launch System
+            - AI Growth Partner
+            - 未決定
           isRequired: false
           width: full
-          type: TextFormControl
+          type: SelectFormControl
         - name: message
           label: 訊息
           hideLabel: true

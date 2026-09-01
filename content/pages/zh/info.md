@@ -137,8 +137,6 @@ sections:
       - type: Label
         label: 消費者心理與研究
       - type: Label
-        label: 市場趨勢預測
-      - type: Label
         label: 品牌定位
       - type: Label
         label: AI輔助內容 & 廣告文案
@@ -151,23 +149,7 @@ sections:
       - type: Label
         label: SEO/SEM優化
       - type: Label
-        label: 電郵營銷
-      - type: Label
         label: CRM系統管理
-      - type: Label
-        label: 內容策略與策劃
-      - type: Label
-        label: 社交媒體策略
-      - type: Label
-        label: 活動統籌
-      - type: Label
-        label: 線上渠道開發
-      - type: Label
-        label: 商業模式轉型
-      - type: Label
-        label: 客戶行為分析
-      - type: Label
-        label: 營銷ROI優化
   - type: DividerSection
     styles:
       self:

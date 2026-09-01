@@ -49,9 +49,10 @@ sections:
     colors: colors-f
     subtitle: "Why listen to me"
     text: |
-      Over 8 years, I've helped businesses hit up to **332% revenue growth in 4 months** — through careful market analysis and disciplined execution, not luck.
+      Over 8 years, I've helped businesses grow revenue by triple digits — through careful market analysis and disciplined execution, not luck. *(Specific numbers below, in their own words.)*
 
-      *(Client testimonial / results video goes here)*
+      > "My calendar filled up so fast I had a waitlist — marketing finally stopped being a headache."
+      > — A hypnotherapy practitioner, [see the case study →](/projects/project-one)
 
       Now I'm pairing that same experience with AI, so you stop worrying about where your next customer is coming from, without burning your own hours doing it.
     styles:
@@ -102,7 +103,9 @@ sections:
         text: |
           I set up your AI-powered marketing systems, dashboards, and campaigns — then teach you how to run them yourself, so you're not stuck doing it forever.
 
-          **$9,980** one-time setup + **$980/month** to keep the system, tools, and community access running *(cancel the monthly anytime — the system stays yours)*
+          **$9,980** one-time setup *(or 2 payments of $4,990)* + **$980/month** keeps the system licensed, updated, and refreshed — not just switched on *(cancel the monthly anytime — the system stays yours)*
+
+          *(First 5 clients lock in this rate — price reviews after that.)*
 
           ✅ AI-assisted content & ad copy workflows
 
@@ -110,9 +113,17 @@ sections:
 
           ✅ Marketing automation tools configured for your business
 
-          ✅ Docs + walkthroughs so you're never stuck
+          ✅ Social media & brand guideline doc (voice, tone, visual style)
 
-          ✅ Access to a private community for ongoing tips and support
+          ✅ Tool & platform costs covered — nothing separate to license yourself
+
+          ✅ Workflows updated as better AI tools become available
+
+          ✅ Monthly content refresh + automated performance snapshot
+
+          ✅ Docs + walkthroughs, plus a private community, whenever you need them
+
+          **Add-on: AI-built website (up to 3 static pages) + setup — $3,000**
         actions:
           - type: Button
             label: "Get the AI Launch System 🚀"
@@ -129,9 +140,9 @@ sections:
 
           Whether or not you have a team, I'll find the AI tools and automation to cover the work a full marketing team would normally do.
 
-          **$5,000/month**
+          **$5,000/month** *(vs. $20k+/month for a full-time hire)* — month-to-month, no lock-in, but only 3-5 spots open at a time
 
-          ✅ Everything in AI Launch System
+          ✅ **Includes the full AI Launch System — no separate $9,980 setup fee — plus:**
 
           ✅ Monthly scheduled call to set strategy and track progress
 
@@ -141,7 +152,7 @@ sections:
 
           ✅ Revenue-focused reporting, not vanity metrics
 
-          I only take on 3-5 Growth Partner clients at a time — not for show, but because I actually want to stay close to every one of them.
+          *(Kept small on purpose — I want to stay close to every client, not spread thin.)*
         actions:
           - type: Button
             label: "Apply for AI Growth Partner 🚀"
@@ -171,6 +182,10 @@ sections:
       **I don't know anything about AI or marketing — can I keep up?**
 
       You don't need to. The AI Launch System comes with docs and walkthroughs — just follow along.
+
+      **What if I get stuck running the system myself after setup?**
+
+      That's what the docs, walkthroughs, and private community are for. You're never troubleshooting alone — and if you outgrow DIY, you can always move to AI Growth Partner.
 
       **How soon will I see results?**
 
@@ -287,10 +302,14 @@ sections:
         - name: interestedTier
           label: Which option are you interested in?
           hideLabel: true
-          placeholder: Which option are you interested in?
+          defaultValue: Which option are you interested in?
+          options:
+            - AI Launch System
+            - AI Growth Partner
+            - Not sure yet
           isRequired: false
           width: full
-          type: TextFormControl
+          type: SelectFormControl
         - name: message
           label: Project Details
           hideLabel: true
