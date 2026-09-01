@@ -101,17 +101,17 @@ sections:
         title: "AI Launch System"
         subtitle: "I set up a system built to bring you customers, you take the wheel"
         text: |
-          I set up your AI-powered marketing systems, dashboards, and campaigns — then teach you how to run them yourself, so you're not stuck doing it forever.
+          I configure a set of AI marketing skills for your business — content, SEO, automation, brand — then teach you how to run them yourself, so you're not stuck doing it forever.
 
           > **$4,980** one-time setup + **$498/month** AI Community membership — keeps you updated, supported, and improving *(cancel anytime — the system stays yours)*
 
           *(Ad/tool platform subscriptions — e.g. Meta Ads, your CRM — are billed directly to you, not included. First 5 clients lock in this rate — price reviews after that.)*
 
-          - ✅ AI-assisted content & ad copy workflows
-          - ✅ SEO and campaign setup
-          - ✅ Marketing automation tools configured for your business
-          - ✅ Social media & brand guideline doc (voice, tone, visual style)
-          - ✅ Workflows updated as better AI tools become available
+          - ✅ AI content & ad-copy skill — drafts on-brand copy in your voice, not generic AI text
+          - ✅ AI SEO & AEO skill — gets you found on Google *and* AI answer engines like ChatGPT
+          - ✅ AI marketing automation skill — runs your campaigns and workflows for you
+          - ✅ AI brand & social media skill — keeps every post on-voice, on-style, automatically
+          - ✅ Skills upgraded as better AI capabilities become available
           - ✅ Monthly content refresh + automated performance snapshot
           - ✅ Docs + walkthroughs, plus a private community, whenever you need them
 
